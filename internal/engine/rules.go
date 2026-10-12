@@ -200,3 +200,17 @@ func streak(day dayNumber, scheduled func(dayNumber) bool, checked map[dayNumber
 type dayNumber int
 
 func (d dayNumber) String() string { return fromDayNumber(d) }
+
+// weekChange is the one-sentence suggestion for next week, from what was planned, finished and reflected on.
+func weekChange(planned, done, entries int) string {
+	switch {
+	case planned == 0:
+		return "Nothing was planned this week. Start by choosing three things for Monday."
+	case float64(done)/float64(planned) < 0.5:
+		return fmt.Sprintf("You finished %d of %d. Plan fewer, smaller things next week.", done, planned)
+	case entries == 0:
+		return "Your plan worked. Add a two-line journal entry at the end of the day to see why."
+	default:
+		return "Your plan worked. Keep the same shape next week."
+	}
+}

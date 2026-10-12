@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/realnighthawk/life-engine/internal/blobs"
 	"github.com/realnighthawk/life-engine/internal/engine"
 	"github.com/realnighthawk/life-engine/internal/store/postgres"
 )
@@ -35,13 +36,13 @@ func integrationEnv(t *testing.T) (*engine.Service, *pgxpool.Pool) {
 		t.Fatal(e)
 	}
 	// One person per database, so tests start from an empty one.
-	if _, e = pool.Exec(context.Background(), "TRUNCATE life.requests, life.changes, life.acked_events, life.reminders, life.schedules, life.routine_checkins, life.routines, life.plan_proposals, life.plan_items, life.commitments, life.steps, life.goals"); e != nil {
+	if _, e = pool.Exec(context.Background(), "TRUNCATE life.requests, life.changes, life.acked_events, life.reminders, life.schedules, life.attachments, life.captures, life.notes, life.journal_entries, life.routine_checkins, life.routines, life.plan_proposals, life.plan_items, life.commitments, life.steps, life.goals"); e != nil {
 		t.Fatal(e)
 	}
 	if _, e = pool.Exec(context.Background(), "UPDATE life.settings SET time_zone='UTC',work_start='09:00',work_end='17:00',version=1"); e != nil {
 		t.Fatal(e)
 	}
-	return engine.New(pool), pool
+	return engine.New(pool, blobs.NewMemory()), pool
 }
 
 func execute[T any](t *testing.T, s *engine.Service, name string, body any) T {

@@ -72,6 +72,40 @@ func (s *Service) registerOperations() {
 	})
 	register(s, "routine_checkins_set", "Record that the person did a routine on a day, in its full or short version, or clear it with none. Idempotent per routine and day.", true, setCheckin)
 	register(s, "routines_status", "How each routine is going on a day: done or not, the streak, days since the last check-in, whether there has been a gap of 3+ days, and a hint for an easy restart.", false, routinesStatus)
+	register(s, "journal_create", "Save a journal entry in the person's words: what happened, how it went, what they learned. Connect it to goals when it relates to them, and add one adjustment for tomorrow if they chose one. Set source to agent and pass session_id when you write it for them.", true, createJournal)
+	register(s, "journal_get", "Read one journal entry with its attachments.", false, func(c context.Context, u *unit, in GetInput) (JournalEntry, error) {
+		return u.getJournal(c, in.ID, false)
+	})
+	register(s, "journal_list", "Browse or search the person's journal, newest first. Search finds words and phrases ('the Lisbon trip', 'felt anxious'); filter by date range or goal.", false, listJournal)
+	register(s, "journal_update", "Replace a journal entry's fields using the version you last read.", true, updateJournal)
+	register(s, "journal_delete", "Delete a journal entry (it can be restored).", true, func(c context.Context, u *unit, in EditInput) (JournalEntry, error) {
+		return lifecycleJournal(c, u, in, false)
+	})
+	register(s, "journal_restore", "Restore a deleted journal entry.", true, func(c context.Context, u *unit, in EditInput) (JournalEntry, error) {
+		return lifecycleJournal(c, u, in, true)
+	})
+	register(s, "notes_create", "Save a note, list or log the person wants to keep (markdown body, tags, optional goal). Use this for anything they want to look up later that is not a task, reminder or journal entry.", true, createNote)
+	register(s, "notes_get", "Read one note with its attachments.", false, func(c context.Context, u *unit, in GetInput) (Note, error) { return u.getNote(c, in.ID, false) })
+	register(s, "notes_list", "Browse or search the person's notes: pinned first, then most recently changed; filter by tag or goal.", false, listNotes)
+	register(s, "notes_update", "Replace a note's fields using the version you last read.", true, updateNote)
+	register(s, "notes_delete", "Delete a note (it can be restored).", true, func(c context.Context, u *unit, in EditInput) (Note, error) { return lifecycleNote(c, u, in, false) })
+	register(s, "notes_restore", "Restore a deleted note.", true, func(c context.Context, u *unit, in EditInput) (Note, error) { return lifecycleNote(c, u, in, true) })
+	register(s, "captures_create", "Save a raw one-line capture exactly as the person said it, to be sorted later. The app uses this offline; you can also use it when you cannot yet tell what something is.", true, createCapture)
+	register(s, "captures_list", "List the person's captures: open ones (not yet sorted) by default, newest first.", false, listCaptures)
+	register(s, "captures_resolve", "Mark a capture sorted after you created the right record from it (a reminder, plan item, journal entry, note or goal), naming what it became, or dismiss it.", true, resolveCapture)
+	register(s, "attachments_upload_init", "Reserve an upload for a photo, voice memo, PDF or text file on a journal entry or note. Then PUT the exact bytes to upload_path with the matching Content-Type. Up to 25 MiB and 20 files per record.", true, s.initAttachment)
+	register(s, "attachments_get", "Read an attachment's status and where to fetch its content.", false, func(c context.Context, u *unit, in GetInput) (Attachment, error) {
+		return u.getAttachment(c, in.ID, false)
+	})
+	register(s, "attachments_delete", "Remove an attachment from its record (it can be restored).", true, func(c context.Context, u *unit, in EditInput) (Attachment, error) {
+		return lifecycleAttachment(c, u, in, false)
+	})
+	register(s, "attachments_restore", "Restore a removed attachment.", true, func(c context.Context, u *unit, in EditInput) (Attachment, error) {
+		return lifecycleAttachment(c, u, in, true)
+	})
+	register(s, "day_close", "Close the person's day: summarise it, move unfinished plan items to tomorrow, and save an optional one-or-two-line reflection to the journal with a suggested adjustment for tomorrow. Safe to repeat; nothing is lost.", true, dayClose)
+	register(s, "week_stats", "What happened in a week: planned versus finished work, goal steps done, routine check-ins, journal entries, commitments, and one suggested change for next week.", false, weekStats)
+	register(s, "life_context_get", "Everything you need to help the person with their day, week or a goal in one read: the plan, commitments, goals with next steps, reminders due, routines (with gaps), recent journal lines and weekly numbers, each with its version. Read this before suggesting, replanning or reflecting.", false, lifeContext)
 	register(s, "history_list", "Read the audit trail of changes to a record, newest first.", false, history)
 	register(s, "events_pending", "Hand over the notices this engine has recorded and not yet delivered. Called by the hub's delivery loop, not by the agent.", false,
 		func(c context.Context, u *unit, _ struct{}) (EventsResult, error) { return u.eventsPending(c) })

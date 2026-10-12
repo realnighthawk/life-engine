@@ -60,7 +60,7 @@ func (u *unit) pendingReminders(ctx context.Context) ([]Event, error) {
 
 func (u *unit) eventsPending(ctx context.Context) (EventsResult, error) {
 	result := EventsResult{Items: []Event{}}
-	for _, source := range []func(context.Context) ([]Event, error){u.pendingReminders, u.pendingSchedules, u.pendingRoutines} {
+	for _, source := range []func(context.Context) ([]Event, error){u.pendingReminders, u.pendingSchedules, u.pendingRoutines, u.pendingCaptures} {
 		items, err := source(ctx)
 		if err != nil {
 			return result, err

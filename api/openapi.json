@@ -24,6 +24,702 @@
         ],
         "type": "object"
       },
+      "attachments_delete_input": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "description": "the version you last read; a stale version is rejected",
+            "type": "integer"
+          },
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "expected_version"
+        ],
+        "type": "object"
+      },
+      "attachments_delete_output": {
+        "additionalProperties": false,
+        "properties": {
+          "content_path": {
+            "description": "GET the bytes here once ready",
+            "type": "string"
+          },
+          "content_type": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "filename": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "owner_id": {
+            "type": "string"
+          },
+          "owner_type": {
+            "description": "journal_entry or note",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "size_bytes": {
+            "type": "integer"
+          },
+          "state": {
+            "description": "pending until the bytes are uploaded, then ready",
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "upload_path": {
+            "description": "PUT the exact bytes here (Content-Type must match) while pending",
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "owner_type",
+          "owner_id",
+          "filename",
+          "content_type",
+          "size_bytes",
+          "state",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "attachments_get_input": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "attachments_get_output": {
+        "additionalProperties": false,
+        "properties": {
+          "content_path": {
+            "description": "GET the bytes here once ready",
+            "type": "string"
+          },
+          "content_type": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "filename": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "owner_id": {
+            "type": "string"
+          },
+          "owner_type": {
+            "description": "journal_entry or note",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "size_bytes": {
+            "type": "integer"
+          },
+          "state": {
+            "description": "pending until the bytes are uploaded, then ready",
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "upload_path": {
+            "description": "PUT the exact bytes here (Content-Type must match) while pending",
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "owner_type",
+          "owner_id",
+          "filename",
+          "content_type",
+          "size_bytes",
+          "state",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "attachments_restore_input": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "description": "the version you last read; a stale version is rejected",
+            "type": "integer"
+          },
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "expected_version"
+        ],
+        "type": "object"
+      },
+      "attachments_restore_output": {
+        "additionalProperties": false,
+        "properties": {
+          "content_path": {
+            "description": "GET the bytes here once ready",
+            "type": "string"
+          },
+          "content_type": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "filename": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "owner_id": {
+            "type": "string"
+          },
+          "owner_type": {
+            "description": "journal_entry or note",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "size_bytes": {
+            "type": "integer"
+          },
+          "state": {
+            "description": "pending until the bytes are uploaded, then ready",
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "upload_path": {
+            "description": "PUT the exact bytes here (Content-Type must match) while pending",
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "owner_type",
+          "owner_id",
+          "filename",
+          "content_type",
+          "size_bytes",
+          "state",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "attachments_upload_init_input": {
+        "additionalProperties": false,
+        "properties": {
+          "content_type": {
+            "description": "image/jpeg, image/png, image/heic, image/webp, audio/mp4, audio/mpeg, audio/x-m4a, audio/aac, audio/wav, application/pdf or text/plain",
+            "type": "string"
+          },
+          "filename": {
+            "description": "1-200 characters",
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          },
+          "owner_id": {
+            "type": "string"
+          },
+          "owner_type": {
+            "description": "journal_entry or note",
+            "type": "string"
+          },
+          "size_bytes": {
+            "description": "exact size of the file, 1 byte to 25 MiB",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "owner_type",
+          "owner_id",
+          "filename",
+          "content_type",
+          "size_bytes"
+        ],
+        "type": "object"
+      },
+      "attachments_upload_init_output": {
+        "additionalProperties": false,
+        "properties": {
+          "content_path": {
+            "description": "GET the bytes here once ready",
+            "type": "string"
+          },
+          "content_type": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "filename": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "owner_id": {
+            "type": "string"
+          },
+          "owner_type": {
+            "description": "journal_entry or note",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "size_bytes": {
+            "type": "integer"
+          },
+          "state": {
+            "description": "pending until the bytes are uploaded, then ready",
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "upload_path": {
+            "description": "PUT the exact bytes here (Content-Type must match) while pending",
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "owner_type",
+          "owner_id",
+          "filename",
+          "content_type",
+          "size_bytes",
+          "state",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "captures_create_input": {
+        "additionalProperties": false,
+        "properties": {
+          "captured_at": {
+            "description": "RFC 3339 when it was captured on the device; default now",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "id": {
+            "description": "client-generated UUID, so an offline retry cannot duplicate",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          },
+          "session_id": {
+            "type": "string"
+          },
+          "source": {
+            "description": "user (default), voice or agent",
+            "type": "string"
+          },
+          "text": {
+            "description": "what the person said or typed, unprocessed, 1-2000 characters",
+            "type": "string"
+          },
+          "turn_seq": {
+            "type": [
+              "null",
+              "integer"
+            ]
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "text"
+        ],
+        "type": "object"
+      },
+      "captures_create_output": {
+        "additionalProperties": false,
+        "properties": {
+          "captured_at": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "resolved_as": {
+            "description": "what it became: reminder, plan_item, journal_entry, note, goal or dismissed",
+            "type": "string"
+          },
+          "resolved_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "resolved_id": {
+            "type": "string"
+          },
+          "session_id": {
+            "type": "string"
+          },
+          "source": {
+            "description": "user, voice or agent",
+            "type": "string"
+          },
+          "state": {
+            "description": "open or resolved",
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "turn_seq": {
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "text",
+          "captured_at",
+          "source",
+          "turn_seq",
+          "state",
+          "resolved_at",
+          "version",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "captures_list_input": {
+        "additionalProperties": false,
+        "properties": {
+          "limit": {
+            "description": "1-200, default 50",
+            "type": "integer"
+          },
+          "offset": {
+            "description": "0-1000000, default 0",
+            "type": "integer"
+          },
+          "search": {
+            "description": "literal text to find",
+            "type": "string"
+          },
+          "state": {
+            "description": "active (default), deleted or all",
+            "type": "string"
+          },
+          "status": {
+            "description": "open (default), resolved or all",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "captures_list_output": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "captured_at": {
+                  "type": "string"
+                },
+                "created_at": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "resolved_as": {
+                  "description": "what it became: reminder, plan_item, journal_entry, note, goal or dismissed",
+                  "type": "string"
+                },
+                "resolved_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "resolved_id": {
+                  "type": "string"
+                },
+                "session_id": {
+                  "type": "string"
+                },
+                "source": {
+                  "description": "user, voice or agent",
+                  "type": "string"
+                },
+                "state": {
+                  "description": "open or resolved",
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "turn_seq": {
+                  "type": [
+                    "null",
+                    "integer"
+                  ]
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "text",
+                "captured_at",
+                "source",
+                "turn_seq",
+                "state",
+                "resolved_at",
+                "version",
+                "created_at",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "next_offset": {
+            "description": "offset of the next page, or null at the end",
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "next_offset"
+        ],
+        "type": "object"
+      },
+      "captures_resolve_input": {
+        "additionalProperties": false,
+        "properties": {
+          "as": {
+            "description": "what it became: reminder, plan_item, journal_entry, note, goal, or dismissed",
+            "type": "string"
+          },
+          "entity_id": {
+            "description": "the record you created from it; required unless dismissed",
+            "type": "string"
+          },
+          "expected_version": {
+            "description": "the version you last read; a stale version is rejected",
+            "type": "integer"
+          },
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "expected_version",
+          "as"
+        ],
+        "type": "object"
+      },
+      "captures_resolve_output": {
+        "additionalProperties": false,
+        "properties": {
+          "captured_at": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "resolved_as": {
+            "description": "what it became: reminder, plan_item, journal_entry, note, goal or dismissed",
+            "type": "string"
+          },
+          "resolved_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "resolved_id": {
+            "type": "string"
+          },
+          "session_id": {
+            "type": "string"
+          },
+          "source": {
+            "description": "user, voice or agent",
+            "type": "string"
+          },
+          "state": {
+            "description": "open or resolved",
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "turn_seq": {
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "text",
+          "captured_at",
+          "source",
+          "turn_seq",
+          "state",
+          "resolved_at",
+          "version",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
       "commitments_add_input": {
         "additionalProperties": false,
         "properties": {
@@ -324,6 +1020,144 @@
           "items",
           "done",
           "total"
+        ],
+        "type": "object"
+      },
+      "day_close_input": {
+        "additionalProperties": false,
+        "properties": {
+          "day": {
+            "description": "local date YYYY-MM-DD; default today",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          },
+          "reflection": {
+            "description": "one or two lines about the day; saved to the journal with tomorrow's adjustment",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key"
+        ],
+        "type": "object"
+      },
+      "day_close_output": {
+        "additionalProperties": false,
+        "properties": {
+          "carried": {
+            "description": "unfinished items moved to the next day",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "created_at": {
+                  "type": "string"
+                },
+                "day": {
+                  "description": "local date YYYY-MM-DD",
+                  "type": "string"
+                },
+                "deleted_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "done_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "goal_id": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "is_priority": {
+                  "type": "boolean"
+                },
+                "kind": {
+                  "description": "task, event, prep or rest",
+                  "type": "string"
+                },
+                "minutes": {
+                  "type": "integer"
+                },
+                "start_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "step_id": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "day",
+                "title",
+                "kind",
+                "minutes",
+                "start_at",
+                "is_priority",
+                "done_at",
+                "version",
+                "deleted_at",
+                "created_at",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "day": {
+            "type": "string"
+          },
+          "done": {
+            "type": "integer"
+          },
+          "journal_entry_id": {
+            "type": "string"
+          },
+          "next_day": {
+            "type": "string"
+          },
+          "planned": {
+            "description": "non-event items on the day, finished or not",
+            "type": "integer"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "tomorrow_note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "done",
+          "planned",
+          "carried",
+          "summary",
+          "tomorrow_note",
+          "day",
+          "next_day"
         ],
         "type": "object"
       },
@@ -1670,7 +2504,7 @@
         "additionalProperties": false,
         "properties": {
           "entity_type": {
-            "description": "reminder, schedule, settings, goal, step, commitment, plan_item, plan_proposal or routine",
+            "description": "reminder, schedule, settings, goal, step, commitment, plan_item, plan_proposal, routine, journal_entry, note, capture or attachment",
             "type": "string"
           },
           "id": {
@@ -1773,6 +2607,2062 @@
         ],
         "type": "object"
       },
+      "journal_create_input": {
+        "additionalProperties": false,
+        "properties": {
+          "entry_at": {
+            "description": "RFC 3339; default now",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "goal_ids": {
+            "description": "goals the entry relates to",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          },
+          "session_id": {
+            "type": "string"
+          },
+          "source": {
+            "description": "user (default) or agent",
+            "type": "string"
+          },
+          "text": {
+            "description": "what happened and how it felt, in the person's words, 1-20000 characters",
+            "type": "string"
+          },
+          "tomorrow": {
+            "description": "one adjustment for tomorrow, up to 500 characters",
+            "type": "string"
+          },
+          "turn_seq": {
+            "type": [
+              "null",
+              "integer"
+            ]
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "text"
+        ],
+        "type": "object"
+      },
+      "journal_create_output": {
+        "additionalProperties": false,
+        "properties": {
+          "attachments": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "content_path": {
+                  "description": "GET the bytes here once ready",
+                  "type": "string"
+                },
+                "content_type": {
+                  "type": "string"
+                },
+                "created_at": {
+                  "type": "string"
+                },
+                "deleted_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "filename": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "owner_id": {
+                  "type": "string"
+                },
+                "owner_type": {
+                  "description": "journal_entry or note",
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string"
+                },
+                "size_bytes": {
+                  "type": "integer"
+                },
+                "state": {
+                  "description": "pending until the bytes are uploaded, then ready",
+                  "type": "string"
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "upload_path": {
+                  "description": "PUT the exact bytes here (Content-Type must match) while pending",
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "owner_type",
+                "owner_id",
+                "filename",
+                "content_type",
+                "size_bytes",
+                "state",
+                "version",
+                "deleted_at",
+                "created_at",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "entry_at": {
+            "type": "string"
+          },
+          "goal_ids": {
+            "description": "goals this entry connects to",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "session_id": {
+            "type": "string"
+          },
+          "source": {
+            "description": "user, agent or day_close",
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "tomorrow": {
+            "description": "one change for tomorrow, if the person chose one",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "turn_seq": {
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "entry_at",
+          "text",
+          "goal_ids",
+          "tomorrow",
+          "source",
+          "turn_seq",
+          "attachments",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "journal_delete_input": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "description": "the version you last read; a stale version is rejected",
+            "type": "integer"
+          },
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "expected_version"
+        ],
+        "type": "object"
+      },
+      "journal_delete_output": {
+        "additionalProperties": false,
+        "properties": {
+          "attachments": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "content_path": {
+                  "description": "GET the bytes here once ready",
+                  "type": "string"
+                },
+                "content_type": {
+                  "type": "string"
+                },
+                "created_at": {
+                  "type": "string"
+                },
+                "deleted_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "filename": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "owner_id": {
+                  "type": "string"
+                },
+                "owner_type": {
+                  "description": "journal_entry or note",
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string"
+                },
+                "size_bytes": {
+                  "type": "integer"
+                },
+                "state": {
+                  "description": "pending until the bytes are uploaded, then ready",
+                  "type": "string"
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "upload_path": {
+                  "description": "PUT the exact bytes here (Content-Type must match) while pending",
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "owner_type",
+                "owner_id",
+                "filename",
+                "content_type",
+                "size_bytes",
+                "state",
+                "version",
+                "deleted_at",
+                "created_at",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "entry_at": {
+            "type": "string"
+          },
+          "goal_ids": {
+            "description": "goals this entry connects to",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "session_id": {
+            "type": "string"
+          },
+          "source": {
+            "description": "user, agent or day_close",
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "tomorrow": {
+            "description": "one change for tomorrow, if the person chose one",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "turn_seq": {
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "entry_at",
+          "text",
+          "goal_ids",
+          "tomorrow",
+          "source",
+          "turn_seq",
+          "attachments",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "journal_get_input": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "journal_get_output": {
+        "additionalProperties": false,
+        "properties": {
+          "attachments": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "content_path": {
+                  "description": "GET the bytes here once ready",
+                  "type": "string"
+                },
+                "content_type": {
+                  "type": "string"
+                },
+                "created_at": {
+                  "type": "string"
+                },
+                "deleted_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "filename": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "owner_id": {
+                  "type": "string"
+                },
+                "owner_type": {
+                  "description": "journal_entry or note",
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string"
+                },
+                "size_bytes": {
+                  "type": "integer"
+                },
+                "state": {
+                  "description": "pending until the bytes are uploaded, then ready",
+                  "type": "string"
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "upload_path": {
+                  "description": "PUT the exact bytes here (Content-Type must match) while pending",
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "owner_type",
+                "owner_id",
+                "filename",
+                "content_type",
+                "size_bytes",
+                "state",
+                "version",
+                "deleted_at",
+                "created_at",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "entry_at": {
+            "type": "string"
+          },
+          "goal_ids": {
+            "description": "goals this entry connects to",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "session_id": {
+            "type": "string"
+          },
+          "source": {
+            "description": "user, agent or day_close",
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "tomorrow": {
+            "description": "one change for tomorrow, if the person chose one",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "turn_seq": {
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "entry_at",
+          "text",
+          "goal_ids",
+          "tomorrow",
+          "source",
+          "turn_seq",
+          "attachments",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "journal_list_input": {
+        "additionalProperties": false,
+        "properties": {
+          "from": {
+            "description": "RFC 3339; entries at or after",
+            "type": "string"
+          },
+          "goal_id": {
+            "type": "string"
+          },
+          "limit": {
+            "description": "1-200, default 50",
+            "type": "integer"
+          },
+          "offset": {
+            "description": "0-1000000, default 0",
+            "type": "integer"
+          },
+          "search": {
+            "description": "literal text to find",
+            "type": "string"
+          },
+          "state": {
+            "description": "active (default), deleted or all",
+            "type": "string"
+          },
+          "to": {
+            "description": "RFC 3339; entries before",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "journal_list_output": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "attachments": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "content_path": {
+                        "description": "GET the bytes here once ready",
+                        "type": "string"
+                      },
+                      "content_type": {
+                        "type": "string"
+                      },
+                      "created_at": {
+                        "type": "string"
+                      },
+                      "deleted_at": {
+                        "type": [
+                          "null",
+                          "string"
+                        ]
+                      },
+                      "filename": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "string"
+                      },
+                      "owner_id": {
+                        "type": "string"
+                      },
+                      "owner_type": {
+                        "description": "journal_entry or note",
+                        "type": "string"
+                      },
+                      "sha256": {
+                        "type": "string"
+                      },
+                      "size_bytes": {
+                        "type": "integer"
+                      },
+                      "state": {
+                        "description": "pending until the bytes are uploaded, then ready",
+                        "type": "string"
+                      },
+                      "updated_at": {
+                        "type": "string"
+                      },
+                      "upload_path": {
+                        "description": "PUT the exact bytes here (Content-Type must match) while pending",
+                        "type": "string"
+                      },
+                      "version": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "owner_type",
+                      "owner_id",
+                      "filename",
+                      "content_type",
+                      "size_bytes",
+                      "state",
+                      "version",
+                      "deleted_at",
+                      "created_at",
+                      "updated_at"
+                    ],
+                    "type": "object"
+                  },
+                  "type": [
+                    "null",
+                    "array"
+                  ]
+                },
+                "created_at": {
+                  "type": "string"
+                },
+                "deleted_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "entry_at": {
+                  "type": "string"
+                },
+                "goal_ids": {
+                  "description": "goals this entry connects to",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": [
+                    "null",
+                    "array"
+                  ]
+                },
+                "id": {
+                  "type": "string"
+                },
+                "session_id": {
+                  "type": "string"
+                },
+                "source": {
+                  "description": "user, agent or day_close",
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "tomorrow": {
+                  "description": "one change for tomorrow, if the person chose one",
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "turn_seq": {
+                  "type": [
+                    "null",
+                    "integer"
+                  ]
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "entry_at",
+                "text",
+                "goal_ids",
+                "tomorrow",
+                "source",
+                "turn_seq",
+                "attachments",
+                "version",
+                "deleted_at",
+                "created_at",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "next_offset": {
+            "description": "offset of the next page, or null at the end",
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "next_offset"
+        ],
+        "type": "object"
+      },
+      "journal_restore_input": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "description": "the version you last read; a stale version is rejected",
+            "type": "integer"
+          },
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "expected_version"
+        ],
+        "type": "object"
+      },
+      "journal_restore_output": {
+        "additionalProperties": false,
+        "properties": {
+          "attachments": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "content_path": {
+                  "description": "GET the bytes here once ready",
+                  "type": "string"
+                },
+                "content_type": {
+                  "type": "string"
+                },
+                "created_at": {
+                  "type": "string"
+                },
+                "deleted_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "filename": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "owner_id": {
+                  "type": "string"
+                },
+                "owner_type": {
+                  "description": "journal_entry or note",
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string"
+                },
+                "size_bytes": {
+                  "type": "integer"
+                },
+                "state": {
+                  "description": "pending until the bytes are uploaded, then ready",
+                  "type": "string"
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "upload_path": {
+                  "description": "PUT the exact bytes here (Content-Type must match) while pending",
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "owner_type",
+                "owner_id",
+                "filename",
+                "content_type",
+                "size_bytes",
+                "state",
+                "version",
+                "deleted_at",
+                "created_at",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "entry_at": {
+            "type": "string"
+          },
+          "goal_ids": {
+            "description": "goals this entry connects to",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "session_id": {
+            "type": "string"
+          },
+          "source": {
+            "description": "user, agent or day_close",
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "tomorrow": {
+            "description": "one change for tomorrow, if the person chose one",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "turn_seq": {
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "entry_at",
+          "text",
+          "goal_ids",
+          "tomorrow",
+          "source",
+          "turn_seq",
+          "attachments",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "journal_update_input": {
+        "additionalProperties": false,
+        "properties": {
+          "entry_at": {
+            "description": "RFC 3339; default now",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "expected_version": {
+            "description": "the version you last read; a stale version is rejected",
+            "type": "integer"
+          },
+          "goal_ids": {
+            "description": "goals the entry relates to",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          },
+          "session_id": {
+            "type": "string"
+          },
+          "source": {
+            "description": "user (default) or agent",
+            "type": "string"
+          },
+          "text": {
+            "description": "what happened and how it felt, in the person's words, 1-20000 characters",
+            "type": "string"
+          },
+          "tomorrow": {
+            "description": "one adjustment for tomorrow, up to 500 characters",
+            "type": "string"
+          },
+          "turn_seq": {
+            "type": [
+              "null",
+              "integer"
+            ]
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "expected_version",
+          "text"
+        ],
+        "type": "object"
+      },
+      "journal_update_output": {
+        "additionalProperties": false,
+        "properties": {
+          "attachments": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "content_path": {
+                  "description": "GET the bytes here once ready",
+                  "type": "string"
+                },
+                "content_type": {
+                  "type": "string"
+                },
+                "created_at": {
+                  "type": "string"
+                },
+                "deleted_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "filename": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "owner_id": {
+                  "type": "string"
+                },
+                "owner_type": {
+                  "description": "journal_entry or note",
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string"
+                },
+                "size_bytes": {
+                  "type": "integer"
+                },
+                "state": {
+                  "description": "pending until the bytes are uploaded, then ready",
+                  "type": "string"
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "upload_path": {
+                  "description": "PUT the exact bytes here (Content-Type must match) while pending",
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "owner_type",
+                "owner_id",
+                "filename",
+                "content_type",
+                "size_bytes",
+                "state",
+                "version",
+                "deleted_at",
+                "created_at",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "entry_at": {
+            "type": "string"
+          },
+          "goal_ids": {
+            "description": "goals this entry connects to",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "session_id": {
+            "type": "string"
+          },
+          "source": {
+            "description": "user, agent or day_close",
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "tomorrow": {
+            "description": "one change for tomorrow, if the person chose one",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "turn_seq": {
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "entry_at",
+          "text",
+          "goal_ids",
+          "tomorrow",
+          "source",
+          "turn_seq",
+          "attachments",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "life_context_get_input": {
+        "additionalProperties": false,
+        "properties": {
+          "day": {
+            "description": "for scope day: local date YYYY-MM-DD, default today",
+            "type": "string"
+          },
+          "goal_id": {
+            "description": "required for scope goal",
+            "type": "string"
+          },
+          "scope": {
+            "description": "day, week or goal",
+            "type": "string"
+          },
+          "week_start": {
+            "description": "for scope week: the local Monday, default this week",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scope"
+        ],
+        "type": "object"
+      },
+      "life_context_get_output": {
+        "additionalProperties": false,
+        "properties": {
+          "commitments": {
+            "additionalProperties": false,
+            "properties": {
+              "done": {
+                "type": "integer"
+              },
+              "items": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "created_at": {
+                      "type": "string"
+                    },
+                    "done_at": {
+                      "type": [
+                        "null",
+                        "string"
+                      ]
+                    },
+                    "goal_id": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "step_id": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "updated_at": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer"
+                    },
+                    "week_start": {
+                      "description": "the local Monday of the week, YYYY-MM-DD",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "week_start",
+                    "title",
+                    "done_at",
+                    "version",
+                    "created_at",
+                    "updated_at"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              },
+              "total": {
+                "type": "integer"
+              },
+              "week_start": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "week_start",
+              "items",
+              "done",
+              "total"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
+          "coverage": {
+            "description": "bounded_snapshot: the lists below are limited and may not be everything",
+            "type": "string"
+          },
+          "goals": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "archived_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "created_at": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "next_step": {
+                  "additionalProperties": false,
+                  "description": "the first step not yet done, or null",
+                  "properties": {
+                    "created_at": {
+                      "type": "string"
+                    },
+                    "done_at": {
+                      "type": [
+                        "null",
+                        "string"
+                      ]
+                    },
+                    "goal_id": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "minutes": {
+                      "type": "integer"
+                    },
+                    "position": {
+                      "description": "1-based order within the goal",
+                      "type": "integer"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "updated_at": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "goal_id",
+                    "title",
+                    "minutes",
+                    "position",
+                    "done_at",
+                    "version",
+                    "created_at",
+                    "updated_at"
+                  ],
+                  "type": [
+                    "null",
+                    "object"
+                  ]
+                },
+                "progress": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "done": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "done",
+                    "total"
+                  ],
+                  "type": "object"
+                },
+                "steps": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "created_at": {
+                        "type": "string"
+                      },
+                      "done_at": {
+                        "type": [
+                          "null",
+                          "string"
+                        ]
+                      },
+                      "goal_id": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "string"
+                      },
+                      "minutes": {
+                        "type": "integer"
+                      },
+                      "position": {
+                        "description": "1-based order within the goal",
+                        "type": "integer"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "updated_at": {
+                        "type": "string"
+                      },
+                      "version": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "goal_id",
+                      "title",
+                      "minutes",
+                      "position",
+                      "done_at",
+                      "version",
+                      "created_at",
+                      "updated_at"
+                    ],
+                    "type": "object"
+                  },
+                  "type": [
+                    "null",
+                    "array"
+                  ]
+                },
+                "title": {
+                  "type": "string"
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                },
+                "weekly_target": {
+                  "description": "steps the person aims to finish each week",
+                  "type": "integer"
+                },
+                "why": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "title",
+                "why",
+                "weekly_target",
+                "archived_at",
+                "version",
+                "steps",
+                "progress",
+                "next_step",
+                "created_at",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "plan": {
+            "additionalProperties": false,
+            "properties": {
+              "day": {
+                "type": "string"
+              },
+              "items": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "created_at": {
+                      "type": "string"
+                    },
+                    "day": {
+                      "description": "local date YYYY-MM-DD",
+                      "type": "string"
+                    },
+                    "deleted_at": {
+                      "type": [
+                        "null",
+                        "string"
+                      ]
+                    },
+                    "done_at": {
+                      "type": [
+                        "null",
+                        "string"
+                      ]
+                    },
+                    "goal_id": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "is_priority": {
+                      "type": "boolean"
+                    },
+                    "kind": {
+                      "description": "task, event, prep or rest",
+                      "type": "string"
+                    },
+                    "minutes": {
+                      "type": "integer"
+                    },
+                    "start_at": {
+                      "type": [
+                        "null",
+                        "string"
+                      ]
+                    },
+                    "step_id": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "updated_at": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "day",
+                    "title",
+                    "kind",
+                    "minutes",
+                    "start_at",
+                    "is_priority",
+                    "done_at",
+                    "version",
+                    "deleted_at",
+                    "created_at",
+                    "updated_at"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              },
+              "proposals": {
+                "description": "pending revisions for this day",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "changes": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "action": {
+                            "description": "add, move or drop",
+                            "type": "string"
+                          },
+                          "day": {
+                            "description": "for move: the day to move it to (required); for add: the day to add it on (default the proposal's day)",
+                            "type": "string"
+                          },
+                          "is_priority": {
+                            "type": "boolean"
+                          },
+                          "item_id": {
+                            "description": "required for move and drop: the plan item affected",
+                            "type": "string"
+                          },
+                          "kind": {
+                            "type": "string"
+                          },
+                          "minutes": {
+                            "type": "integer"
+                          },
+                          "title": {
+                            "description": "required for add",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "action"
+                        ],
+                        "type": "object"
+                      },
+                      "type": [
+                        "null",
+                        "array"
+                      ]
+                    },
+                    "created_at": {
+                      "type": "string"
+                    },
+                    "day": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "reason": {
+                      "type": "string"
+                    },
+                    "state": {
+                      "description": "pending, applied or discarded",
+                      "type": "string"
+                    },
+                    "updated_at": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "day",
+                    "reason",
+                    "changes",
+                    "state",
+                    "version",
+                    "created_at",
+                    "updated_at"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              },
+              "summary": {
+                "additionalProperties": false,
+                "properties": {
+                  "done": {
+                    "type": "integer"
+                  },
+                  "minutes_done": {
+                    "type": "integer"
+                  },
+                  "minutes_events": {
+                    "type": "integer"
+                  },
+                  "minutes_open": {
+                    "type": "integer"
+                  },
+                  "planned": {
+                    "description": "non-event items on the day",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "planned",
+                  "done",
+                  "minutes_open",
+                  "minutes_done",
+                  "minutes_events"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "day",
+              "items",
+              "proposals",
+              "summary"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
+          "recent_journal": {
+            "description": "the last three entries",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "entry_at": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "text": {
+                  "description": "truncated to 500 characters",
+                  "type": "string"
+                },
+                "tomorrow": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "entry_at",
+                "text",
+                "tomorrow"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "reminders_due": {
+            "description": "pending reminders overdue or due within a day, at most 10",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "completed_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "created_at": {
+                  "type": "string"
+                },
+                "deleted_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "due_at": {
+                  "description": "when it is due; null for an undated reminder",
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "id": {
+                  "type": "string"
+                },
+                "last_completed_at": {
+                  "description": "for recurring reminders, the last time one occurrence was completed",
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "link": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "entity": {
+                      "description": "reminder, schedule, goal, step, plan_item, routine, journal_entry, note or capture",
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "entity",
+                    "id"
+                  ],
+                  "type": [
+                    "null",
+                    "object"
+                  ]
+                },
+                "notes": {
+                  "type": "string"
+                },
+                "recurrence": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "freq": {
+                      "description": "daily, weekly or monthly",
+                      "type": "string"
+                    },
+                    "interval": {
+                      "description": "repeat every N days/weeks/months, 1-365, default 1",
+                      "type": "integer"
+                    },
+                    "weekdays": {
+                      "description": "weekly only: days of the week, 0 = Sunday to 6 = Saturday; empty repeats on the due date's weekday",
+                      "items": {
+                        "type": "integer"
+                      },
+                      "type": [
+                        "null",
+                        "array"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "freq"
+                  ],
+                  "type": [
+                    "null",
+                    "object"
+                  ]
+                },
+                "session_id": {
+                  "description": "the conversation that created it, when the agent did",
+                  "type": "string"
+                },
+                "snoozed_until": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "source": {
+                  "description": "user or agent",
+                  "type": "string"
+                },
+                "state": {
+                  "description": "pending or done",
+                  "type": "string"
+                },
+                "time_zone": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "turn_seq": {
+                  "type": [
+                    "null",
+                    "integer"
+                  ]
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "title",
+                "notes",
+                "due_at",
+                "snoozed_until",
+                "time_zone",
+                "recurrence",
+                "source",
+                "turn_seq",
+                "link",
+                "state",
+                "completed_at",
+                "last_completed_at",
+                "version",
+                "deleted_at",
+                "created_at",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "retrieved_at": {
+            "type": "string"
+          },
+          "routines": {
+            "additionalProperties": false,
+            "properties": {
+              "day": {
+                "type": "string"
+              },
+              "items": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "days_since_last": {
+                      "description": "days since the last check-in, or null if never",
+                      "type": [
+                        "null",
+                        "integer"
+                      ]
+                    },
+                    "done": {
+                      "type": "boolean"
+                    },
+                    "gap": {
+                      "description": "three or more days without a check-in",
+                      "type": "boolean"
+                    },
+                    "hint": {
+                      "type": "string"
+                    },
+                    "routine": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "created_at": {
+                          "type": "string"
+                        },
+                        "deleted_at": {
+                          "type": [
+                            "null",
+                            "string"
+                          ]
+                        },
+                        "id": {
+                          "type": "string"
+                        },
+                        "minutes": {
+                          "type": "integer"
+                        },
+                        "remind_at": {
+                          "description": "HH:MM local time the person wants a nudge, or null",
+                          "type": [
+                            "null",
+                            "string"
+                          ]
+                        },
+                        "short_minutes": {
+                          "type": "integer"
+                        },
+                        "short_title": {
+                          "description": "the smaller version for a busy day",
+                          "type": "string"
+                        },
+                        "time_zone": {
+                          "type": "string"
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "updated_at": {
+                          "type": "string"
+                        },
+                        "version": {
+                          "type": "integer"
+                        },
+                        "weekdays": {
+                          "description": "days it applies, 0 = Sunday to 6; empty means every day",
+                          "items": {
+                            "type": "integer"
+                          },
+                          "type": [
+                            "null",
+                            "array"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "title",
+                        "minutes",
+                        "short_title",
+                        "short_minutes",
+                        "weekdays",
+                        "remind_at",
+                        "time_zone",
+                        "version",
+                        "deleted_at",
+                        "created_at",
+                        "updated_at"
+                      ],
+                      "type": "object"
+                    },
+                    "scheduled": {
+                      "description": "whether the routine applies on this day",
+                      "type": "boolean"
+                    },
+                    "streak": {
+                      "description": "consecutive scheduled days done; days it does not apply neither extend nor break it",
+                      "type": "integer"
+                    },
+                    "variant": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "routine",
+                    "scheduled",
+                    "done",
+                    "streak",
+                    "days_since_last",
+                    "gap",
+                    "hint"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              }
+            },
+            "required": [
+              "day",
+              "items"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
+          "schema_version": {
+            "type": "integer"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "sources": {
+            "description": "every record above with its version and last change, so a write can name what it read",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "entity_type": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "entity_type",
+                "id",
+                "version",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "time_zone": {
+            "type": "string"
+          },
+          "today": {
+            "type": "string"
+          },
+          "week": {
+            "additionalProperties": false,
+            "properties": {
+              "change": {
+                "description": "one suggested change for next week, from what was planned, finished and written",
+                "type": "string"
+              },
+              "commitments_done": {
+                "type": "integer"
+              },
+              "commitments_total": {
+                "type": "integer"
+              },
+              "done": {
+                "type": "integer"
+              },
+              "journal_entries": {
+                "type": "integer"
+              },
+              "planned": {
+                "description": "non-event plan items on the week's days",
+                "type": "integer"
+              },
+              "routine_checkins": {
+                "type": "integer"
+              },
+              "steps_done": {
+                "type": "integer"
+              },
+              "week_start": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "week_start",
+              "planned",
+              "done",
+              "steps_done",
+              "journal_entries",
+              "routine_checkins",
+              "commitments_total",
+              "commitments_done",
+              "change"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          }
+        },
+        "required": [
+          "schema_version",
+          "scope",
+          "retrieved_at",
+          "time_zone",
+          "today",
+          "coverage",
+          "plan",
+          "commitments",
+          "goals",
+          "reminders_due",
+          "routines",
+          "recent_journal",
+          "week",
+          "sources"
+        ],
+        "type": "object"
+      },
       "next_action_input": {
         "additionalProperties": false,
         "properties": {
@@ -1834,6 +4724,1007 @@
         },
         "required": [
           "suggestion"
+        ],
+        "type": "object"
+      },
+      "notes_create_input": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "description": "markdown, up to 50000 characters; lists and logs the person keeps live here",
+            "type": "string"
+          },
+          "goal_id": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          },
+          "pinned": {
+            "type": "boolean"
+          },
+          "tags": {
+            "description": "up to 20 short labels",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "title": {
+            "description": "1-200 characters",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "title"
+        ],
+        "type": "object"
+      },
+      "notes_create_output": {
+        "additionalProperties": false,
+        "properties": {
+          "attachments": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "content_path": {
+                  "description": "GET the bytes here once ready",
+                  "type": "string"
+                },
+                "content_type": {
+                  "type": "string"
+                },
+                "created_at": {
+                  "type": "string"
+                },
+                "deleted_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "filename": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "owner_id": {
+                  "type": "string"
+                },
+                "owner_type": {
+                  "description": "journal_entry or note",
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string"
+                },
+                "size_bytes": {
+                  "type": "integer"
+                },
+                "state": {
+                  "description": "pending until the bytes are uploaded, then ready",
+                  "type": "string"
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "upload_path": {
+                  "description": "PUT the exact bytes here (Content-Type must match) while pending",
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "owner_type",
+                "owner_id",
+                "filename",
+                "content_type",
+                "size_bytes",
+                "state",
+                "version",
+                "deleted_at",
+                "created_at",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "body": {
+            "description": "markdown",
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "goal_id": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "pinned": {
+            "type": "boolean"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "body",
+          "tags",
+          "pinned",
+          "attachments",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "notes_delete_input": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "description": "the version you last read; a stale version is rejected",
+            "type": "integer"
+          },
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "expected_version"
+        ],
+        "type": "object"
+      },
+      "notes_delete_output": {
+        "additionalProperties": false,
+        "properties": {
+          "attachments": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "content_path": {
+                  "description": "GET the bytes here once ready",
+                  "type": "string"
+                },
+                "content_type": {
+                  "type": "string"
+                },
+                "created_at": {
+                  "type": "string"
+                },
+                "deleted_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "filename": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "owner_id": {
+                  "type": "string"
+                },
+                "owner_type": {
+                  "description": "journal_entry or note",
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string"
+                },
+                "size_bytes": {
+                  "type": "integer"
+                },
+                "state": {
+                  "description": "pending until the bytes are uploaded, then ready",
+                  "type": "string"
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "upload_path": {
+                  "description": "PUT the exact bytes here (Content-Type must match) while pending",
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "owner_type",
+                "owner_id",
+                "filename",
+                "content_type",
+                "size_bytes",
+                "state",
+                "version",
+                "deleted_at",
+                "created_at",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "body": {
+            "description": "markdown",
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "goal_id": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "pinned": {
+            "type": "boolean"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "body",
+          "tags",
+          "pinned",
+          "attachments",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "notes_get_input": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "notes_get_output": {
+        "additionalProperties": false,
+        "properties": {
+          "attachments": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "content_path": {
+                  "description": "GET the bytes here once ready",
+                  "type": "string"
+                },
+                "content_type": {
+                  "type": "string"
+                },
+                "created_at": {
+                  "type": "string"
+                },
+                "deleted_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "filename": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "owner_id": {
+                  "type": "string"
+                },
+                "owner_type": {
+                  "description": "journal_entry or note",
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string"
+                },
+                "size_bytes": {
+                  "type": "integer"
+                },
+                "state": {
+                  "description": "pending until the bytes are uploaded, then ready",
+                  "type": "string"
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "upload_path": {
+                  "description": "PUT the exact bytes here (Content-Type must match) while pending",
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "owner_type",
+                "owner_id",
+                "filename",
+                "content_type",
+                "size_bytes",
+                "state",
+                "version",
+                "deleted_at",
+                "created_at",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "body": {
+            "description": "markdown",
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "goal_id": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "pinned": {
+            "type": "boolean"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "body",
+          "tags",
+          "pinned",
+          "attachments",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "notes_list_input": {
+        "additionalProperties": false,
+        "properties": {
+          "goal_id": {
+            "type": "string"
+          },
+          "limit": {
+            "description": "1-200, default 50",
+            "type": "integer"
+          },
+          "offset": {
+            "description": "0-1000000, default 0",
+            "type": "integer"
+          },
+          "pinned": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "search": {
+            "description": "literal text to find",
+            "type": "string"
+          },
+          "state": {
+            "description": "active (default), deleted or all",
+            "type": "string"
+          },
+          "tag": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "notes_list_output": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "attachments": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "content_path": {
+                        "description": "GET the bytes here once ready",
+                        "type": "string"
+                      },
+                      "content_type": {
+                        "type": "string"
+                      },
+                      "created_at": {
+                        "type": "string"
+                      },
+                      "deleted_at": {
+                        "type": [
+                          "null",
+                          "string"
+                        ]
+                      },
+                      "filename": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "string"
+                      },
+                      "owner_id": {
+                        "type": "string"
+                      },
+                      "owner_type": {
+                        "description": "journal_entry or note",
+                        "type": "string"
+                      },
+                      "sha256": {
+                        "type": "string"
+                      },
+                      "size_bytes": {
+                        "type": "integer"
+                      },
+                      "state": {
+                        "description": "pending until the bytes are uploaded, then ready",
+                        "type": "string"
+                      },
+                      "updated_at": {
+                        "type": "string"
+                      },
+                      "upload_path": {
+                        "description": "PUT the exact bytes here (Content-Type must match) while pending",
+                        "type": "string"
+                      },
+                      "version": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "owner_type",
+                      "owner_id",
+                      "filename",
+                      "content_type",
+                      "size_bytes",
+                      "state",
+                      "version",
+                      "deleted_at",
+                      "created_at",
+                      "updated_at"
+                    ],
+                    "type": "object"
+                  },
+                  "type": [
+                    "null",
+                    "array"
+                  ]
+                },
+                "body": {
+                  "description": "markdown",
+                  "type": "string"
+                },
+                "created_at": {
+                  "type": "string"
+                },
+                "deleted_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "goal_id": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "pinned": {
+                  "type": "boolean"
+                },
+                "tags": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": [
+                    "null",
+                    "array"
+                  ]
+                },
+                "title": {
+                  "type": "string"
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "title",
+                "body",
+                "tags",
+                "pinned",
+                "attachments",
+                "version",
+                "deleted_at",
+                "created_at",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "next_offset": {
+            "description": "offset of the next page, or null at the end",
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "next_offset"
+        ],
+        "type": "object"
+      },
+      "notes_restore_input": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "description": "the version you last read; a stale version is rejected",
+            "type": "integer"
+          },
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "expected_version"
+        ],
+        "type": "object"
+      },
+      "notes_restore_output": {
+        "additionalProperties": false,
+        "properties": {
+          "attachments": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "content_path": {
+                  "description": "GET the bytes here once ready",
+                  "type": "string"
+                },
+                "content_type": {
+                  "type": "string"
+                },
+                "created_at": {
+                  "type": "string"
+                },
+                "deleted_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "filename": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "owner_id": {
+                  "type": "string"
+                },
+                "owner_type": {
+                  "description": "journal_entry or note",
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string"
+                },
+                "size_bytes": {
+                  "type": "integer"
+                },
+                "state": {
+                  "description": "pending until the bytes are uploaded, then ready",
+                  "type": "string"
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "upload_path": {
+                  "description": "PUT the exact bytes here (Content-Type must match) while pending",
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "owner_type",
+                "owner_id",
+                "filename",
+                "content_type",
+                "size_bytes",
+                "state",
+                "version",
+                "deleted_at",
+                "created_at",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "body": {
+            "description": "markdown",
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "goal_id": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "pinned": {
+            "type": "boolean"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "body",
+          "tags",
+          "pinned",
+          "attachments",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "notes_update_input": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "description": "markdown, up to 50000 characters; lists and logs the person keeps live here",
+            "type": "string"
+          },
+          "expected_version": {
+            "description": "the version you last read; a stale version is rejected",
+            "type": "integer"
+          },
+          "goal_id": {
+            "type": "string"
+          },
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          },
+          "pinned": {
+            "type": "boolean"
+          },
+          "tags": {
+            "description": "up to 20 short labels",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "title": {
+            "description": "1-200 characters",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "expected_version",
+          "title"
+        ],
+        "type": "object"
+      },
+      "notes_update_output": {
+        "additionalProperties": false,
+        "properties": {
+          "attachments": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "content_path": {
+                  "description": "GET the bytes here once ready",
+                  "type": "string"
+                },
+                "content_type": {
+                  "type": "string"
+                },
+                "created_at": {
+                  "type": "string"
+                },
+                "deleted_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "filename": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "owner_id": {
+                  "type": "string"
+                },
+                "owner_type": {
+                  "description": "journal_entry or note",
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string"
+                },
+                "size_bytes": {
+                  "type": "integer"
+                },
+                "state": {
+                  "description": "pending until the bytes are uploaded, then ready",
+                  "type": "string"
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "upload_path": {
+                  "description": "PUT the exact bytes here (Content-Type must match) while pending",
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "owner_type",
+                "owner_id",
+                "filename",
+                "content_type",
+                "size_bytes",
+                "state",
+                "version",
+                "deleted_at",
+                "created_at",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "body": {
+            "description": "markdown",
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "goal_id": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "pinned": {
+            "type": "boolean"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "body",
+          "tags",
+          "pinned",
+          "attachments",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
         ],
         "type": "object"
       },
@@ -7256,6 +11147,62 @@
           "updated_at"
         ],
         "type": "object"
+      },
+      "week_stats_input": {
+        "additionalProperties": false,
+        "properties": {
+          "week_start": {
+            "description": "the local Monday, YYYY-MM-DD; default this week",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "week_stats_output": {
+        "additionalProperties": false,
+        "properties": {
+          "change": {
+            "description": "one suggested change for next week, from what was planned, finished and written",
+            "type": "string"
+          },
+          "commitments_done": {
+            "type": "integer"
+          },
+          "commitments_total": {
+            "type": "integer"
+          },
+          "done": {
+            "type": "integer"
+          },
+          "journal_entries": {
+            "type": "integer"
+          },
+          "planned": {
+            "description": "non-event plan items on the week's days",
+            "type": "integer"
+          },
+          "routine_checkins": {
+            "type": "integer"
+          },
+          "steps_done": {
+            "type": "integer"
+          },
+          "week_start": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "week_start",
+          "planned",
+          "done",
+          "steps_done",
+          "journal_entries",
+          "routine_checkins",
+          "commitments_total",
+          "commitments_done",
+          "change"
+        ],
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -7274,6 +11221,898 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/attachments/{id}/content": {
+      "get": {
+        "description": "Read a ready attachment's bytes.",
+        "operationId": "attachments_content",
+        "responses": {
+          "200": {
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "The stored bytes"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Attachment not found or not ready"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Attachment storage unavailable"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ]
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "format": "uuid",
+            "type": "string"
+          }
+        }
+      ],
+      "put": {
+        "description": "Upload the exact bytes reserved by attachments_upload_init (maximum 25 MiB). The Content-Type must match the reserved type. Identical retries are safe.",
+        "operationId": "attachments_upload",
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/attachments_get_output"
+                }
+              }
+            },
+            "description": "Attachment status"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Wrong type or size"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Attachment not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Attachment already has different content"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Attachment exceeds 25 MiB"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Attachment storage unavailable"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/operations/attachments_delete": {
+      "post": {
+        "description": "Remove an attachment from its record (it can be restored).",
+        "operationId": "attachments_delete",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/attachments_delete_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/attachments_delete_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "attachments_delete",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/attachments_get": {
+      "post": {
+        "description": "Read an attachment's status and where to fetch its content.",
+        "operationId": "attachments_get",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/attachments_get_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/attachments_get_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "attachments_get",
+        "x-read-only": true
+      }
+    },
+    "/api/v1/operations/attachments_restore": {
+      "post": {
+        "description": "Restore a removed attachment.",
+        "operationId": "attachments_restore",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/attachments_restore_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/attachments_restore_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "attachments_restore",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/attachments_upload_init": {
+      "post": {
+        "description": "Reserve an upload for a photo, voice memo, PDF or text file on a journal entry or note. Then PUT the exact bytes to upload_path with the matching Content-Type. Up to 25 MiB and 20 files per record.",
+        "operationId": "attachments_upload_init",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/attachments_upload_init_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/attachments_upload_init_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "attachments_upload_init",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/captures_create": {
+      "post": {
+        "description": "Save a raw one-line capture exactly as the person said it, to be sorted later. The app uses this offline; you can also use it when you cannot yet tell what something is.",
+        "operationId": "captures_create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/captures_create_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/captures_create_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "captures_create",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/captures_list": {
+      "post": {
+        "description": "List the person's captures: open ones (not yet sorted) by default, newest first.",
+        "operationId": "captures_list",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/captures_list_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/captures_list_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "captures_list",
+        "x-read-only": true
+      }
+    },
+    "/api/v1/operations/captures_resolve": {
+      "post": {
+        "description": "Mark a capture sorted after you created the right record from it (a reminder, plan item, journal entry, note or goal), naming what it became, or dismiss it.",
+        "operationId": "captures_resolve",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/captures_resolve_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/captures_resolve_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "captures_resolve",
+        "x-read-only": false
+      }
+    },
     "/api/v1/operations/commitments_add": {
       "post": {
         "description": "Record something the person commits to doing this week (or a given week) toward a goal. Weekly commitments should be few and small.",
@@ -7692,6 +12531,111 @@
         ],
         "x-mcp-tool": "commitments_list",
         "x-read-only": true
+      }
+    },
+    "/api/v1/operations/day_close": {
+      "post": {
+        "description": "Close the person's day: summarise it, move unfinished plan items to tomorrow, and save an optional one-or-two-line reflection to the journal with a suggested adjustment for tomorrow. Safe to repeat; nothing is lost.",
+        "operationId": "day_close",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/day_close_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/day_close_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "day_close",
+        "x-read-only": false
       }
     },
     "/api/v1/operations/events_ack": {
@@ -8639,6 +13583,741 @@
         "x-read-only": true
       }
     },
+    "/api/v1/operations/journal_create": {
+      "post": {
+        "description": "Save a journal entry in the person's words: what happened, how it went, what they learned. Connect it to goals when it relates to them, and add one adjustment for tomorrow if they chose one. Set source to agent and pass session_id when you write it for them.",
+        "operationId": "journal_create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/journal_create_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/journal_create_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "journal_create",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/journal_delete": {
+      "post": {
+        "description": "Delete a journal entry (it can be restored).",
+        "operationId": "journal_delete",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/journal_delete_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/journal_delete_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "journal_delete",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/journal_get": {
+      "post": {
+        "description": "Read one journal entry with its attachments.",
+        "operationId": "journal_get",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/journal_get_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/journal_get_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "journal_get",
+        "x-read-only": true
+      }
+    },
+    "/api/v1/operations/journal_list": {
+      "post": {
+        "description": "Browse or search the person's journal, newest first. Search finds words and phrases ('the Lisbon trip', 'felt anxious'); filter by date range or goal.",
+        "operationId": "journal_list",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/journal_list_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/journal_list_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "journal_list",
+        "x-read-only": true
+      }
+    },
+    "/api/v1/operations/journal_restore": {
+      "post": {
+        "description": "Restore a deleted journal entry.",
+        "operationId": "journal_restore",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/journal_restore_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/journal_restore_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "journal_restore",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/journal_update": {
+      "post": {
+        "description": "Replace a journal entry's fields using the version you last read.",
+        "operationId": "journal_update",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/journal_update_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/journal_update_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "journal_update",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/life_context_get": {
+      "post": {
+        "description": "Everything you need to help the person with their day, week or a goal in one read: the plan, commitments, goals with next steps, reminders due, routines (with gaps), recent journal lines and weekly numbers, each with its version. Read this before suggesting, replanning or reflecting.",
+        "operationId": "life_context_get",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/life_context_get_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/life_context_get_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "life_context_get",
+        "x-read-only": true
+      }
+    },
     "/api/v1/operations/next_action": {
       "post": {
         "description": "The one thing to do with the minutes the person has: today's priorities first, then the next step of a goal, then anything else that fits. Returns null when nothing fits, which is a good moment to suggest a break.",
@@ -8742,6 +14421,636 @@
         ],
         "x-mcp-tool": "next_action",
         "x-read-only": true
+      }
+    },
+    "/api/v1/operations/notes_create": {
+      "post": {
+        "description": "Save a note, list or log the person wants to keep (markdown body, tags, optional goal). Use this for anything they want to look up later that is not a task, reminder or journal entry.",
+        "operationId": "notes_create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/notes_create_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/notes_create_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "notes_create",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/notes_delete": {
+      "post": {
+        "description": "Delete a note (it can be restored).",
+        "operationId": "notes_delete",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/notes_delete_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/notes_delete_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "notes_delete",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/notes_get": {
+      "post": {
+        "description": "Read one note with its attachments.",
+        "operationId": "notes_get",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/notes_get_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/notes_get_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "notes_get",
+        "x-read-only": true
+      }
+    },
+    "/api/v1/operations/notes_list": {
+      "post": {
+        "description": "Browse or search the person's notes: pinned first, then most recently changed; filter by tag or goal.",
+        "operationId": "notes_list",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/notes_list_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/notes_list_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "notes_list",
+        "x-read-only": true
+      }
+    },
+    "/api/v1/operations/notes_restore": {
+      "post": {
+        "description": "Restore a deleted note.",
+        "operationId": "notes_restore",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/notes_restore_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/notes_restore_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "notes_restore",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/notes_update": {
+      "post": {
+        "description": "Replace a note's fields using the version you last read.",
+        "operationId": "notes_update",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/notes_update_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/notes_update_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "notes_update",
+        "x-read-only": false
       }
     },
     "/api/v1/operations/plan_get": {
@@ -13047,6 +19356,111 @@
         ],
         "x-mcp-tool": "steps_update",
         "x-read-only": false
+      }
+    },
+    "/api/v1/operations/week_stats": {
+      "post": {
+        "description": "What happened in a week: planned versus finished work, goal steps done, routine check-ins, journal entries, commitments, and one suggested change for next week.",
+        "operationId": "week_stats",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/week_stats_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/week_stats_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "week_stats",
+        "x-read-only": true
       }
     }
   },

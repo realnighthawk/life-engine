@@ -10,7 +10,7 @@ import (
 func main() {
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "  ")
-	if err := encoder.Encode(engine.New(nil).OpenAPI()); err != nil {
+	if err := encoder.Encode(engine.New(nil, nil).OpenAPI()); err != nil {
 		panic(err)
 	}
 }

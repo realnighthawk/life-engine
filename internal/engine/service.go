@@ -16,6 +16,7 @@ import (
 	"github.com/google/jsonschema-go/jsonschema"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/realnighthawk/life-engine/internal/blobs"
 )
 
 type Operation struct {
@@ -30,6 +31,7 @@ type Operation struct {
 }
 type Service struct {
 	pool       *pgxpool.Pool
+	blobs      blobs.Store
 	operations map[string]*Operation
 }
 
@@ -39,8 +41,9 @@ type unit struct {
 	actor, operation string
 }
 
-func New(pool *pgxpool.Pool) *Service {
-	s := &Service{pool: pool, operations: map[string]*Operation{}}
+// New builds the service. blobs may be nil, in which case attachment operations answer busy.
+func New(pool *pgxpool.Pool, store blobs.Store) *Service {
+	s := &Service{pool: pool, blobs: store, operations: map[string]*Operation{}}
 	s.registerOperations()
 	return s
 }

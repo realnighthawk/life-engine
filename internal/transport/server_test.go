@@ -11,7 +11,7 @@ import (
 func TestHealthAndCapabilities(t *testing.T) {
 	health := http.NewServeMux()
 	health.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(200) })
-	h, err := New(engine.New(nil), health, nil)
+	h, err := New(engine.New(nil, nil), health, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

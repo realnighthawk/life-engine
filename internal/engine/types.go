@@ -40,7 +40,7 @@ type Change struct {
 }
 type HistoryInput struct {
 	ListInput
-	EntityType string `json:"entity_type" jsonschema:"reminder, schedule, settings, goal, step, commitment, plan_item, plan_proposal or routine"`
+	EntityType string `json:"entity_type" jsonschema:"reminder, schedule, settings, goal, step, commitment, plan_item, plan_proposal, routine, journal_entry, note, capture or attachment"`
 	ID         string `json:"id" jsonschema:"record UUID"`
 }
 

@@ -39,7 +39,15 @@ jobs:
           go-version-file: go.mod
       - name: Format, vet, unit tests, build, OpenAPI drift
         run: make check
+      - name: Start MinIO for the object-storage tests
+        run: |
+          docker run -d --name minio -p 9000:9000 -e MINIO_ROOT_USER=life-local-test -e MINIO_ROOT_PASSWORD=local-life-minio-test-only minio/minio server /data
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:9000/minio/health/ready && break; sleep 1; done
       - name: Integration tests with the race detector
+        env:
+          MINIO_TEST_ENDPOINT: 127.0.0.1:9000
+          MINIO_TEST_ACCESS: life-local-test
+          MINIO_TEST_SECRET: local-life-minio-test-only
         run: make integration
 
   build-and-push:
