@@ -53,8 +53,14 @@ func TestLiveTemporal(t *testing.T) {
 	if !found {
 		t.Log("not in visibility yet (eventually consistent); describe succeeded, which is what the engine relies on")
 	}
+	if ok, err := w.Exists(ctx, wake.Name); err != nil || !ok {
+		t.Fatalf("exists: %v %v", ok, err)
+	}
 	if err = w.Cancel(ctx, wake.Name); err != nil {
 		t.Fatal(err)
+	}
+	if ok, err := w.Exists(ctx, wake.Name); err != nil || ok {
+		t.Fatalf("exists after cancel: %v %v", ok, err)
 	}
 	if err = w.Cancel(ctx, wake.Name); err != nil {
 		t.Fatalf("cancelling a missing wake must not be an error: %v", err)

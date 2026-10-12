@@ -91,3 +91,12 @@ func (t *Temporal) Cancel(ctx context.Context, name string) error {
 	}
 	return err
 }
+
+func (t *Temporal) Exists(ctx context.Context, name string) (bool, error) {
+	_, err := t.c.ScheduleClient().GetHandle(ctx, t.id(name)).Describe(ctx)
+	var nf *serviceerror.NotFound
+	if errors.As(err, &nf) {
+		return false, nil
+	}
+	return err == nil, err
+}

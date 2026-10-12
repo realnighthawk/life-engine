@@ -234,20 +234,11 @@ func TestRoutines(t *testing.T) {
 	}
 }
 
-func TestRoutineNudge(t *testing.T) {
+// The nudge at the chosen time is a wake (wake_integration_test.go), not a feed event.
+func TestRoutineNudgeIsNotAFeedEvent(t *testing.T) {
 	s := integrationService(t)
-	r := execute[engine.Routine](t, s, "routines_create", map[string]any{"idempotency_key": key(), "title": "Stretch", "remind_at": "00:00"})
-	ev := execute[engine.EventsResult](t, s, "events_pending", map[string]any{}).Items
-	if len(ev) != 1 || ev[0].EventKey != "life:routine" || ev[0].Notice.Kind != "routine.due" {
-		t.Fatalf("nudge: %+v", ev)
-	}
-	// Doing it first means no nudge.
-	execute[engine.AckEventsResult](t, s, "events_ack", map[string]any{"event_ids": []string{ev[0].EventID}})
+	execute[engine.Routine](t, s, "routines_create", map[string]any{"idempotency_key": key(), "title": "Stretch", "remind_at": "00:00"})
 	if n := len(execute[engine.EventsResult](t, s, "events_pending", map[string]any{}).Items); n != 0 {
-		t.Fatal("acked nudge repeated")
-	}
-	execute[engine.Routine](t, s, "routines_delete", map[string]any{"idempotency_key": key(), "id": r.ID, "expected_version": 1})
-	if n := len(execute[engine.EventsResult](t, s, "events_pending", map[string]any{}).Items); n != 0 {
-		t.Fatal("deleted routine nudged")
+		t.Fatalf("a routine nudge must not be a feed event: %d", n)
 	}
 }

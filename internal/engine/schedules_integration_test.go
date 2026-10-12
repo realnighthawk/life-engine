@@ -37,32 +37,38 @@ func TestScheduleLifecycleAndEvents(t *testing.T) {
 	errorCode(t, s, "schedules_create", map[string]any{"idempotency_key": key(), "name": "weekly REVIEW", "instruction": "x", "time_of_day": "09:00", "recurrence": map[string]any{"freq": "daily"}}, "conflict")
 	errorCode(t, s, "schedules_create", map[string]any{"idempotency_key": key(), "name": "Bad", "instruction": "x", "time_of_day": "25:00", "recurrence": map[string]any{"freq": "daily"}}, "invalid_input")
 
-	// Nothing is due yet; move the occurrence into the past and it fires once, then advances on ack.
-	if n := len(execute[engine.EventsResult](t, s, "events_pending", map[string]any{}).Items); n != 0 {
-		t.Fatalf("early notice: %d", n)
-	}
-	if _, e := pool.Exec(context.Background(), "UPDATE life.schedules SET next_at = now() - interval '1 minute' WHERE id=$1", sc.ID); e != nil {
+	// It fires from a wake. Move the occurrence into the past (beyond the grace window) and the sync advances the row to the
+	// next occurrence, recording the one that fired, and arms that.
+	f := &fakeWaker{armed: map[string]engine.Wake{}}
+	s.UseWaker(f)
+	if e := s.SyncWakes(context.Background()); e != nil {
 		t.Fatal(e)
 	}
-	pending := execute[engine.EventsResult](t, s, "events_pending", map[string]any{}).Items
-	if len(pending) != 1 || pending[0].EventKey != "life:schedule" || pending[0].Notice.Title != "Weekly review" {
-		t.Fatalf("pending: %+v", pending)
-	}
-	execute[engine.AckEventsResult](t, s, "events_ack", map[string]any{"event_ids": []string{pending[0].EventID}})
-	after := execute[engine.Schedule](t, s, "schedules_get", map[string]any{"id": sc.ID})
-	if !after.NextAt.After(time.Now()) || after.LastFiredAt == nil {
-		t.Fatalf("not advanced: %+v", after)
+	if w, ok := f.armed["schedule-"+sc.ID]; !ok || !w.At.Equal(sc.NextAt) {
+		t.Fatalf("not armed for next_at: %+v", f.armed)
 	}
 	if n := len(execute[engine.EventsResult](t, s, "events_pending", map[string]any{}).Items); n != 0 {
-		t.Fatalf("re-notified: %d", n)
+		t.Fatalf("a schedule must not be a feed event: %d", n)
+	}
+	if _, e := pool.Exec(context.Background(), "UPDATE life.schedules SET next_at = now() - interval '10 minutes' WHERE id=$1", sc.ID); e != nil {
+		t.Fatal(e)
+	}
+	if e := s.SyncWakes(context.Background()); e != nil {
+		t.Fatal(e)
+	}
+	after := execute[engine.Schedule](t, s, "schedules_get", map[string]any{"id": sc.ID})
+	if !after.NextAt.After(time.Now()) || after.LastFiredAt == nil || !f.armed["schedule-"+sc.ID].At.Equal(after.NextAt) {
+		t.Fatalf("not advanced: %+v", after)
 	}
 
 	// A disabled or deleted schedule never fires; a restored one resumes from now.
-	pool.Exec(context.Background(), "UPDATE life.schedules SET next_at = now() - interval '1 minute' WHERE id=$1", sc.ID)
 	upd := execute[engine.Schedule](t, s, "schedules_update", map[string]any{"idempotency_key": key(), "id": sc.ID, "expected_version": after.Version, "name": "Weekly review",
 		"instruction": "Review my week.", "time_of_day": "18:00", "recurrence": map[string]any{"freq": "weekly", "weekdays": []int{0}}, "enabled": false})
-	if upd.Enabled || len(execute[engine.EventsResult](t, s, "events_pending", map[string]any{}).Items) != 0 {
-		t.Fatalf("disabled schedule fired: %+v", upd)
+	if e := s.SyncWakes(context.Background()); e != nil {
+		t.Fatal(e)
+	}
+	if _, armed := f.armed["schedule-"+sc.ID]; upd.Enabled || armed {
+		t.Fatalf("disabled schedule still has a wake: %+v", upd)
 	}
 	del := execute[engine.Schedule](t, s, "schedules_delete", map[string]any{"idempotency_key": key(), "id": sc.ID, "expected_version": upd.Version})
 	res := execute[engine.Schedule](t, s, "schedules_restore", map[string]any{"idempotency_key": key(), "id": sc.ID, "expected_version": del.Version})
@@ -73,7 +79,7 @@ func TestScheduleLifecycleAndEvents(t *testing.T) {
 		t.Fatalf("list: %d", list.Total)
 	}
 	h := execute[engine.Page[engine.Change]](t, s, "history_list", map[string]any{"entity_type": "schedule", "id": sc.ID})
-	if h.Total < 5 {
+	if h.Total < 4 { // create, edit, delete, restore; the wake moving next_at on is bookkeeping, not an edit
 		t.Fatalf("history: %d", h.Total)
 	}
 }
