@@ -1,0 +1,233 @@
+{
+  "schema_version": 1,
+  "scope": "day",
+  "retrieved_at": "2026-10-12T20:24:32.840978Z",
+  "time_zone": "Europe/London",
+  "today": "2026-10-12",
+  "coverage": "bounded_snapshot",
+  "plan": {
+    "day": "2026-10-12",
+    "items": [
+      {
+        "id": "55555555-5555-4555-8555-555555555555",
+        "day": "2026-10-12",
+        "title": "Draft memo",
+        "kind": "task",
+        "minutes": 40,
+        "start_at": "2026-10-12T21:24:32Z",
+        "is_priority": true,
+        "goal_id": "33333333-3333-4333-8333-333333333333",
+        "done_at": null,
+        "version": 1,
+        "deleted_at": null,
+        "created_at": "2026-10-12T20:24:32.791246Z",
+        "updated_at": "2026-10-12T20:24:32.791246Z"
+      },
+      {
+        "id": "068016f7-18a1-4d95-88a0-8b0442b71578",
+        "day": "2026-10-12",
+        "title": "Standup",
+        "kind": "event",
+        "minutes": 15,
+        "start_at": null,
+        "is_priority": false,
+        "done_at": null,
+        "version": 1,
+        "deleted_at": null,
+        "created_at": "2026-10-12T20:24:32.795274Z",
+        "updated_at": "2026-10-12T20:24:32.795274Z"
+      },
+      {
+        "id": "8fd6263f-aee9-41bc-9e35-a7246d4242be",
+        "day": "2026-10-12",
+        "title": "Spanish lesson",
+        "kind": "task",
+        "minutes": 25,
+        "start_at": null,
+        "is_priority": false,
+        "step_id": "277de360-7e6a-4877-95f2-b0c4e15b225b",
+        "done_at": null,
+        "version": 1,
+        "deleted_at": null,
+        "created_at": "2026-10-12T20:24:32.797856Z",
+        "updated_at": "2026-10-12T20:24:32.797856Z"
+      }
+    ],
+    "proposals": [
+      {
+        "id": "66666666-6666-4666-8666-666666666666",
+        "day": "2026-10-12",
+        "reason": "Your afternoon meeting ran long",
+        "changes": [
+          {
+            "action": "move",
+            "item_id": "55555555-5555-4555-8555-555555555555",
+            "day": "2026-10-13"
+          },
+          {
+            "action": "add",
+            "title": "Take a walk",
+            "minutes": 15,
+            "kind": "rest"
+          }
+        ],
+        "state": "pending",
+        "version": 1,
+        "created_at": "2026-10-12T20:24:32.80124Z",
+        "updated_at": "2026-10-12T20:24:32.80124Z"
+      }
+    ],
+    "summary": {
+      "planned": 2,
+      "done": 0,
+      "minutes_open": 65,
+      "minutes_done": 0,
+      "minutes_events": 15
+    }
+  },
+  "commitments": {
+    "week_start": "2026-10-12",
+    "items": [
+      {
+        "id": "44444444-4444-4444-8444-444444444444",
+        "week_start": "2026-10-12",
+        "title": "First lesson",
+        "goal_id": "33333333-3333-4333-8333-333333333333",
+        "step_id": "277de360-7e6a-4877-95f2-b0c4e15b225b",
+        "done_at": null,
+        "version": 1,
+        "created_at": "2026-10-12T20:24:32.785548Z",
+        "updated_at": "2026-10-12T20:24:32.785548Z"
+      }
+    ],
+    "done": 0,
+    "total": 1
+  },
+  "goals": [
+    {
+      "id": "33333333-3333-4333-8333-333333333333",
+      "title": "Learn Spanish",
+      "why": "Trip in spring",
+      "weekly_target": 4,
+      "archived_at": null,
+      "version": 1,
+      "steps": [
+        {
+          "id": "aeb5eafd-7952-4a3d-81ad-b78ede5e369b",
+          "goal_id": "33333333-3333-4333-8333-333333333333",
+          "title": "Pick a course",
+          "minutes": 10,
+          "position": 1,
+          "done_at": "2026-10-12T20:24:32.780284Z",
+          "version": 2,
+          "created_at": "2026-10-12T20:24:32.773354Z",
+          "updated_at": "2026-10-12T20:24:32.780284Z"
+        },
+        {
+          "id": "277de360-7e6a-4877-95f2-b0c4e15b225b",
+          "goal_id": "33333333-3333-4333-8333-333333333333",
+          "title": "First lesson",
+          "minutes": 25,
+          "position": 2,
+          "done_at": null,
+          "version": 1,
+          "created_at": "2026-10-12T20:24:32.773354Z",
+          "updated_at": "2026-10-12T20:24:32.773354Z"
+        }
+      ],
+      "progress": {
+        "done": 1,
+        "total": 2
+      },
+      "next_step": {
+        "id": "277de360-7e6a-4877-95f2-b0c4e15b225b",
+        "goal_id": "33333333-3333-4333-8333-333333333333",
+        "title": "First lesson",
+        "minutes": 25,
+        "position": 2,
+        "done_at": null,
+        "version": 1,
+        "created_at": "2026-10-12T20:24:32.773354Z",
+        "updated_at": "2026-10-12T20:24:32.773354Z"
+      },
+      "created_at": "2026-10-12T20:24:32.773354Z",
+      "updated_at": "2026-10-12T20:24:32.773354Z"
+    }
+  ],
+  "reminders_due": [],
+  "routines": {
+    "day": "2026-10-12",
+    "items": [
+      {
+        "routine": {
+          "id": "77777777-7777-4777-8777-777777777777",
+          "title": "Morning run",
+          "minutes": 30,
+          "short_title": "Walk around the block",
+          "short_minutes": 10,
+          "weekdays": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "remind_at": "07:30",
+          "time_zone": "Europe/London",
+          "version": 1,
+          "deleted_at": null,
+          "created_at": "2026-10-12T20:24:32.811173Z",
+          "updated_at": "2026-10-12T20:24:32.811173Z"
+        },
+        "scheduled": true,
+        "done": true,
+        "variant": "short",
+        "streak": 1,
+        "days_since_last": 0,
+        "gap": false,
+        "hint": "Done today."
+      }
+    ]
+  },
+  "recent_journal": [
+    {
+      "id": "88888888-8888-4888-8888-888888888888",
+      "entry_at": "2026-10-12T20:24:32.819477Z",
+      "text": "Went for a run and felt strong.",
+      "tomorrow": "Stretch before bed"
+    }
+  ],
+  "week": null,
+  "sources": [
+    {
+      "entity_type": "goal",
+      "id": "33333333-3333-4333-8333-333333333333",
+      "version": 1,
+      "updated_at": "2026-10-12T20:24:32.773354Z"
+    },
+    {
+      "entity_type": "plan_item",
+      "id": "55555555-5555-4555-8555-555555555555",
+      "version": 1,
+      "updated_at": "2026-10-12T20:24:32.791246Z"
+    },
+    {
+      "entity_type": "plan_item",
+      "id": "068016f7-18a1-4d95-88a0-8b0442b71578",
+      "version": 1,
+      "updated_at": "2026-10-12T20:24:32.795274Z"
+    },
+    {
+      "entity_type": "plan_item",
+      "id": "8fd6263f-aee9-41bc-9e35-a7246d4242be",
+      "version": 1,
+      "updated_at": "2026-10-12T20:24:32.797856Z"
+    },
+    {
+      "entity_type": "journal_entry",
+      "id": "88888888-8888-4888-8888-888888888888",
+      "version": 1,
+      "updated_at": "2026-10-12T20:24:32.819477Z"
+    }
+  ]
+}

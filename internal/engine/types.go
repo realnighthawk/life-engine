@@ -50,14 +50,14 @@ type Link struct {
 	ID     string `json:"id"`
 }
 type Notice struct {
-	Kind     string `json:"kind" jsonschema:"for example reminder.due"`
+	Kind     string `json:"kind" jsonschema:"for example capture.open"`
 	Title    string `json:"title"`
 	Body     string `json:"body"`
 	Priority string `json:"priority" jsonschema:"normal or high"`
 	Link     *Link  `json:"link,omitempty" jsonschema:"the record to open; clients map it to a deep link"`
 }
 type Event struct {
-	EventKey string `json:"event_key" jsonschema:"Class of notice (life:reminder); subscriptions are registered against it, never per record"`
+	EventKey string `json:"event_key" jsonschema:"Class of notice (for example life:capture); subscriptions are registered against it, never per record"`
 	EventID  string `json:"event_id" jsonschema:"This occurrence, durable and deterministic so re-delivery is detectable"`
 	Detail   string `json:"detail" jsonschema:"What happened, in one sentence, for an agent that is woken about it"`
 	Notice   Notice `json:"notice" jsonschema:"What to show the person if delivered directly"`

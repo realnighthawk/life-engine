@@ -33,6 +33,8 @@ type Service struct {
 	pool       *pgxpool.Pool
 	blobs      blobs.Store
 	operations map[string]*Operation
+	waker      Waker
+	nudge      chan struct{}
 }
 
 // unit is one operation's transaction. Every mutation and its audit row commit together.
@@ -193,6 +195,12 @@ func (s *Service) Execute(ctx context.Context, name string, raw []byte) (json.Ra
 	}
 	if err = tx.Commit(ctx); err != nil {
 		return nil, err
+	}
+	if op.Write && s.nudge != nil {
+		select {
+		case s.nudge <- struct{}{}:
+		default:
+		}
 	}
 	return response, nil
 }

@@ -1212,7 +1212,7 @@
                   "type": "string"
                 },
                 "event_key": {
-                  "description": "Class of notice (life:reminder); subscriptions are registered against it, never per record",
+                  "description": "Class of notice (for example life:capture); subscriptions are registered against it, never per record",
                   "type": "string"
                 },
                 "notice": {
@@ -1223,7 +1223,7 @@
                       "type": "string"
                     },
                     "kind": {
-                      "description": "for example reminder.due",
+                      "description": "for example capture.open",
                       "type": "string"
                     },
                     "link": {

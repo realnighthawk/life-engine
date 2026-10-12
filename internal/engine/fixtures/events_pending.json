@@ -1,0 +1,19 @@
+{
+  "items": [
+    {
+      "event_key": "life:capture",
+      "event_id": "capture:aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa:1791836672",
+      "detail": "The person captured: \"remind me to book the dentist\". Decide what it is (reminder, plan item, journal entry, note or goal), create it, then resolve the capture.",
+      "notice": {
+        "kind": "capture.open",
+        "title": "Captured",
+        "body": "remind me to book the dentist",
+        "priority": "normal",
+        "link": {
+          "entity": "capture",
+          "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+        }
+      }
+    }
+  ]
+}

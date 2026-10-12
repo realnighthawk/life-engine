@@ -142,61 +142,17 @@ func TestReminderLifecycle(t *testing.T) {
 	}
 }
 
-func TestRecurringReminderAdvancesOnAck(t *testing.T) {
+func TestRecurringReminderNeedsADueTime(t *testing.T) {
 	s := integrationService(t)
-	past := ts(-26 * time.Hour)
-	r := execute[engine.Reminder](t, s, "reminders_create", map[string]any{
-		"idempotency_key": key(), "title": "Take vitamins", "due_at": past, "time_zone": "UTC", "recurrence": map[string]any{"freq": "daily"}})
-	errorCode(t, s, "reminders_create", map[string]any{"idempotency_key": key(), "title": "bad", "recurrence": map[string]any{"freq": "daily"}}, "invalid_input") // needs due_at
-
-	pending := execute[engine.EventsResult](t, s, "events_pending", map[string]any{})
-	if len(pending.Items) != 1 {
-		t.Fatalf("pending: %+v", pending)
-	}
-	ev := pending.Items[0]
-	if ev.EventKey != "life:reminder" || ev.Notice.Title != "Take vitamins" || ev.Notice.Link.ID != r.ID {
-		t.Fatalf("event: %+v", ev)
-	}
-	// Acking is idempotent and, for a repeating reminder, moves it to its next occurrence.
-	if got := execute[engine.AckEventsResult](t, s, "events_ack", map[string]any{"event_ids": []string{ev.EventID}}); got.Acknowledged != 1 {
-		t.Fatalf("ack: %+v", got)
-	}
-	if got := execute[engine.AckEventsResult](t, s, "events_ack", map[string]any{"event_ids": []string{ev.EventID}}); got.Acknowledged != 0 {
-		t.Fatalf("second ack: %+v", got)
-	}
-	after := execute[engine.Reminder](t, s, "reminders_get", map[string]any{"id": r.ID})
-	if after.DueAt == nil || !after.DueAt.After(time.Now()) || after.Version != 2 || after.State != "pending" {
-		t.Fatalf("not advanced: %+v", after)
-	}
-	if again := execute[engine.EventsResult](t, s, "events_pending", map[string]any{}); len(again.Items) != 0 {
-		t.Fatalf("still pending: %+v", again)
-	}
+	errorCode(t, s, "reminders_create", map[string]any{"idempotency_key": key(), "title": "bad", "recurrence": map[string]any{"freq": "daily"}}, "invalid_input")
 }
 
-func TestOneOffStaysPendingUntilCompletedAndSnoozeRenotifies(t *testing.T) {
+// Reminders no longer appear in events_pending: they fire from a Temporal Schedule (wake_integration_test.go).
+func TestDueReminderIsNotAFeedEvent(t *testing.T) {
 	s := integrationService(t)
-	r := execute[engine.Reminder](t, s, "reminders_create", map[string]any{"idempotency_key": key(), "title": "Renew passport", "due_at": ts(-time.Minute)})
-	first := execute[engine.EventsResult](t, s, "events_pending", map[string]any{}).Items
-	if len(first) != 1 {
-		t.Fatal("expected one notice")
-	}
-	execute[engine.AckEventsResult](t, s, "events_ack", map[string]any{"event_ids": []string{first[0].EventID}})
+	execute[engine.Reminder](t, s, "reminders_create", map[string]any{"idempotency_key": key(), "title": "Renew passport", "due_at": ts(-time.Minute)})
 	if n := len(execute[engine.EventsResult](t, s, "events_pending", map[string]any{}).Items); n != 0 {
-		t.Fatalf("acked notice returned again: %d", n)
-	}
-	got := execute[engine.Reminder](t, s, "reminders_get", map[string]any{"id": r.ID})
-	if got.State != "pending" || got.Version != 1 {
-		t.Fatalf("a one-off must stay pending after firing: %+v", got)
-	}
-	// An edited due time is a new occurrence and notifies again.
-	execute[engine.Reminder](t, s, "reminders_update", map[string]any{"idempotency_key": key(), "id": r.ID, "expected_version": 1, "title": "Renew passport", "due_at": ts(-30 * time.Second)})
-	if n := len(execute[engine.EventsResult](t, s, "events_pending", map[string]any{}).Items); n != 1 {
-		t.Fatalf("edited reminder should notify again, got %d", n)
-	}
-	// A deleted reminder never notifies.
-	execute[engine.Reminder](t, s, "reminders_delete", map[string]any{"idempotency_key": key(), "id": r.ID, "expected_version": 2})
-	if n := len(execute[engine.EventsResult](t, s, "events_pending", map[string]any{}).Items); n != 0 {
-		t.Fatalf("deleted reminder notified: %d", n)
+		t.Fatalf("a due reminder must not be a feed event: %d", n)
 	}
 }
 

@@ -12,55 +12,14 @@ import (
 // understanding any of it (agent-harness docs/components/event-delivery.md). Nothing here reaches outwards: the engine
 // records and answers when asked, and delivery, retries and waking are the hub's job.
 //
-// Pending notices are derived from records, not stored: a pending reminder whose effective due time has passed and
-// whose occurrence has not been acknowledged. There is no engine timer; latency is the hub's delivery interval.
+// Pending notices are derived from records, not stored: a schedule or routine occurrence that has come due and
+// has not been acknowledged. There is no engine timer; latency is the hub's delivery interval.
 
-const reminderEventKey = "life:reminder"
-
-// effectiveDue is the instant a pending reminder next needs attention.
-const effectiveDue = `coalesce(r.snoozed_until, r.due_at)`
-
-// reminderEventID names one occurrence: the reminder and the whole second it was due, so a redelivery is recognisable and an edit of the due time is a new occurrence.
-func reminderEventID(id string, due time.Time) string {
-	return "reminder:" + id + ":" + strconv.FormatInt(due.Unix(), 10)
-}
-
-func (u *unit) pendingReminders(ctx context.Context) ([]Event, error) {
-	var items []Event
-	rows, err := u.tx.Query(ctx, `SELECT r.id::text,r.title,r.notes,`+effectiveDue+`
-		FROM life.reminders r
-		WHERE r.deleted_at IS NULL AND r.state='pending' AND `+effectiveDue+` <= now()
-		  AND NOT EXISTS (SELECT 1 FROM life.acked_events a
-		       WHERE a.event_id = 'reminder:' || r.id::text || ':' || floor(extract(epoch FROM `+effectiveDue+`))::bigint::text)
-		ORDER BY `+effectiveDue+`, r.id LIMIT 100`)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var rid, title, notes string
-		var due time.Time
-		if err := rows.Scan(&rid, &title, &notes, &due); err != nil {
-			return nil, err
-		}
-		body := notes
-		if body == "" {
-			body = "Due now"
-		}
-		items = append(items, Event{
-			// A class key, never per record: subscriptions are registered against the key, and a per-record key could never be subscribed to.
-			EventKey: reminderEventKey,
-			EventID:  reminderEventID(rid, due),
-			Detail:   fmt.Sprintf("The reminder %q is due.", title),
-			Notice:   Notice{Kind: "reminder.due", Title: title, Body: body, Priority: "normal", Link: &Link{Entity: "reminder", ID: rid}},
-		})
-	}
-	return items, rows.Err()
-}
+// Reminders are not here: they fire from a Temporal Schedule armed by SyncWakes (wake.go, ADR 0003), not from this feed.
 
 func (u *unit) eventsPending(ctx context.Context) (EventsResult, error) {
 	result := EventsResult{Items: []Event{}}
-	for _, source := range []func(context.Context) ([]Event, error){u.pendingReminders, u.pendingSchedules, u.pendingRoutines, u.pendingCaptures} {
+	for _, source := range []func(context.Context) ([]Event, error){u.pendingSchedules, u.pendingRoutines, u.pendingCaptures} {
 		items, err := source(ctx)
 		if err != nil {
 			return result, err
@@ -73,8 +32,8 @@ func (u *unit) eventsPending(ctx context.Context) (EventsResult, error) {
 	return result, nil
 }
 
-// eventsAck marks occurrences handed over. Idempotent by construction. A repeating reminder moves on to its next
-// occurrence here, because it has now fired; a one-off stays pending (overdue) until the person completes it.
+// eventsAck marks occurrences handed over. Idempotent by construction. A repeating schedule moves on to its next
+// occurrence here, because it has now fired.
 func (u *unit) eventsAck(ctx context.Context, in AckEventsInput) (AckEventsResult, error) {
 	result := AckEventsResult{}
 	if len(in.EventIDs) > 500 {
@@ -105,8 +64,6 @@ func (u *unit) eventsAck(ctx context.Context, in AckEventsInput) (AckEventsResul
 			continue
 		}
 		switch parts[0] {
-		case "reminder":
-			err = u.advanceFired(ctx, parts[1], epoch, now)
 		case "schedule":
 			err = u.advanceSchedule(ctx, parts[1], epoch, now)
 		}
@@ -115,30 +72,6 @@ func (u *unit) eventsAck(ctx context.Context, in AckEventsInput) (AckEventsResul
 		}
 	}
 	return result, nil
-}
-
-func (u *unit) advanceFired(ctx context.Context, rid string, epoch int64, now time.Time) error {
-	r, err := u.getReminder(ctx, rid, true)
-	if err != nil {
-		return nil // the reminder is gone; nothing to advance
-	}
-	if r.Recurrence == nil || r.DeletedAt != nil || r.State != "pending" || r.DueAt == nil {
-		return nil
-	}
-	due := *r.DueAt
-	if r.SnoozedUntil != nil {
-		due = *r.SnoozedUntil
-	}
-	if due.Unix() != epoch {
-		return nil // edited since this notice was raised
-	}
-	loc, _ := zone(r.TimeZone)
-	next := nextOccurrence(*r.DueAt, now, *r.Recurrence, loc)
-	if _, err := u.tx.Exec(ctx, `UPDATE life.reminders SET due_at=$2,snoozed_until=NULL,version=version+1,updated_at=now() WHERE id=$1`, rid, next); err != nil {
-		return err
-	}
-	_, err = u.afterChange(ctx, r)
-	return err
 }
 
 // pendingSchedules raises one notice per fired occurrence of an enabled schedule. The default route wakes the agent

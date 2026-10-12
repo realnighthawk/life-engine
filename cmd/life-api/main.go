@@ -16,6 +16,7 @@ import (
 	"github.com/realnighthawk/life-engine/internal/engine"
 	"github.com/realnighthawk/life-engine/internal/store/postgres"
 	"github.com/realnighthawk/life-engine/internal/transport"
+	"github.com/realnighthawk/life-engine/internal/wakes"
 )
 
 func main() {
@@ -58,6 +59,17 @@ func run() error {
 		store = minio
 	}
 	service := engine.New(pool, store)
+	if cfg.TemporalAddress != "" {
+		waker, err := wakes.New(wakes.Config{Address: cfg.TemporalAddress, Namespace: cfg.TemporalNamespace, TaskQueue: cfg.TemporalTaskQueue,
+			TenantSlug: cfg.TenantSlug, SessionKey: cfg.WakeSessionKey})
+		if err != nil {
+			return err
+		}
+		defer waker.Close()
+		service.SetWaker(ctx, waker, 30*time.Second)
+	} else {
+		slog.Warn("wakes disabled: reminders are stored but nothing will fire them", "reason", "TEMPORAL_ADDRESS unset")
+	}
 	health := http.NewServeMux()
 	health.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(200); _, _ = w.Write([]byte("ok")) })
 	health.HandleFunc("GET /readyz", func(w http.ResponseWriter, r *http.Request) {
