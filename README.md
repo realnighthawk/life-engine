@@ -31,3 +31,10 @@ DATABASE_URL=$TEST_DATABASE_URL make run   # serves on 127.0.0.1:8093
 - Add a numbered migration; never edit an applied one.
 - Attachments are optional: set `MINIO_*` (see `.env.example`) to enable them. Bytes go through the engine (`PUT`/`GET /api/v1/attachments/<id>/content`), since object storage is not reachable from clients. Objects are immutable and checksummed.
 - "Today" and the week are computed in the time zone from `settings_get`; set it first.
+
+## Client fixtures
+
+`fixtures/*.json` are real responses recorded from this engine (regenerate with
+`LIFE_WRITE_FIXTURES=$PWD/fixtures go test ./internal/engine -run TestWriteClientFixtures`, needs `TEST_DATABASE_URL`). Client apps
+decode them in their own tests so a contract change shows up as a failing test, not a broken screen; the iOS app keeps a copy
+under `Tests/Fixtures/life`. IDs the scenario chooses are fixed; timestamps are whatever the server produced.

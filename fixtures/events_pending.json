@@ -1,0 +1,34 @@
+{
+  "items": [
+    {
+      "event_key": "life:reminder",
+      "event_id": "reminder:ecfafb44-3cca-46b3-9017-327f557631c7:1791833238",
+      "detail": "The reminder \"Call the bank\" is due.",
+      "notice": {
+        "kind": "reminder.due",
+        "title": "Call the bank",
+        "body": "Due now",
+        "priority": "normal",
+        "link": {
+          "entity": "reminder",
+          "id": "ecfafb44-3cca-46b3-9017-327f557631c7"
+        }
+      }
+    },
+    {
+      "event_key": "life:capture",
+      "event_id": "capture:aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa:1791833298",
+      "detail": "The person captured: \"remind me to book the dentist\". Decide what it is (reminder, plan item, journal entry, note or goal), create it, then resolve the capture.",
+      "notice": {
+        "kind": "capture.open",
+        "title": "Captured",
+        "body": "remind me to book the dentist",
+        "priority": "normal",
+        "link": {
+          "entity": "capture",
+          "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+        }
+      }
+    }
+  ]
+}

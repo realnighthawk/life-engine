@@ -1,0 +1,41 @@
+{
+  "done": 0,
+  "planned": 2,
+  "carried": [
+    {
+      "id": "55555555-5555-4555-8555-555555555555",
+      "day": "2026-10-12",
+      "title": "Draft memo",
+      "kind": "task",
+      "minutes": 40,
+      "start_at": "2026-10-12T20:28:18Z",
+      "is_priority": true,
+      "goal_id": "33333333-3333-4333-8333-333333333333",
+      "done_at": null,
+      "version": 1,
+      "deleted_at": null,
+      "created_at": "2026-10-12T19:28:18.381497Z",
+      "updated_at": "2026-10-12T19:28:18.381497Z"
+    },
+    {
+      "id": "d46e968c-29e0-4a72-b5dd-b3ea859df60c",
+      "day": "2026-10-12",
+      "title": "Spanish lesson",
+      "kind": "task",
+      "minutes": 25,
+      "start_at": null,
+      "is_priority": false,
+      "step_id": "17c3ceba-0fab-4b7f-8f2d-c330da3a061b",
+      "done_at": null,
+      "version": 1,
+      "deleted_at": null,
+      "created_at": "2026-10-12T19:28:18.388845Z",
+      "updated_at": "2026-10-12T19:28:18.388845Z"
+    }
+  ],
+  "summary": "Nothing got done today, and that's allowed. Tomorrow starts clean.",
+  "tomorrow_note": "Start tomorrow with \"Draft memo\".",
+  "day": "2026-10-12",
+  "next_day": "2026-10-13",
+  "journal_entry_id": "6a1febff-235b-42d7-82d4-3034bd8d5831"
+}

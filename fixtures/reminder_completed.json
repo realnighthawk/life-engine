@@ -1,0 +1,23 @@
+{
+  "id": "11111111-1111-4111-8111-111111111111",
+  "title": "Pay rent",
+  "notes": "Landlord prefers a bank transfer",
+  "due_at": "2030-01-15T09:00:00Z",
+  "snoozed_until": null,
+  "time_zone": "Europe/London",
+  "recurrence": null,
+  "source": "agent",
+  "session_id": "agent:main:ios:user:u",
+  "turn_seq": 7,
+  "link": {
+    "entity": "goal",
+    "id": "g1"
+  },
+  "state": "done",
+  "completed_at": "2026-10-12T19:28:18.354474Z",
+  "last_completed_at": "2026-10-12T19:28:18.354474Z",
+  "version": 2,
+  "deleted_at": null,
+  "created_at": "2026-10-12T19:28:18.343047Z",
+  "updated_at": "2026-10-12T19:28:18.354474Z"
+}
