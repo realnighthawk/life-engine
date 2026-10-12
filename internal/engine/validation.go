@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"strconv"
 	"strings"
 	"time"
 	_ "time/tzdata" // IANA zones must resolve in a distroless image
@@ -87,3 +88,28 @@ func nextOffset(offset, limit, total int) *int {
 	n := offset + limit
 	return &n
 }
+
+// day validates a local calendar date (YYYY-MM-DD) with no time zone.
+func day(field, v string) (string, error) {
+	t, err := time.Parse("2006-01-02", v)
+	if err != nil || t.Format("2006-01-02") != v {
+		return "", invalid(field + " must be a date as YYYY-MM-DD")
+	}
+	return v, nil
+}
+
+func toDayNumber(v string) dayNumber {
+	t, _ := time.Parse("2006-01-02", v)
+	return dayNumber(t.Unix() / 86400)
+}
+
+func fromDayNumber(d dayNumber) string {
+	return time.Unix(int64(d)*86400, 0).UTC().Format("2006-01-02")
+}
+
+// weekdayOf is 0 (Sunday) to 6 for a day number; 1970-01-01 was a Thursday.
+func weekdayOf(d dayNumber) int { return (int(d)%7 + 4 + 7) % 7 }
+
+func addDays(v string, n int) string { return fromDayNumber(toDayNumber(v) + dayNumber(n)) }
+
+func itoa(n int) string { return strconv.Itoa(n) }

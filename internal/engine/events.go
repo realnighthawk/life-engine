@@ -60,7 +60,7 @@ func (u *unit) pendingReminders(ctx context.Context) ([]Event, error) {
 
 func (u *unit) eventsPending(ctx context.Context) (EventsResult, error) {
 	result := EventsResult{Items: []Event{}}
-	for _, source := range []func(context.Context) ([]Event, error){u.pendingReminders, u.pendingSchedules} {
+	for _, source := range []func(context.Context) ([]Event, error){u.pendingReminders, u.pendingSchedules, u.pendingRoutines} {
 		items, err := source(ctx)
 		if err != nil {
 			return result, err
@@ -184,4 +184,91 @@ func (u *unit) advanceSchedule(ctx context.Context, sid string, epoch int64, now
 	}
 	_, err = u.scheduleChanged(ctx, s)
 	return err
+}
+
+const (
+	routineEventKey    = "life:routine"
+	routineGapEventKey = "life:routine_gap"
+)
+
+// pendingRoutines raises two kinds of notice, both derived from the routine and its check-ins:
+//   - a nudge at the person's chosen time on a day the routine applies and is not yet done;
+//   - one notice when a gap reaches three days, so an easy restart can be offered.
+//
+// Each occurrence has a deterministic id (the routine and the local day, or the last check-in day), so acknowledging it
+// is the whole of the delivery state.
+func (u *unit) pendingRoutines(ctx context.Context) ([]Event, error) {
+	var items []Event
+	rows, err := u.tx.Query(ctx, "SELECT "+routineCols+" FROM life.routines WHERE deleted_at IS NULL ORDER BY created_at, id")
+	if err != nil {
+		return nil, err
+	}
+	var routines []Routine
+	for rows.Next() {
+		r, err := scanRoutine(rows)
+		if err != nil {
+			rows.Close()
+			return nil, err
+		}
+		routines = append(routines, r)
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	now, err := u.now(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, r := range routines {
+		loc, e := zone(r.TimeZone)
+		if e != nil {
+			continue
+		}
+		local := now.In(loc)
+		d := local.Format("2006-01-02")
+		st, err := u.routineStatus(ctx, r, d)
+		if err != nil {
+			return nil, err
+		}
+		if r.RemindAt != nil && st.Scheduled && !st.Done && local.Format("15:04") >= *r.RemindAt {
+			acked, err := u.acked(ctx, routineEventID("routine", r.ID, toDayNumber(d)))
+			if err != nil {
+				return nil, err
+			}
+			if !acked {
+				items = append(items, Event{EventKey: routineEventKey, EventID: routineEventID("routine", r.ID, toDayNumber(d)),
+					Detail: fmt.Sprintf("The routine %q is due today and not done.", r.Title),
+					Notice: Notice{Kind: "routine.due", Title: r.Title, Body: fmt.Sprintf("%d min, or the short version: %s (%d min)", r.Minutes, r.ShortTitle, r.ShortMinutes), Priority: "normal", Link: &Link{Entity: "routine", ID: r.ID}}})
+			}
+		}
+		if st.Gap {
+			anchor := toDayNumber(r.CreatedAt.In(loc).Format("2006-01-02"))
+			if st.DaysSinceLast != nil {
+				anchor = toDayNumber(d) - dayNumber(*st.DaysSinceLast)
+			}
+			eid := routineEventID("routine_gap", r.ID, anchor)
+			acked, err := u.acked(ctx, eid)
+			if err != nil {
+				return nil, err
+			}
+			if !acked {
+				items = append(items, Event{EventKey: routineGapEventKey, EventID: eid,
+					Detail: fmt.Sprintf("The person has not done the routine %q for a few days. Offer an easy restart.", r.Title),
+					Notice: Notice{Kind: "routine.gap", Title: r.Title, Body: st.Hint, Priority: "normal", Link: &Link{Entity: "routine", ID: r.ID}}})
+			}
+		}
+	}
+	return items, nil
+}
+
+// routineEventID names an occurrence by the routine and a calendar day: "<kind>:<id>:<epoch of that day's midnight UTC>".
+func routineEventID(kind, rid string, d dayNumber) string {
+	return kind + ":" + rid + ":" + strconv.FormatInt(int64(d)*86400, 10)
+}
+
+func (u *unit) acked(ctx context.Context, eventID string) (bool, error) {
+	var found bool
+	err := u.tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM life.acked_events WHERE event_id=$1)`, eventID).Scan(&found)
+	return found, err
 }
