@@ -22,6 +22,9 @@ func New(service *engine.Service, health http.Handler, trustedOrigins []string) 
 			Name: op.Name, Description: op.Description, InputSchema: op.InputSchema, OutputSchema: op.OutputSchema,
 			Annotations: &mcp.ToolAnnotations{ReadOnlyHint: !op.Write, IdempotentHint: op.Write, OpenWorldHint: &closed},
 		}, func(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			if key, ok := req.Params.GetMeta()[engine.SessionMetaKey].(string); ok {
+				ctx = engine.WithSession(ctx, key) // the hub passes on which agent session is calling
+			}
 			data, err := service.Execute(ctx, op.Name, req.Params.Arguments)
 			if err != nil {
 				public := engine.PublicError(err)

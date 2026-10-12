@@ -42,16 +42,23 @@ func New(cfg Config) (*Temporal, error) {
 
 func (t *Temporal) Close() { t.c.Close() }
 
-func (t *Temporal) id(name string) string { return "wake:" + t.cfg.SessionKey + ":" + name }
+func (t *Temporal) session(key string) string {
+	if key == "" {
+		return t.cfg.SessionKey
+	}
+	return key
+}
+
+func (t *Temporal) id(session, name string) string { return "wake:" + t.session(session) + ":" + name }
 
 func (t *Temporal) Arm(ctx context.Context, w engine.Wake) error {
-	_ = t.Cancel(ctx, w.Name) // replace: a schedule's spec is cheaper to recreate than to diff
+	_ = t.Cancel(ctx, w.SessionKey, w.Name) // replace: a schedule's spec is cheaper to recreate than to diff
 	_, err := t.c.ScheduleClient().Create(ctx, t.options(w))
 	return err
 }
 
 func (t *Temporal) options(w engine.Wake) client.ScheduleOptions {
-	id := t.id(w.Name)
+	id := t.id(w.SessionKey, w.Name)
 	return client.ScheduleOptions{
 		ID: id,
 		// A one-shot at an exact instant is a calendar spec for that second (UTC). An interval spec cannot do it: intervals
@@ -72,7 +79,7 @@ func (t *Temporal) options(w engine.Wake) client.ScheduleOptions {
 			Workflow:  "WakeWorkflow",
 			TaskQueue: t.cfg.TaskQueue,
 			Args: []any{map[string]any{
-				"wake_id": id, "session_key": t.cfg.SessionKey, "tenant_slug": t.cfg.TenantSlug,
+				"wake_id": id, "session_key": t.session(w.SessionKey), "tenant_slug": t.cfg.TenantSlug,
 				"objective": w.Objective, "why": w.Why,
 			}},
 		},
@@ -83,8 +90,8 @@ func (t *Temporal) options(w engine.Wake) client.ScheduleOptions {
 	}
 }
 
-func (t *Temporal) Cancel(ctx context.Context, name string) error {
-	err := t.c.ScheduleClient().GetHandle(ctx, t.id(name)).Delete(ctx)
+func (t *Temporal) Cancel(ctx context.Context, session, name string) error {
+	err := t.c.ScheduleClient().GetHandle(ctx, t.id(session, name)).Delete(ctx)
 	var nf *serviceerror.NotFound
 	if errors.As(err, &nf) {
 		return nil
@@ -92,8 +99,8 @@ func (t *Temporal) Cancel(ctx context.Context, name string) error {
 	return err
 }
 
-func (t *Temporal) Exists(ctx context.Context, name string) (bool, error) {
-	_, err := t.c.ScheduleClient().GetHandle(ctx, t.id(name)).Describe(ctx)
+func (t *Temporal) Exists(ctx context.Context, session, name string) (bool, error) {
+	_, err := t.c.ScheduleClient().GetHandle(ctx, t.id(session, name)).Describe(ctx)
 	var nf *serviceerror.NotFound
 	if errors.As(err, &nf) {
 		return false, nil

@@ -155,8 +155,8 @@ func createRoutine(ctx context.Context, u *unit, in CreateRoutineInput) (Routine
 	if e != nil {
 		return Routine{}, e
 	}
-	if _, e = u.tx.Exec(ctx, `INSERT INTO life.routines(id,title,minutes,short_title,short_minutes,weekdays,remind_at,time_zone) VALUES($1,$2,$3,$4,$5,$6,$7,$8)`,
-		key, v.title, v.minutes, v.short, v.shortMin, v.weekdays, v.remind, v.tz); e != nil {
+	if _, e = u.tx.Exec(ctx, `INSERT INTO life.routines(id,title,minutes,short_title,short_minutes,weekdays,remind_at,time_zone,session_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,NULLIF($9,''))`,
+		key, v.title, v.minutes, v.short, v.shortMin, v.weekdays, v.remind, v.tz, u.session); e != nil {
 		return Routine{}, e
 	}
 	r, e := u.getRoutine(ctx, key, false)

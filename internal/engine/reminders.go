@@ -182,6 +182,9 @@ func createReminder(ctx context.Context, u *unit, in CreateReminderInput) (Remin
 	if e != nil {
 		return Reminder{}, e
 	}
+	if v.session == "" {
+		v.session = u.session // created by the agent in this session; the wake will land here
+	}
 	_, e = u.tx.Exec(ctx, `INSERT INTO life.reminders(id,title,notes,due_at,time_zone,recurrence,source,session_id,turn_seq,link)
 		VALUES($1,$2,$3,$4,$5,$6,$7,NULLIF($8,''),$9,$10)`, key, v.title, v.notes, v.due, v.tz, jsonOrNil(v.rec), v.source, v.session, v.turn, jsonOrNil(v.link))
 	if e != nil {
@@ -210,7 +213,7 @@ func updateReminder(ctx context.Context, u *unit, in UpdateReminderInput) (Remin
 		return old, e
 	}
 	// Editing the due time starts a fresh occurrence, so any snooze no longer applies.
-	_, e = u.tx.Exec(ctx, `UPDATE life.reminders SET title=$2,notes=$3,due_at=$4,snoozed_until=NULL,time_zone=$5,recurrence=$6,source=$7,session_id=NULLIF($8,''),turn_seq=$9,link=$10,
+	_, e = u.tx.Exec(ctx, `UPDATE life.reminders SET title=$2,notes=$3,due_at=$4,snoozed_until=NULL,time_zone=$5,recurrence=$6,source=$7,session_id=COALESCE(NULLIF($8,''),session_id),turn_seq=$9,link=$10,
 		version=version+1,updated_at=now() WHERE id=$1`, old.ID, v.title, v.notes, v.due, v.tz, jsonOrNil(v.rec), v.source, v.session, v.turn, jsonOrNil(v.link))
 	if e != nil {
 		return old, e

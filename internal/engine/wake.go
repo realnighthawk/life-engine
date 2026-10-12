@@ -17,15 +17,17 @@ type Wake struct {
 	Objective string
 	Why       string
 	At        time.Time
+	// SessionKey is the session the wake wakes: the one the record was created from. Empty means the waker's default.
+	SessionKey string
 }
 
 type Waker interface {
-	// Arm creates the wake, replacing any existing one with the same Name.
+	// Arm creates the wake, replacing any existing one with the same Name on the same session.
 	Arm(ctx context.Context, w Wake) error
-	// Cancel removes it; a wake that does not exist is not an error.
-	Cancel(ctx context.Context, name string) error
+	// Cancel removes it; a wake that does not exist is not an error. session is where it was armed ("" for the default).
+	Cancel(ctx context.Context, session, name string) error
 	// Exists reports whether the wake is still there, so a Schedule deleted behind the engine's back is armed again.
-	Exists(ctx context.Context, name string) (bool, error)
+	Exists(ctx context.Context, session, name string) (bool, error)
 }
 
 // wakeGrace is how long after its instant a wake is left alone before the record is moved on to its next occurrence;
@@ -58,11 +60,13 @@ func (s *Service) SetWaker(ctx context.Context, w Waker, every time.Duration) {
 
 // wakeItem is one record's wake: what it should be armed for, and what it is armed for.
 type wakeItem struct {
-	table, id string
-	want      *time.Time
-	armed     *time.Time
-	wake      func(at time.Time) Wake
-	moved     string // extra SQL run, with ($1 id, $2 want), when the wake moves on to a later instant
+	table, id    string
+	want         *time.Time
+	armed        *time.Time
+	session      string // where it should wake ("" = default); armedSession is where it is armed
+	armedSession string
+	wake         func(at time.Time) Wake
+	moved        string // extra SQL run, with ($1 id, $2 want), when the wake moves on to a later instant
 }
 
 func wakeName(kind, id string) string { return kind + "-" + id }
@@ -85,17 +89,22 @@ func (s *Service) SyncWakes(ctx context.Context) error {
 	now := time.Now()
 	for _, it := range items {
 		name := it.wake(now).Name
-		if same(it.want, it.armed) && !(it.want != nil && it.want.After(now) && s.missing(ctx, name)) {
+		if same(it.want, it.armed) && it.session == it.armedSession && !(it.want != nil && it.want.After(now) && s.missing(ctx, it.session, name)) {
 			continue
 		}
 		var err error
-		if it.want == nil {
-			err = s.waker.Cancel(ctx, name)
-		} else {
-			err = s.waker.Arm(ctx, it.wake(*it.want))
+		if it.armed != nil && it.armedSession != it.session {
+			err = s.waker.Cancel(ctx, it.armedSession, name) // it was created on another session; take it off that one
+		}
+		if err == nil && it.want == nil {
+			err = s.waker.Cancel(ctx, it.session, name)
+		} else if err == nil {
+			w := it.wake(*it.want)
+			w.SessionKey = it.session
+			err = s.waker.Arm(ctx, w)
 		}
 		if err == nil {
-			_, err = s.pool.Exec(ctx, `UPDATE life.`+it.table+` SET armed_for=$2 WHERE id=$1`, it.id, it.want)
+			_, err = s.pool.Exec(ctx, `UPDATE life.`+it.table+` SET armed_for=$2, armed_session=CASE WHEN $2::timestamptz IS NULL THEN NULL ELSE NULLIF($3,'') END WHERE id=$1`, it.id, it.want, it.session)
 		}
 		if err == nil && it.want != nil && it.moved != "" {
 			_, err = s.pool.Exec(ctx, it.moved, it.id, it.want)
@@ -108,8 +117,8 @@ func (s *Service) SyncWakes(ctx context.Context) error {
 	return failed
 }
 
-func (s *Service) missing(ctx context.Context, name string) bool {
-	ok, err := s.waker.Exists(ctx, name)
+func (s *Service) missing(ctx context.Context, session, name string) bool {
+	ok, err := s.waker.Exists(ctx, session, name)
 	return err == nil && !ok // if Temporal cannot answer, assume it is there rather than churn
 }
 
@@ -124,6 +133,7 @@ func same(a, b *time.Time) bool {
 
 type wakeRow struct {
 	id, title, state, tz   string
+	session, armedSession  string
 	due, snoozed, armedFor *time.Time
 	deleted                bool
 	rec                    *Recurrence
@@ -164,7 +174,7 @@ func reminderObjective(id, title string) string {
 }
 
 func (s *Service) reminderWakes(ctx context.Context, now time.Time) ([]wakeItem, error) {
-	rows, err := s.pool.Query(ctx, `SELECT id::text,title,state,time_zone,due_at,snoozed_until,armed_for,deleted_at IS NOT NULL,recurrence
+	rows, err := s.pool.Query(ctx, `SELECT id::text,title,state,time_zone,due_at,snoozed_until,armed_for,deleted_at IS NOT NULL,recurrence,coalesce(session_id,''),coalesce(armed_session,'')
 		FROM life.reminders WHERE armed_for IS NOT NULL OR (state='pending' AND deleted_at IS NULL AND due_at IS NOT NULL)`)
 	if err != nil {
 		return nil, err
@@ -174,7 +184,7 @@ func (s *Service) reminderWakes(ctx context.Context, now time.Time) ([]wakeItem,
 	for rows.Next() {
 		var r wakeRow
 		var rec []byte
-		if err = rows.Scan(&r.id, &r.title, &r.state, &r.tz, &r.due, &r.snoozed, &r.armedFor, &r.deleted, &rec); err != nil {
+		if err = rows.Scan(&r.id, &r.title, &r.state, &r.tz, &r.due, &r.snoozed, &r.armedFor, &r.deleted, &rec, &r.session, &r.armedSession); err != nil {
 			return nil, err
 		}
 		if len(rec) > 0 {
@@ -183,7 +193,7 @@ func (s *Service) reminderWakes(ctx context.Context, now time.Time) ([]wakeItem,
 				return nil, err
 			}
 		}
-		items = append(items, wakeItem{table: "reminders", id: r.id, want: desiredWake(r, now), armed: r.armedFor, wake: func(at time.Time) Wake {
+		items = append(items, wakeItem{table: "reminders", id: r.id, want: desiredWake(r, now), armed: r.armedFor, session: sessionScope(r.session), armedSession: r.armedSession, wake: func(at time.Time) Wake {
 			return Wake{Name: reminderWakeName(r.id), Kind: "reminder", Subject: "reminder:" + r.id,
 				Objective: reminderObjective(r.id, r.title), Why: "A reminder you set for the user is due.", At: at}
 		}})
@@ -199,6 +209,7 @@ type scheduleRow struct {
 	enabled, deleted          bool
 	next                      time.Time
 	armed                     *time.Time
+	session, armedSession     string
 }
 
 func desiredScheduleWake(r scheduleRow, now time.Time) *time.Time {
@@ -217,7 +228,7 @@ func desiredScheduleWake(r scheduleRow, now time.Time) *time.Time {
 }
 
 func (s *Service) scheduleWakes(ctx context.Context, now time.Time) ([]wakeItem, error) {
-	rows, err := s.pool.Query(ctx, `SELECT id::text,name,instruction,time_zone,recurrence,enabled,deleted_at IS NOT NULL,next_at,armed_for
+	rows, err := s.pool.Query(ctx, `SELECT id::text,name,instruction,time_zone,recurrence,enabled,deleted_at IS NOT NULL,next_at,armed_for,coalesce(session_id,''),coalesce(armed_session,'')
 		FROM life.schedules WHERE armed_for IS NOT NULL OR (enabled AND deleted_at IS NULL)`)
 	if err != nil {
 		return nil, err
@@ -227,13 +238,13 @@ func (s *Service) scheduleWakes(ctx context.Context, now time.Time) ([]wakeItem,
 	for rows.Next() {
 		var r scheduleRow
 		var rec []byte
-		if err = rows.Scan(&r.id, &r.name, &r.instruction, &r.tz, &rec, &r.enabled, &r.deleted, &r.next, &r.armed); err != nil {
+		if err = rows.Scan(&r.id, &r.name, &r.instruction, &r.tz, &rec, &r.enabled, &r.deleted, &r.next, &r.armed, &r.session, &r.armedSession); err != nil {
 			return nil, err
 		}
 		if err = json.Unmarshal(rec, &r.rec); err != nil {
 			return nil, err
 		}
-		items = append(items, wakeItem{table: "schedules", id: r.id, want: desiredScheduleWake(r, now), armed: r.armed,
+		items = append(items, wakeItem{table: "schedules", id: r.id, want: desiredScheduleWake(r, now), armed: r.armed, session: sessionScope(r.session), armedSession: r.armedSession,
 			// Once the occurrence has fired, the row records it and shows the next one.
 			moved: `UPDATE life.schedules SET last_fired_at=CASE WHEN next_at<=now() THEN next_at ELSE last_fired_at END, next_at=$2 WHERE id=$1 AND $2 > next_at`,
 			wake: func(at time.Time) Wake {
@@ -250,11 +261,12 @@ func (s *Service) scheduleWakes(ctx context.Context, now time.Time) ([]wakeItem,
 // --- routines (the nudge at the person's chosen time) ---
 
 type routineRow struct {
-	id, title, short, tz string
-	remindAt             *string
-	weekdays             []int16
-	armed                *time.Time
-	deleted              bool
+	id, title, short, tz  string
+	remindAt              *string
+	weekdays              []int16
+	armed                 *time.Time
+	session, armedSession string
+	deleted               bool
 }
 
 // desiredRoutineWake is the next local remind_at on a day the routine applies. Whether it is already done that day is
@@ -298,7 +310,7 @@ func hasDay(days []int16, d int) bool {
 }
 
 func (s *Service) routineWakes(ctx context.Context, now time.Time) ([]wakeItem, error) {
-	rows, err := s.pool.Query(ctx, `SELECT id::text,title,short_title,time_zone,remind_at,weekdays,armed_for,deleted_at IS NOT NULL
+	rows, err := s.pool.Query(ctx, `SELECT id::text,title,short_title,time_zone,remind_at,weekdays,armed_for,deleted_at IS NOT NULL,coalesce(session_id,''),coalesce(armed_session,'')
 		FROM life.routines WHERE armed_for IS NOT NULL OR (remind_at IS NOT NULL AND deleted_at IS NULL)`)
 	if err != nil {
 		return nil, err
@@ -307,10 +319,10 @@ func (s *Service) routineWakes(ctx context.Context, now time.Time) ([]wakeItem, 
 	var items []wakeItem
 	for rows.Next() {
 		var r routineRow
-		if err = rows.Scan(&r.id, &r.title, &r.short, &r.tz, &r.remindAt, &r.weekdays, &r.armed, &r.deleted); err != nil {
+		if err = rows.Scan(&r.id, &r.title, &r.short, &r.tz, &r.remindAt, &r.weekdays, &r.armed, &r.deleted, &r.session, &r.armedSession); err != nil {
 			return nil, err
 		}
-		items = append(items, wakeItem{table: "routines", id: r.id, want: desiredRoutineWake(r, now), armed: r.armed, wake: func(at time.Time) Wake {
+		items = append(items, wakeItem{table: "routines", id: r.id, want: desiredRoutineWake(r, now), armed: r.armed, session: sessionScope(r.session), armedSession: r.armedSession, wake: func(at time.Time) Wake {
 			return Wake{Name: wakeName("routine", r.id), Kind: "routine", Subject: "routine:" + r.id,
 				Objective: fmt.Sprintf("It is the time the user chose to be nudged about their routine %q (Life routine %s). Check today with the Life "+
 					"routines_status tool. If it applies today and is not done, call notify_user with entity \"routine\" and id %q, a kind one-line nudge, "+

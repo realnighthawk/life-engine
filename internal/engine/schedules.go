@@ -136,8 +136,8 @@ func createSchedule(ctx context.Context, u *unit, in CreateScheduleInput) (Sched
 	if e = u.nameFree(ctx, v.name, key); e != nil {
 		return Schedule{}, e
 	}
-	if _, e = u.tx.Exec(ctx, `INSERT INTO life.schedules(id,name,instruction,time_of_day,time_zone,recurrence,enabled,next_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8)`,
-		key, v.name, v.instruction, v.tod, v.tz, jsonOrNil(&v.rec), v.enabled, v.next); e != nil {
+	if _, e = u.tx.Exec(ctx, `INSERT INTO life.schedules(id,name,instruction,time_of_day,time_zone,recurrence,enabled,next_at,session_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,NULLIF($9,''))`,
+		key, v.name, v.instruction, v.tod, v.tz, jsonOrNil(&v.rec), v.enabled, v.next, u.session); e != nil {
 		return Schedule{}, e
 	}
 	s, e := u.getSchedule(ctx, key, false)

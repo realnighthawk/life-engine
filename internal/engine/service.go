@@ -41,6 +41,7 @@ type Service struct {
 type unit struct {
 	tx               pgx.Tx
 	actor, operation string
+	session          string // the agent session this call came from, if any
 }
 
 // New builds the service. blobs may be nil, in which case attachment operations answer busy.
@@ -156,7 +157,7 @@ func (s *Service) Execute(ctx context.Context, name string, raw []byte) (json.Ra
 		return nil, err
 	}
 	defer tx.Rollback(context.Background())
-	u := &unit{tx: tx, actor: "router", operation: name}
+	u := &unit{tx: tx, actor: "router", operation: name, session: sessionFrom(ctx)}
 	sum := sha256.Sum256(canonical)
 	hash := hex.EncodeToString(sum[:])
 	if op.Write {

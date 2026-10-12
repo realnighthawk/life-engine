@@ -25,13 +25,13 @@ func TestLiveTemporal(t *testing.T) {
 	ctx := context.Background()
 	at := time.Now().Add(time.Hour).UTC().Truncate(time.Second)
 	wake := engine.Wake{Name: "reminder-livetest", Kind: "reminder", Subject: "reminder:livetest", Objective: "live test, ignore", Why: "test", At: at}
-	defer w.Cancel(ctx, wake.Name)
+	defer w.Cancel(ctx, "", wake.Name)
 	for i := 0; i < 2; i++ { // twice: the second replaces the first
 		if err = w.Arm(ctx, wake); err != nil {
 			t.Fatal(err)
 		}
 	}
-	d, err := w.c.ScheduleClient().GetHandle(ctx, w.id(wake.Name)).Describe(ctx)
+	d, err := w.c.ScheduleClient().GetHandle(ctx, w.id("", wake.Name)).Describe(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -48,21 +48,21 @@ func TestLiveTemporal(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		found = found || e.ID == w.id(wake.Name)
+		found = found || e.ID == w.id("", wake.Name)
 	}
 	if !found {
 		t.Log("not in visibility yet (eventually consistent); describe succeeded, which is what the engine relies on")
 	}
-	if ok, err := w.Exists(ctx, wake.Name); err != nil || !ok {
+	if ok, err := w.Exists(ctx, "", wake.Name); err != nil || !ok {
 		t.Fatalf("exists: %v %v", ok, err)
 	}
-	if err = w.Cancel(ctx, wake.Name); err != nil {
+	if err = w.Cancel(ctx, "", wake.Name); err != nil {
 		t.Fatal(err)
 	}
-	if ok, err := w.Exists(ctx, wake.Name); err != nil || ok {
+	if ok, err := w.Exists(ctx, "", wake.Name); err != nil || ok {
 		t.Fatalf("exists after cancel: %v %v", ok, err)
 	}
-	if err = w.Cancel(ctx, wake.Name); err != nil {
+	if err = w.Cancel(ctx, "", wake.Name); err != nil {
 		t.Fatalf("cancelling a missing wake must not be an error: %v", err)
 	}
 }

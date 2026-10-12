@@ -2,6 +2,8 @@ package engine_test
 
 import (
 	"context"
+	"encoding/json"
+	"slices"
 	"sync"
 	"testing"
 	"time"
@@ -22,15 +24,18 @@ func (f *fakeWaker) Arm(_ context.Context, w engine.Wake) error {
 	f.log = append(f.log, "arm "+w.Name)
 	return nil
 }
-func (f *fakeWaker) Cancel(_ context.Context, name string) error {
+func (f *fakeWaker) Cancel(_ context.Context, session, name string) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	delete(f.armed, name)
-	f.log = append(f.log, "cancel "+name)
+	// Like Temporal: a wake is identified by session and name, so only one armed on that session is removed.
+	if w, ok := f.armed[name]; ok && w.SessionKey == session {
+		delete(f.armed, name)
+	}
+	f.log = append(f.log, "cancel "+session+"/"+name)
 	return nil
 }
 
-func (f *fakeWaker) Exists(_ context.Context, name string) (bool, error) {
+func (f *fakeWaker) Exists(_ context.Context, _, name string) (bool, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	_, ok := f.armed[name]
@@ -131,5 +136,65 @@ func TestAWakeDeletedBehindTheEnginesBackIsArmedAgain(t *testing.T) {
 	sync()
 	if _, ok := f.armed[name]; !ok {
 		t.Fatal("the missing wake was not armed again")
+	}
+}
+
+// executeIn runs an operation as the agent would through MCP: with the calling session on the context.
+func executeIn[T any](t *testing.T, s *engine.Service, session, name string, body any) T {
+	t.Helper()
+	raw, _ := json.Marshal(body)
+	response, e := s.Execute(engine.WithSession(context.Background(), session), name, raw)
+	if e != nil {
+		t.Fatalf("%s: %v", name, engine.PublicError(e))
+	}
+	var v T
+	if e = json.Unmarshal(response, &v); e != nil {
+		t.Fatal(e)
+	}
+	return v
+}
+
+func TestAWakeLandsOnTheSessionItWasCreatedFrom(t *testing.T) {
+	s, f, sync := newSynced(t)
+	web := "agent:main:web:user:u9:session:abc"
+	due := time.Now().Add(2 * time.Hour).UTC().Format(time.RFC3339)
+
+	r := executeIn[engine.Reminder](t, s, web, "reminders_create", map[string]any{"idempotency_key": "ss1", "title": "From the web chat", "due_at": due})
+	sc := executeIn[engine.Schedule](t, s, web, "schedules_create", map[string]any{"idempotency_key": "ss2", "name": "Review", "instruction": "Review", "time_of_day": "09:00", "recurrence": map[string]any{"freq": "daily"}})
+	ro := executeIn[engine.Routine](t, s, web, "routines_create", map[string]any{"idempotency_key": "ss3", "title": "Stretch", "remind_at": time.Now().UTC().Add(3 * time.Hour).Format("15:04")})
+	app := execute[engine.Reminder](t, s, "reminders_create", map[string]any{"idempotency_key": "ss4", "title": "From the app", "due_at": due})
+	sync()
+
+	// The branch suffix is stripped, as arm_wake does, so the wake goes to the user's canonical session.
+	for _, name := range []string{"reminder-" + r.ID, "schedule-" + sc.ID, "routine-" + ro.ID} {
+		if got := f.armed[name].SessionKey; got != "agent:main:web:user:u9" {
+			t.Errorf("%s armed on %q", name, got)
+		}
+	}
+	// No session (the app calls over HTTP): the waker's default.
+	if got := f.armed["reminder-"+app.ID].SessionKey; got != "" {
+		t.Errorf("app-created reminder armed on %q, want the default", got)
+	}
+	// Editing it later does not move it off the session that created it.
+	execute[engine.Reminder](t, s, "reminders_update", map[string]any{"idempotency_key": "ss5", "id": r.ID, "expected_version": r.Version, "title": "Renamed", "due_at": due})
+	n := len(f.log)
+	sync()
+	if got := f.armed["reminder-"+r.ID].SessionKey; got != "agent:main:web:user:u9" {
+		t.Errorf("edit moved the wake to %q (log %v)", got, f.log[n:])
+	}
+}
+
+func TestMovingAReminderToAnotherSessionTakesItOffTheOld(t *testing.T) {
+	s, f, sync := newSynced(t)
+	due := time.Now().Add(2 * time.Hour).UTC().Format(time.RFC3339)
+	r := executeIn[engine.Reminder](t, s, "agent:main:ios:user:u1", "reminders_create", map[string]any{"idempotency_key": "mv1", "title": "Move me", "due_at": due})
+	sync()
+	execute[engine.Reminder](t, s, "reminders_update", map[string]any{"idempotency_key": "mv2", "id": r.ID, "expected_version": r.Version, "title": "Move me", "due_at": due, "session_id": "agent:main:web:user:u1"})
+	sync()
+	if got := f.armed["reminder-"+r.ID].SessionKey; got != "agent:main:web:user:u1" {
+		t.Fatalf("armed on %q", got)
+	}
+	if !slices.Contains(f.log, "cancel agent:main:ios:user:u1/reminder-"+r.ID) {
+		t.Fatalf("the old session's wake was not cancelled: %v", f.log)
 	}
 }
