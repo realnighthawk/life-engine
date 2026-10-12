@@ -94,7 +94,7 @@
                       "description": "the record to open; clients map it to a deep link",
                       "properties": {
                         "entity": {
-                          "description": "reminder, goal, step, plan_item, journal_entry or note",
+                          "description": "reminder, schedule, goal, step, plan_item, journal_entry, note or capture",
                           "type": "string"
                         },
                         "id": {
@@ -150,7 +150,7 @@
         "additionalProperties": false,
         "properties": {
           "entity_type": {
-            "description": "reminder",
+            "description": "reminder, schedule or settings",
             "type": "string"
           },
           "id": {
@@ -315,7 +315,7 @@
             "additionalProperties": false,
             "properties": {
               "entity": {
-                "description": "reminder, goal, step, plan_item, journal_entry or note",
+                "description": "reminder, schedule, goal, step, plan_item, journal_entry, note or capture",
                 "type": "string"
               },
               "id": {
@@ -445,7 +445,7 @@
             "description": "optional record this reminder is about",
             "properties": {
               "entity": {
-                "description": "reminder, goal, step, plan_item, journal_entry or note",
+                "description": "reminder, schedule, goal, step, plan_item, journal_entry, note or capture",
                 "type": "string"
               },
               "id": {
@@ -564,7 +564,7 @@
             "additionalProperties": false,
             "properties": {
               "entity": {
-                "description": "reminder, goal, step, plan_item, journal_entry or note",
+                "description": "reminder, schedule, goal, step, plan_item, journal_entry, note or capture",
                 "type": "string"
               },
               "id": {
@@ -733,7 +733,7 @@
             "additionalProperties": false,
             "properties": {
               "entity": {
-                "description": "reminder, goal, step, plan_item, journal_entry or note",
+                "description": "reminder, schedule, goal, step, plan_item, journal_entry, note or capture",
                 "type": "string"
               },
               "id": {
@@ -892,7 +892,7 @@
             "additionalProperties": false,
             "properties": {
               "entity": {
-                "description": "reminder, goal, step, plan_item, journal_entry or note",
+                "description": "reminder, schedule, goal, step, plan_item, journal_entry, note or capture",
                 "type": "string"
               },
               "id": {
@@ -1076,7 +1076,7 @@
                   "additionalProperties": false,
                   "properties": {
                     "entity": {
-                      "description": "reminder, goal, step, plan_item, journal_entry or note",
+                      "description": "reminder, schedule, goal, step, plan_item, journal_entry, note or capture",
                       "type": "string"
                     },
                     "id": {
@@ -1268,7 +1268,7 @@
             "additionalProperties": false,
             "properties": {
               "entity": {
-                "description": "reminder, goal, step, plan_item, journal_entry or note",
+                "description": "reminder, schedule, goal, step, plan_item, journal_entry, note or capture",
                 "type": "string"
               },
               "id": {
@@ -1442,7 +1442,7 @@
             "additionalProperties": false,
             "properties": {
               "entity": {
-                "description": "reminder, goal, step, plan_item, journal_entry or note",
+                "description": "reminder, schedule, goal, step, plan_item, journal_entry, note or capture",
                 "type": "string"
               },
               "id": {
@@ -1576,7 +1576,7 @@
             "description": "optional record this reminder is about",
             "properties": {
               "entity": {
-                "description": "reminder, goal, step, plan_item, journal_entry or note",
+                "description": "reminder, schedule, goal, step, plan_item, journal_entry, note or capture",
                 "type": "string"
               },
               "id": {
@@ -1697,7 +1697,7 @@
             "additionalProperties": false,
             "properties": {
               "entity": {
-                "description": "reminder, goal, step, plan_item, journal_entry or note",
+                "description": "reminder, schedule, goal, step, plan_item, journal_entry, note or capture",
                 "type": "string"
               },
               "id": {
@@ -1800,6 +1800,909 @@
           "version",
           "deleted_at",
           "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "schedules_create_input": {
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "description": "default true; a disabled schedule never fires",
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          },
+          "instruction": {
+            "description": "what the person wants the agent to do each time, in their words",
+            "type": "string"
+          },
+          "name": {
+            "description": "short unique name, for example Weekly review",
+            "type": "string"
+          },
+          "recurrence": {
+            "additionalProperties": false,
+            "description": "how often; schedules always repeat (use a reminder for a one-off)",
+            "properties": {
+              "freq": {
+                "description": "daily, weekly or monthly",
+                "type": "string"
+              },
+              "interval": {
+                "description": "repeat every N days/weeks/months, 1-365, default 1",
+                "type": "integer"
+              },
+              "weekdays": {
+                "description": "weekly only: days of the week, 0 = Sunday to 6 = Saturday; empty repeats on the due date's weekday",
+                "items": {
+                  "type": "integer"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              }
+            },
+            "required": [
+              "freq"
+            ],
+            "type": "object"
+          },
+          "time_of_day": {
+            "description": "HH:MM local time",
+            "type": "string"
+          },
+          "time_zone": {
+            "description": "IANA zone; defaults to the person's setting",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "name",
+          "instruction",
+          "time_of_day",
+          "recurrence"
+        ],
+        "type": "object"
+      },
+      "schedules_create_output": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string"
+          },
+          "instruction": {
+            "type": "string"
+          },
+          "last_fired_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "next_at": {
+            "type": "string"
+          },
+          "recurrence": {
+            "additionalProperties": false,
+            "properties": {
+              "freq": {
+                "description": "daily, weekly or monthly",
+                "type": "string"
+              },
+              "interval": {
+                "description": "repeat every N days/weeks/months, 1-365, default 1",
+                "type": "integer"
+              },
+              "weekdays": {
+                "description": "weekly only: days of the week, 0 = Sunday to 6 = Saturday; empty repeats on the due date's weekday",
+                "items": {
+                  "type": "integer"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              }
+            },
+            "required": [
+              "freq"
+            ],
+            "type": "object"
+          },
+          "time_of_day": {
+            "type": "string"
+          },
+          "time_zone": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "instruction",
+          "time_of_day",
+          "time_zone",
+          "recurrence",
+          "enabled",
+          "next_at",
+          "last_fired_at",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "schedules_delete_input": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "description": "the version you last read; a stale version is rejected",
+            "type": "integer"
+          },
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "expected_version"
+        ],
+        "type": "object"
+      },
+      "schedules_delete_output": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string"
+          },
+          "instruction": {
+            "type": "string"
+          },
+          "last_fired_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "next_at": {
+            "type": "string"
+          },
+          "recurrence": {
+            "additionalProperties": false,
+            "properties": {
+              "freq": {
+                "description": "daily, weekly or monthly",
+                "type": "string"
+              },
+              "interval": {
+                "description": "repeat every N days/weeks/months, 1-365, default 1",
+                "type": "integer"
+              },
+              "weekdays": {
+                "description": "weekly only: days of the week, 0 = Sunday to 6 = Saturday; empty repeats on the due date's weekday",
+                "items": {
+                  "type": "integer"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              }
+            },
+            "required": [
+              "freq"
+            ],
+            "type": "object"
+          },
+          "time_of_day": {
+            "type": "string"
+          },
+          "time_zone": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "instruction",
+          "time_of_day",
+          "time_zone",
+          "recurrence",
+          "enabled",
+          "next_at",
+          "last_fired_at",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "schedules_get_input": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "schedules_get_output": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string"
+          },
+          "instruction": {
+            "type": "string"
+          },
+          "last_fired_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "next_at": {
+            "type": "string"
+          },
+          "recurrence": {
+            "additionalProperties": false,
+            "properties": {
+              "freq": {
+                "description": "daily, weekly or monthly",
+                "type": "string"
+              },
+              "interval": {
+                "description": "repeat every N days/weeks/months, 1-365, default 1",
+                "type": "integer"
+              },
+              "weekdays": {
+                "description": "weekly only: days of the week, 0 = Sunday to 6 = Saturday; empty repeats on the due date's weekday",
+                "items": {
+                  "type": "integer"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              }
+            },
+            "required": [
+              "freq"
+            ],
+            "type": "object"
+          },
+          "time_of_day": {
+            "type": "string"
+          },
+          "time_zone": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "instruction",
+          "time_of_day",
+          "time_zone",
+          "recurrence",
+          "enabled",
+          "next_at",
+          "last_fired_at",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "schedules_list_input": {
+        "additionalProperties": false,
+        "properties": {
+          "limit": {
+            "description": "1-200, default 50",
+            "type": "integer"
+          },
+          "offset": {
+            "description": "0-1000000, default 0",
+            "type": "integer"
+          },
+          "search": {
+            "description": "literal text to find",
+            "type": "string"
+          },
+          "state": {
+            "description": "active (default), deleted or all",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "schedules_list_output": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "created_at": {
+                  "type": "string"
+                },
+                "deleted_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "enabled": {
+                  "type": "boolean"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "instruction": {
+                  "type": "string"
+                },
+                "last_fired_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "name": {
+                  "type": "string"
+                },
+                "next_at": {
+                  "type": "string"
+                },
+                "recurrence": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "freq": {
+                      "description": "daily, weekly or monthly",
+                      "type": "string"
+                    },
+                    "interval": {
+                      "description": "repeat every N days/weeks/months, 1-365, default 1",
+                      "type": "integer"
+                    },
+                    "weekdays": {
+                      "description": "weekly only: days of the week, 0 = Sunday to 6 = Saturday; empty repeats on the due date's weekday",
+                      "items": {
+                        "type": "integer"
+                      },
+                      "type": [
+                        "null",
+                        "array"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "freq"
+                  ],
+                  "type": "object"
+                },
+                "time_of_day": {
+                  "type": "string"
+                },
+                "time_zone": {
+                  "type": "string"
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "instruction",
+                "time_of_day",
+                "time_zone",
+                "recurrence",
+                "enabled",
+                "next_at",
+                "last_fired_at",
+                "version",
+                "deleted_at",
+                "created_at",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "next_offset": {
+            "description": "offset of the next page, or null at the end",
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "next_offset"
+        ],
+        "type": "object"
+      },
+      "schedules_restore_input": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "description": "the version you last read; a stale version is rejected",
+            "type": "integer"
+          },
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "expected_version"
+        ],
+        "type": "object"
+      },
+      "schedules_restore_output": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string"
+          },
+          "instruction": {
+            "type": "string"
+          },
+          "last_fired_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "next_at": {
+            "type": "string"
+          },
+          "recurrence": {
+            "additionalProperties": false,
+            "properties": {
+              "freq": {
+                "description": "daily, weekly or monthly",
+                "type": "string"
+              },
+              "interval": {
+                "description": "repeat every N days/weeks/months, 1-365, default 1",
+                "type": "integer"
+              },
+              "weekdays": {
+                "description": "weekly only: days of the week, 0 = Sunday to 6 = Saturday; empty repeats on the due date's weekday",
+                "items": {
+                  "type": "integer"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              }
+            },
+            "required": [
+              "freq"
+            ],
+            "type": "object"
+          },
+          "time_of_day": {
+            "type": "string"
+          },
+          "time_zone": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "instruction",
+          "time_of_day",
+          "time_zone",
+          "recurrence",
+          "enabled",
+          "next_at",
+          "last_fired_at",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "schedules_update_input": {
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "description": "default true; a disabled schedule never fires",
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "expected_version": {
+            "description": "the version you last read; a stale version is rejected",
+            "type": "integer"
+          },
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          },
+          "instruction": {
+            "description": "what the person wants the agent to do each time, in their words",
+            "type": "string"
+          },
+          "name": {
+            "description": "short unique name, for example Weekly review",
+            "type": "string"
+          },
+          "recurrence": {
+            "additionalProperties": false,
+            "description": "how often; schedules always repeat (use a reminder for a one-off)",
+            "properties": {
+              "freq": {
+                "description": "daily, weekly or monthly",
+                "type": "string"
+              },
+              "interval": {
+                "description": "repeat every N days/weeks/months, 1-365, default 1",
+                "type": "integer"
+              },
+              "weekdays": {
+                "description": "weekly only: days of the week, 0 = Sunday to 6 = Saturday; empty repeats on the due date's weekday",
+                "items": {
+                  "type": "integer"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              }
+            },
+            "required": [
+              "freq"
+            ],
+            "type": "object"
+          },
+          "time_of_day": {
+            "description": "HH:MM local time",
+            "type": "string"
+          },
+          "time_zone": {
+            "description": "IANA zone; defaults to the person's setting",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "expected_version",
+          "name",
+          "instruction",
+          "time_of_day",
+          "recurrence"
+        ],
+        "type": "object"
+      },
+      "schedules_update_output": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string"
+          },
+          "instruction": {
+            "type": "string"
+          },
+          "last_fired_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "next_at": {
+            "type": "string"
+          },
+          "recurrence": {
+            "additionalProperties": false,
+            "properties": {
+              "freq": {
+                "description": "daily, weekly or monthly",
+                "type": "string"
+              },
+              "interval": {
+                "description": "repeat every N days/weeks/months, 1-365, default 1",
+                "type": "integer"
+              },
+              "weekdays": {
+                "description": "weekly only: days of the week, 0 = Sunday to 6 = Saturday; empty repeats on the due date's weekday",
+                "items": {
+                  "type": "integer"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              }
+            },
+            "required": [
+              "freq"
+            ],
+            "type": "object"
+          },
+          "time_of_day": {
+            "type": "string"
+          },
+          "time_zone": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "instruction",
+          "time_of_day",
+          "time_zone",
+          "recurrence",
+          "enabled",
+          "next_at",
+          "last_fired_at",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "settings_get_input": {
+        "additionalProperties": false,
+        "type": "object"
+      },
+      "settings_get_output": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "time_zone": {
+            "description": "IANA zone; every day-based operation (today's plan, closing the day) uses this zone",
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "work_end": {
+            "description": "HH:MM",
+            "type": "string"
+          },
+          "work_start": {
+            "description": "HH:MM",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "time_zone",
+          "work_start",
+          "work_end",
+          "version",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "settings_set_input": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "type": "integer"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          },
+          "time_zone": {
+            "description": "IANA zone such as Europe/London",
+            "type": "string"
+          },
+          "work_end": {
+            "description": "HH:MM",
+            "type": "string"
+          },
+          "work_start": {
+            "description": "HH:MM",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "expected_version",
+          "time_zone",
+          "work_start",
+          "work_end"
+        ],
+        "type": "object"
+      },
+      "settings_set_output": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "time_zone": {
+            "description": "IANA zone; every day-based operation (today's plan, closing the day) uses this zone",
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "work_end": {
+            "description": "HH:MM",
+            "type": "string"
+          },
+          "work_start": {
+            "description": "HH:MM",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "time_zone",
+          "work_start",
+          "work_end",
+          "version",
           "updated_at"
         ],
         "type": "object"
@@ -2973,6 +3876,846 @@
           }
         ],
         "x-mcp-tool": "reminders_update",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/schedules_create": {
+      "post": {
+        "description": "Create a recurring prompt the person asked you to run, such as 'every Sunday evening, review my week'. It appears in their app where they can pause or edit it. Use this, not a private wake, for anything the person asked to happen on a schedule; use a wake only for your own follow-ups. When it fires you are woken with the instruction.",
+        "operationId": "schedules_create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/schedules_create_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/schedules_create_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "schedules_create",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/schedules_delete": {
+      "post": {
+        "description": "Delete a schedule (it can be restored).",
+        "operationId": "schedules_delete",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/schedules_delete_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/schedules_delete_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "schedules_delete",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/schedules_get": {
+      "post": {
+        "description": "Read one schedule, including when it next fires.",
+        "operationId": "schedules_get",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/schedules_get_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/schedules_get_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "schedules_get",
+        "x-read-only": true
+      }
+    },
+    "/api/v1/operations/schedules_list": {
+      "post": {
+        "description": "List the person's recurring prompts, soonest first.",
+        "operationId": "schedules_list",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/schedules_list_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/schedules_list_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "schedules_list",
+        "x-read-only": true
+      }
+    },
+    "/api/v1/operations/schedules_restore": {
+      "post": {
+        "description": "Restore a deleted schedule; it resumes from now.",
+        "operationId": "schedules_restore",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/schedules_restore_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/schedules_restore_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "schedules_restore",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/schedules_update": {
+      "post": {
+        "description": "Replace a schedule's name, instruction, time, repeat or enabled flag using the version you last read.",
+        "operationId": "schedules_update",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/schedules_update_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/schedules_update_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "schedules_update",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/settings_get": {
+      "post": {
+        "description": "Read the person's settings: their time zone (which decides what 'today' means) and working hours.",
+        "operationId": "settings_get",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/settings_get_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/settings_get_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "settings_get",
+        "x-read-only": true
+      }
+    },
+    "/api/v1/operations/settings_set": {
+      "post": {
+        "description": "Set the person's time zone and working hours (versioned). Set the time zone first: today's plan and closing the day depend on it.",
+        "operationId": "settings_set",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/settings_set_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/settings_set_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "settings_set",
         "x-read-only": false
       }
     }

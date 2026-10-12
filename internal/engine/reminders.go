@@ -149,11 +149,14 @@ func (d ReminderData) values() (reminderValues, error) {
 		}
 		v.rec = &r
 	}
-	if v.link != nil && (!oneOf(v.link.Entity, "reminder", "goal", "step", "plan_item", "journal_entry", "note") || v.link.ID == "") {
-		return v, invalid("link.entity must be reminder, goal, step, plan_item, journal_entry or note, with an id")
+	if v.link != nil && (!oneOf(v.link.Entity, linkEntities...) || v.link.ID == "") {
+		return v, invalid("link.entity must name a record kind, with an id")
 	}
 	return v, nil
 }
+
+// linkEntities are the record kinds a reminder or notice can point at.
+var linkEntities = []string{"reminder", "schedule", "goal", "step", "plan_item", "journal_entry", "note", "capture"}
 
 func jsonOrNil(v any) any {
 	switch x := v.(type) {

@@ -15,6 +15,13 @@ import (
 
 func integrationService(t *testing.T) *engine.Service {
 	t.Helper()
+	s, _ := integrationEnv(t)
+	return s
+}
+
+// integrationEnv also returns the pool, for tests that must move time (set a due instant in the past).
+func integrationEnv(t *testing.T) (*engine.Service, *pgxpool.Pool) {
+	t.Helper()
 	url := os.Getenv("TEST_DATABASE_URL")
 	if url == "" {
 		t.Skip("TEST_DATABASE_URL is not set")
@@ -28,10 +35,13 @@ func integrationService(t *testing.T) *engine.Service {
 		t.Fatal(e)
 	}
 	// One person per database, so tests start from an empty one.
-	if _, e = pool.Exec(context.Background(), "TRUNCATE life.requests, life.changes, life.acked_events, life.reminders"); e != nil {
+	if _, e = pool.Exec(context.Background(), "TRUNCATE life.requests, life.changes, life.acked_events, life.reminders, life.schedules"); e != nil {
 		t.Fatal(e)
 	}
-	return engine.New(pool)
+	if _, e = pool.Exec(context.Background(), "UPDATE life.settings SET time_zone='UTC',work_start='09:00',work_end='17:00',version=1"); e != nil {
+		t.Fatal(e)
+	}
+	return engine.New(pool), pool
 }
 
 func execute[T any](t *testing.T, s *engine.Service, name string, body any) T {

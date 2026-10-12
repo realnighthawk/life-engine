@@ -100,3 +100,26 @@ func addMonthsClamped(anchor time.Time, months int) time.Time {
 	}
 	return time.Date(first.Year(), first.Month(), d, anchor.Hour(), anchor.Minute(), anchor.Second(), 0, anchor.Location())
 }
+
+// scheduleNext returns the first occurrence strictly after `now` of a series at a local time of day.
+func scheduleNext(now time.Time, timeOfDay string, loc *time.Location, r Recurrence) (time.Time, error) {
+	t, err := time.Parse("15:04", timeOfDay)
+	if err != nil {
+		return time.Time{}, invalid("time_of_day must be HH:MM")
+	}
+	y, m, d := now.In(loc).Date()
+	anchor := time.Date(y, m, d, t.Hour(), t.Minute(), 0, 0, loc)
+	allowed := true
+	if r.Freq == "weekly" && len(r.Weekdays) > 0 {
+		allowed = false
+		for _, wd := range r.Weekdays {
+			if time.Weekday(wd) == anchor.Weekday() {
+				allowed = true
+			}
+		}
+	}
+	if anchor.After(now) && allowed {
+		return anchor.UTC(), nil
+	}
+	return nextOccurrence(anchor, now, r, loc).UTC(), nil
+}

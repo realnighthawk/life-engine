@@ -25,8 +25,8 @@ func reminderEventID(id string, due time.Time) string {
 	return "reminder:" + id + ":" + strconv.FormatInt(due.Unix(), 10)
 }
 
-func (u *unit) eventsPending(ctx context.Context) (EventsResult, error) {
-	result := EventsResult{Items: []Event{}}
+func (u *unit) pendingReminders(ctx context.Context) ([]Event, error) {
+	var items []Event
 	rows, err := u.tx.Query(ctx, `SELECT r.id::text,r.title,r.notes,`+effectiveDue+`
 		FROM life.reminders r
 		WHERE r.deleted_at IS NULL AND r.state='pending' AND `+effectiveDue+` <= now()
@@ -34,20 +34,20 @@ func (u *unit) eventsPending(ctx context.Context) (EventsResult, error) {
 		       WHERE a.event_id = 'reminder:' || r.id::text || ':' || floor(extract(epoch FROM `+effectiveDue+`))::bigint::text)
 		ORDER BY `+effectiveDue+`, r.id LIMIT 100`)
 	if err != nil {
-		return result, err
+		return nil, err
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var rid, title, notes string
 		var due time.Time
 		if err := rows.Scan(&rid, &title, &notes, &due); err != nil {
-			return result, err
+			return nil, err
 		}
 		body := notes
 		if body == "" {
 			body = "Due now"
 		}
-		result.Items = append(result.Items, Event{
+		items = append(items, Event{
 			// A class key, never per record: subscriptions are registered against the key, and a per-record key could never be subscribed to.
 			EventKey: reminderEventKey,
 			EventID:  reminderEventID(rid, due),
@@ -55,7 +55,22 @@ func (u *unit) eventsPending(ctx context.Context) (EventsResult, error) {
 			Notice:   Notice{Kind: "reminder.due", Title: title, Body: body, Priority: "normal", Link: &Link{Entity: "reminder", ID: rid}},
 		})
 	}
-	return result, rows.Err()
+	return items, rows.Err()
+}
+
+func (u *unit) eventsPending(ctx context.Context) (EventsResult, error) {
+	result := EventsResult{Items: []Event{}}
+	for _, source := range []func(context.Context) ([]Event, error){u.pendingReminders, u.pendingSchedules} {
+		items, err := source(ctx)
+		if err != nil {
+			return result, err
+		}
+		result.Items = append(result.Items, items...)
+	}
+	if len(result.Items) > 100 {
+		result.Items = result.Items[:100]
+	}
+	return result, nil
 }
 
 // eventsAck marks occurrences handed over. Idempotent by construction. A repeating reminder moves on to its next
@@ -82,14 +97,20 @@ func (u *unit) eventsAck(ctx context.Context, in AckEventsInput) (AckEventsResul
 		}
 		result.Acknowledged++
 		parts := strings.Split(eventID, ":")
-		if len(parts) != 3 || parts[0] != "reminder" {
+		if len(parts) != 3 {
 			continue
 		}
 		epoch, err := strconv.ParseInt(parts[2], 10, 64)
 		if err != nil {
 			continue
 		}
-		if err := u.advanceFired(ctx, parts[1], epoch, now); err != nil {
+		switch parts[0] {
+		case "reminder":
+			err = u.advanceFired(ctx, parts[1], epoch, now)
+		case "schedule":
+			err = u.advanceSchedule(ctx, parts[1], epoch, now)
+		}
+		if err != nil {
 			return result, err
 		}
 	}
@@ -117,5 +138,50 @@ func (u *unit) advanceFired(ctx context.Context, rid string, epoch int64, now ti
 		return err
 	}
 	_, err = u.afterChange(ctx, r)
+	return err
+}
+
+// pendingSchedules raises one notice per fired occurrence of an enabled schedule. The default route wakes the agent
+// with the person's instruction; the notice lets a subscription deliver "time for your weekly review" directly instead.
+func (u *unit) pendingSchedules(ctx context.Context) ([]Event, error) {
+	var items []Event
+	rows, err := u.tx.Query(ctx, `SELECT s.id::text,s.name,s.instruction,s.next_at FROM life.schedules s
+		WHERE s.deleted_at IS NULL AND s.enabled AND s.next_at <= now()
+		  AND NOT EXISTS (SELECT 1 FROM life.acked_events a WHERE a.event_id = 'schedule:' || s.id::text || ':' || floor(extract(epoch FROM s.next_at))::bigint::text)
+		ORDER BY s.next_at, s.id LIMIT 100`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var sid, name, instruction string
+		var at time.Time
+		if err := rows.Scan(&sid, &name, &instruction, &at); err != nil {
+			return nil, err
+		}
+		items = append(items, Event{
+			EventKey: scheduleEventKey,
+			EventID:  "schedule:" + sid + ":" + strconv.FormatInt(at.Unix(), 10),
+			Detail:   fmt.Sprintf("The person's scheduled prompt %q is due: %s", name, instruction),
+			Notice:   Notice{Kind: "schedule.due", Title: name, Body: instruction, Priority: "normal", Link: &Link{Entity: "schedule", ID: sid}},
+		})
+	}
+	return items, rows.Err()
+}
+
+const scheduleEventKey = "life:schedule"
+
+// advanceSchedule moves a fired schedule on to its next occurrence.
+func (u *unit) advanceSchedule(ctx context.Context, sid string, epoch int64, now time.Time) error {
+	s, err := u.getSchedule(ctx, sid, true)
+	if err != nil || s.DeletedAt != nil || !s.Enabled || s.NextAt.Unix() != epoch {
+		return nil // gone, disabled, or edited since this notice was raised
+	}
+	loc, _ := zone(s.TimeZone)
+	next := nextOccurrence(s.NextAt, now, s.Recurrence, loc).UTC()
+	if _, err := u.tx.Exec(ctx, `UPDATE life.schedules SET next_at=$2,last_fired_at=$3,version=version+1,updated_at=now() WHERE id=$1`, sid, next, now); err != nil {
+		return err
+	}
+	_, err = u.scheduleChanged(ctx, s)
 	return err
 }

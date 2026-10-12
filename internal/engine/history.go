@@ -2,18 +2,26 @@ package engine
 
 import "context"
 
+// historyTables maps an auditable entity type to its table; add an entry with each new entity.
+var historyTables = map[string]string{"reminder": "reminders", "schedule": "schedules", "settings": "settings"}
+
 func history(ctx context.Context, u *unit, in HistoryInput) (Page[Change], error) {
 	result := Page[Change]{Items: []Change{}}
 	key, e := id(in.ID)
 	if e != nil {
 		return result, e
 	}
-	if !oneOf(in.EntityType, "reminder") {
+	table, ok := historyTables[in.EntityType]
+	if !ok {
 		return result, invalid("unsupported entity_type")
 	}
 	// History is only available for an existing record, deleted or not.
-	if _, e = u.getReminder(ctx, key, false); e != nil {
+	var found bool
+	if e = u.tx.QueryRow(ctx, "SELECT EXISTS (SELECT 1 FROM life."+table+" WHERE id=$1)", key).Scan(&found); e != nil {
 		return result, e
+	}
+	if !found {
+		return result, notFound()
 	}
 	limit, offset, _, e := paging(in.ListInput)
 	if e != nil {

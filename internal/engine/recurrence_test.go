@@ -57,3 +57,29 @@ func TestRecurrenceNormalize(t *testing.T) {
 		}
 	}
 }
+
+func TestScheduleNext(t *testing.T) {
+	ny, _ := time.LoadLocation("America/New_York")
+	now := at(t, "America/New_York", "2026-10-12 10:00") // a Monday
+	weeklySun := Recurrence{Freq: "weekly", Interval: 1, Weekdays: []int{0}}
+	got, err := scheduleNext(now, "18:00", ny, weeklySun)
+	if err != nil || !got.Equal(at(t, "America/New_York", "2026-10-18 18:00")) {
+		t.Errorf("next Sunday: %v %v", got, err)
+	}
+	// Later today when allowed that day, else the next allowed day.
+	daily, _ := scheduleNext(now, "18:00", ny, Recurrence{Freq: "daily", Interval: 1})
+	if !daily.Equal(at(t, "America/New_York", "2026-10-12 18:00")) {
+		t.Errorf("daily today: %v", daily)
+	}
+	passed, _ := scheduleNext(now, "09:00", ny, Recurrence{Freq: "daily", Interval: 1})
+	if !passed.Equal(at(t, "America/New_York", "2026-10-13 09:00")) {
+		t.Errorf("daily tomorrow: %v", passed)
+	}
+	mon, _ := scheduleNext(now, "18:00", ny, Recurrence{Freq: "weekly", Interval: 1, Weekdays: []int{1}})
+	if !mon.Equal(at(t, "America/New_York", "2026-10-12 18:00")) {
+		t.Errorf("weekly Monday later today: %v", mon)
+	}
+	if _, err := scheduleNext(now, "7pm", ny, weeklySun); err == nil {
+		t.Error("bad time of day accepted")
+	}
+}
