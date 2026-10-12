@@ -1,4 +1,4 @@
-name: Publish Docker image
+name: CI and publish image
 
 on:
   push:
@@ -16,7 +16,34 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: life_test
+          POSTGRES_USER: life_test
+          POSTGRES_PASSWORD: local-life-test-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U life_test -d life_test"
+          --health-interval 2s --health-timeout 3s --health-retries 30
+    env:
+      TEST_DATABASE_URL: postgres://life_test:local-life-test-only@127.0.0.1:5432/life_test?sslmode=disable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Format, vet, unit tests, build, OpenAPI drift
+        run: make check
+      - name: Integration tests with the race detector
+        run: make integration
+
   build-and-push:
+    needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: read
