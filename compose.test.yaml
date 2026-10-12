@@ -13,7 +13,8 @@ services:
       timeout: 3s
       retries: 30
   minio:
-    image: minio/minio:latest
+    # MinIO's official images are withdrawn; this is the rebuild of the final community release the tenant chart also uses.
+    image: ghcr.io/coollabsio/minio:latest
     command: ["server", "/data"]
     environment:
       MINIO_ROOT_USER: life-local-test
@@ -21,7 +22,7 @@ services:
     ports:
       - "127.0.0.1:59003:9000"
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: ["CMD-SHELL", "curl -sf http://127.0.0.1:9000/minio/health/ready || exit 1"]
       interval: 2s
       timeout: 3s
       retries: 30
