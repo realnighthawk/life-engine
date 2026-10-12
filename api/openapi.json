@@ -4663,6 +4663,728 @@
         ],
         "type": "object"
       },
+      "monitors_create_input": {
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "description": "default true; a disabled monitor is never checked",
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "every_minutes": {
+            "description": "how often to check, 15 to 44640 (31 days)",
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          },
+          "name": {
+            "description": "short unique name, for example Flight prices, 1-80 characters",
+            "type": "string"
+          },
+          "objective": {
+            "description": "what to watch and when the person should be told, in their words, 1-2000 characters",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "name",
+          "objective",
+          "every_minutes"
+        ],
+        "type": "object"
+      },
+      "monitors_create_output": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "every_minutes": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "last_checked_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "last_result": {
+            "description": "one line from the most recent check",
+            "type": "string"
+          },
+          "last_triggered_at": {
+            "description": "when a check last decided the person should be told",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "next_at": {
+            "type": "string"
+          },
+          "objective": {
+            "description": "what to watch and when the person should be told, in their words",
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "objective",
+          "every_minutes",
+          "enabled",
+          "next_at",
+          "last_checked_at",
+          "last_result",
+          "last_triggered_at",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "monitors_delete_input": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "description": "the version you last read; a stale version is rejected",
+            "type": "integer"
+          },
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "expected_version"
+        ],
+        "type": "object"
+      },
+      "monitors_delete_output": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "every_minutes": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "last_checked_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "last_result": {
+            "description": "one line from the most recent check",
+            "type": "string"
+          },
+          "last_triggered_at": {
+            "description": "when a check last decided the person should be told",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "next_at": {
+            "type": "string"
+          },
+          "objective": {
+            "description": "what to watch and when the person should be told, in their words",
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "objective",
+          "every_minutes",
+          "enabled",
+          "next_at",
+          "last_checked_at",
+          "last_result",
+          "last_triggered_at",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "monitors_get_input": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "monitors_get_output": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "every_minutes": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "last_checked_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "last_result": {
+            "description": "one line from the most recent check",
+            "type": "string"
+          },
+          "last_triggered_at": {
+            "description": "when a check last decided the person should be told",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "next_at": {
+            "type": "string"
+          },
+          "objective": {
+            "description": "what to watch and when the person should be told, in their words",
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "objective",
+          "every_minutes",
+          "enabled",
+          "next_at",
+          "last_checked_at",
+          "last_result",
+          "last_triggered_at",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "monitors_list_input": {
+        "additionalProperties": false,
+        "properties": {
+          "limit": {
+            "description": "1-200, default 50",
+            "type": "integer"
+          },
+          "offset": {
+            "description": "0-1000000, default 0",
+            "type": "integer"
+          },
+          "search": {
+            "description": "literal text to find",
+            "type": "string"
+          },
+          "state": {
+            "description": "active (default), deleted or all",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "monitors_list_output": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "created_at": {
+                  "type": "string"
+                },
+                "deleted_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "enabled": {
+                  "type": "boolean"
+                },
+                "every_minutes": {
+                  "type": "integer"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "last_checked_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "last_result": {
+                  "description": "one line from the most recent check",
+                  "type": "string"
+                },
+                "last_triggered_at": {
+                  "description": "when a check last decided the person should be told",
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "name": {
+                  "type": "string"
+                },
+                "next_at": {
+                  "type": "string"
+                },
+                "objective": {
+                  "description": "what to watch and when the person should be told, in their words",
+                  "type": "string"
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "objective",
+                "every_minutes",
+                "enabled",
+                "next_at",
+                "last_checked_at",
+                "last_result",
+                "last_triggered_at",
+                "version",
+                "deleted_at",
+                "created_at",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "next_offset": {
+            "description": "offset of the next page, or null at the end",
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "next_offset"
+        ],
+        "type": "object"
+      },
+      "monitors_record_input": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          },
+          "result": {
+            "description": "one line on what the check found, up to 1000 characters",
+            "type": "string"
+          },
+          "triggered": {
+            "description": "true only if the person should be told; then also call notify_user",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "result",
+          "triggered"
+        ],
+        "type": "object"
+      },
+      "monitors_record_output": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "every_minutes": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "last_checked_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "last_result": {
+            "description": "one line from the most recent check",
+            "type": "string"
+          },
+          "last_triggered_at": {
+            "description": "when a check last decided the person should be told",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "next_at": {
+            "type": "string"
+          },
+          "objective": {
+            "description": "what to watch and when the person should be told, in their words",
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "objective",
+          "every_minutes",
+          "enabled",
+          "next_at",
+          "last_checked_at",
+          "last_result",
+          "last_triggered_at",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "monitors_restore_input": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "description": "the version you last read; a stale version is rejected",
+            "type": "integer"
+          },
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "expected_version"
+        ],
+        "type": "object"
+      },
+      "monitors_restore_output": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "every_minutes": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "last_checked_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "last_result": {
+            "description": "one line from the most recent check",
+            "type": "string"
+          },
+          "last_triggered_at": {
+            "description": "when a check last decided the person should be told",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "next_at": {
+            "type": "string"
+          },
+          "objective": {
+            "description": "what to watch and when the person should be told, in their words",
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "objective",
+          "every_minutes",
+          "enabled",
+          "next_at",
+          "last_checked_at",
+          "last_result",
+          "last_triggered_at",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "monitors_update_input": {
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "description": "default true; a disabled monitor is never checked",
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "every_minutes": {
+            "description": "how often to check, 15 to 44640 (31 days)",
+            "type": "integer"
+          },
+          "expected_version": {
+            "description": "the version you last read; a stale version is rejected",
+            "type": "integer"
+          },
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          },
+          "name": {
+            "description": "short unique name, for example Flight prices, 1-80 characters",
+            "type": "string"
+          },
+          "objective": {
+            "description": "what to watch and when the person should be told, in their words, 1-2000 characters",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "expected_version",
+          "name",
+          "objective",
+          "every_minutes"
+        ],
+        "type": "object"
+      },
+      "monitors_update_output": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "every_minutes": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "last_checked_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "last_result": {
+            "description": "one line from the most recent check",
+            "type": "string"
+          },
+          "last_triggered_at": {
+            "description": "when a check last decided the person should be told",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "next_at": {
+            "type": "string"
+          },
+          "objective": {
+            "description": "what to watch and when the person should be told, in their words",
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "objective",
+          "every_minutes",
+          "enabled",
+          "next_at",
+          "last_checked_at",
+          "last_result",
+          "last_triggered_at",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
       "next_action_input": {
         "additionalProperties": false,
         "properties": {
@@ -9758,6 +10480,27 @@
             "description": "what the person wants the agent to do each time, in their words",
             "type": "string"
           },
+          "link": {
+            "additionalProperties": false,
+            "description": "optional record this is about; link a goal (entity goal) to make this that goal's regular check-in",
+            "properties": {
+              "entity": {
+                "description": "reminder, schedule, goal, step, plan_item, routine, journal_entry, note or capture",
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entity",
+              "id"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
           "name": {
             "description": "short unique name, for example Weekly review",
             "type": "string"
@@ -9835,6 +10578,27 @@
               "string"
             ]
           },
+          "link": {
+            "additionalProperties": false,
+            "description": "the record this is about; a schedule linked to a goal is that goal's check-in",
+            "properties": {
+              "entity": {
+                "description": "reminder, schedule, goal, step, plan_item, routine, journal_entry, note or capture",
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entity",
+              "id"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
           "name": {
             "type": "string"
           },
@@ -9891,6 +10655,7 @@
           "enabled",
           "next_at",
           "last_fired_at",
+          "link",
           "version",
           "deleted_at",
           "created_at",
@@ -9948,6 +10713,27 @@
               "string"
             ]
           },
+          "link": {
+            "additionalProperties": false,
+            "description": "the record this is about; a schedule linked to a goal is that goal's check-in",
+            "properties": {
+              "entity": {
+                "description": "reminder, schedule, goal, step, plan_item, routine, journal_entry, note or capture",
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entity",
+              "id"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
           "name": {
             "type": "string"
           },
@@ -10004,6 +10790,7 @@
           "enabled",
           "next_at",
           "last_fired_at",
+          "link",
           "version",
           "deleted_at",
           "created_at",
@@ -10051,6 +10838,27 @@
               "string"
             ]
           },
+          "link": {
+            "additionalProperties": false,
+            "description": "the record this is about; a schedule linked to a goal is that goal's check-in",
+            "properties": {
+              "entity": {
+                "description": "reminder, schedule, goal, step, plan_item, routine, journal_entry, note or capture",
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entity",
+              "id"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
           "name": {
             "type": "string"
           },
@@ -10107,6 +10915,7 @@
           "enabled",
           "next_at",
           "last_fired_at",
+          "link",
           "version",
           "deleted_at",
           "created_at",
@@ -10167,6 +10976,27 @@
                     "string"
                   ]
                 },
+                "link": {
+                  "additionalProperties": false,
+                  "description": "the record this is about; a schedule linked to a goal is that goal's check-in",
+                  "properties": {
+                    "entity": {
+                      "description": "reminder, schedule, goal, step, plan_item, routine, journal_entry, note or capture",
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "entity",
+                    "id"
+                  ],
+                  "type": [
+                    "null",
+                    "object"
+                  ]
+                },
                 "name": {
                   "type": "string"
                 },
@@ -10223,6 +11053,7 @@
                 "enabled",
                 "next_at",
                 "last_fired_at",
+                "link",
                 "version",
                 "deleted_at",
                 "created_at",
@@ -10303,6 +11134,27 @@
               "string"
             ]
           },
+          "link": {
+            "additionalProperties": false,
+            "description": "the record this is about; a schedule linked to a goal is that goal's check-in",
+            "properties": {
+              "entity": {
+                "description": "reminder, schedule, goal, step, plan_item, routine, journal_entry, note or capture",
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entity",
+              "id"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
           "name": {
             "type": "string"
           },
@@ -10359,6 +11211,7 @@
           "enabled",
           "next_at",
           "last_fired_at",
+          "link",
           "version",
           "deleted_at",
           "created_at",
@@ -10391,6 +11244,27 @@
           "instruction": {
             "description": "what the person wants the agent to do each time, in their words",
             "type": "string"
+          },
+          "link": {
+            "additionalProperties": false,
+            "description": "optional record this is about; link a goal (entity goal) to make this that goal's regular check-in",
+            "properties": {
+              "entity": {
+                "description": "reminder, schedule, goal, step, plan_item, routine, journal_entry, note or capture",
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entity",
+              "id"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
           },
           "name": {
             "description": "short unique name, for example Weekly review",
@@ -10471,6 +11345,27 @@
               "string"
             ]
           },
+          "link": {
+            "additionalProperties": false,
+            "description": "the record this is about; a schedule linked to a goal is that goal's check-in",
+            "properties": {
+              "entity": {
+                "description": "reminder, schedule, goal, step, plan_item, routine, journal_entry, note or capture",
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entity",
+              "id"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
           "name": {
             "type": "string"
           },
@@ -10527,6 +11422,7 @@
           "enabled",
           "next_at",
           "last_fired_at",
+          "link",
           "version",
           "deleted_at",
           "created_at",
@@ -14318,6 +15214,741 @@
         "x-read-only": true
       }
     },
+    "/api/v1/operations/monitors_create": {
+      "post": {
+        "description": "Create a monitor: something the person asked you to keep an eye on, checked on an interval (15 minutes to 31 days), with the person told only when it matters. It appears in their app where they can pause or edit it. Use this, not a private wake, for anything the person asked you to watch. When a check is due you are woken with the objective: check it, call monitors_record with what you found, and only if the person should hear about it set triggered and call notify_user.",
+        "operationId": "monitors_create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/monitors_create_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/monitors_create_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "monitors_create",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/monitors_delete": {
+      "post": {
+        "description": "Delete a monitor (it can be restored).",
+        "operationId": "monitors_delete",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/monitors_delete_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/monitors_delete_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "monitors_delete",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/monitors_get": {
+      "post": {
+        "description": "Read one monitor, including its last result and when it is next checked.",
+        "operationId": "monitors_get",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/monitors_get_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/monitors_get_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "monitors_get",
+        "x-read-only": true
+      }
+    },
+    "/api/v1/operations/monitors_list": {
+      "post": {
+        "description": "List the person's monitors, next check first.",
+        "operationId": "monitors_list",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/monitors_list_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/monitors_list_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "monitors_list",
+        "x-read-only": true
+      }
+    },
+    "/api/v1/operations/monitors_record": {
+      "post": {
+        "description": "Record the outcome of a check you just ran: one line on what you found, and whether the person should be told. Call it every time a monitor wakes you, including when nothing needs saying.",
+        "operationId": "monitors_record",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/monitors_record_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/monitors_record_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "monitors_record",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/monitors_restore": {
+      "post": {
+        "description": "Restore a deleted monitor; it resumes from now.",
+        "operationId": "monitors_restore",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/monitors_restore_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/monitors_restore_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "monitors_restore",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/monitors_update": {
+      "post": {
+        "description": "Replace a monitor's name, objective, interval or enabled flag using the version you last read.",
+        "operationId": "monitors_update",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/monitors_update_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/monitors_update_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "monitors_update",
+        "x-read-only": false
+      }
+    },
     "/api/v1/operations/next_action": {
       "post": {
         "description": "The one thing to do with the minutes the person has: today's priorities first, then the next step of a goal, then anything else that fits. Returns null when nothing fits, which is a good moment to suggest a break.",
@@ -17995,7 +19626,7 @@
     },
     "/api/v1/operations/schedules_create": {
       "post": {
-        "description": "Create a recurring prompt the person asked you to run, such as 'every Sunday evening, review my week'. It appears in their app where they can pause or edit it. Use this, not a private wake, for anything the person asked to happen on a schedule; use a wake only for your own follow-ups. When it fires you are woken with the instruction.",
+        "description": "Create a recurring prompt the person asked you to run, such as 'every Sunday evening, review my week'. It appears in their app where they can pause or edit it. Use this, not a private wake, for anything the person asked to happen on a schedule; use a wake only for your own follow-ups. When it fires you are woken with the instruction. To give a goal a regular check-in, link the goal (link entity goal): you are then woken to look at its progress and offer a smaller next step if it has stalled.",
         "operationId": "schedules_create",
         "requestBody": {
           "content": {

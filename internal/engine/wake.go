@@ -78,7 +78,7 @@ func (s *Service) SyncWakes(ctx context.Context) error {
 		return nil
 	}
 	var items []wakeItem
-	for _, load := range []func(context.Context, time.Time) ([]wakeItem, error){s.reminderWakes, s.scheduleWakes, s.routineWakes} {
+	for _, load := range []func(context.Context, time.Time) ([]wakeItem, error){s.reminderWakes, s.scheduleWakes, s.routineWakes, s.monitorWakes} {
 		got, err := load(ctx, time.Now())
 		if err != nil {
 			return err
@@ -210,6 +210,7 @@ type scheduleRow struct {
 	next                      time.Time
 	armed                     *time.Time
 	session, armedSession     string
+	goalID, goalTitle         string // set when the schedule is a goal's check-in
 }
 
 func desiredScheduleWake(r scheduleRow, now time.Time) *time.Time {
@@ -228,8 +229,10 @@ func desiredScheduleWake(r scheduleRow, now time.Time) *time.Time {
 }
 
 func (s *Service) scheduleWakes(ctx context.Context, now time.Time) ([]wakeItem, error) {
-	rows, err := s.pool.Query(ctx, `SELECT id::text,name,instruction,time_zone,recurrence,enabled,deleted_at IS NOT NULL,next_at,armed_for,coalesce(session_id,''),coalesce(armed_session,'')
-		FROM life.schedules WHERE armed_for IS NOT NULL OR (enabled AND deleted_at IS NULL)`)
+	rows, err := s.pool.Query(ctx, `SELECT s.id::text,s.name,s.instruction,s.time_zone,s.recurrence,s.enabled,s.deleted_at IS NOT NULL,s.next_at,s.armed_for,coalesce(s.session_id,''),coalesce(s.armed_session,''),
+		coalesce(g.id::text,''),coalesce(g.title,'')
+		FROM life.schedules s LEFT JOIN life.goals g ON s.link->>'entity'='goal' AND g.id::text = s.link->>'id'
+		WHERE s.armed_for IS NOT NULL OR (s.enabled AND s.deleted_at IS NULL)`)
 	if err != nil {
 		return nil, err
 	}
@@ -238,7 +241,7 @@ func (s *Service) scheduleWakes(ctx context.Context, now time.Time) ([]wakeItem,
 	for rows.Next() {
 		var r scheduleRow
 		var rec []byte
-		if err = rows.Scan(&r.id, &r.name, &r.instruction, &r.tz, &rec, &r.enabled, &r.deleted, &r.next, &r.armed, &r.session, &r.armedSession); err != nil {
+		if err = rows.Scan(&r.id, &r.name, &r.instruction, &r.tz, &rec, &r.enabled, &r.deleted, &r.next, &r.armed, &r.session, &r.armedSession, &r.goalID, &r.goalTitle); err != nil {
 			return nil, err
 		}
 		if err = json.Unmarshal(rec, &r.rec); err != nil {
@@ -248,6 +251,11 @@ func (s *Service) scheduleWakes(ctx context.Context, now time.Time) ([]wakeItem,
 			// Once the occurrence has fired, the row records it and shows the next one.
 			moved: `UPDATE life.schedules SET last_fired_at=CASE WHEN next_at<=now() THEN next_at ELSE last_fired_at END, next_at=$2 WHERE id=$1 AND $2 > next_at`,
 			wake: func(at time.Time) Wake {
+				if r.goalID != "" {
+					return Wake{Name: wakeName("schedule", r.id), Kind: "goal_checkin", Subject: "goal:" + r.goalID, At: at,
+						Objective: goalCheckInObjective(r.goalID, r.goalTitle, r.id, r.instruction),
+						Why:       "A regular check-in the user set on one of their goals is due."}
+				}
 				return Wake{Name: wakeName("schedule", r.id), Kind: "instruction", Subject: "schedule:" + r.id,
 					Objective: fmt.Sprintf("The user's recurring request %q (Life schedule %s) is due now. Their instruction: %s\n"+
 						"Do it. If there is something the user should see or act on, call notify_user with entity \"schedule\" and id %q, a short title and a one-line body.",
@@ -329,6 +337,68 @@ func (s *Service) routineWakes(ctx context.Context, now time.Time) ([]wakeItem, 
 					"and mention the short version (%s) as an easy option. If it is done or does not apply today, do nothing and say nothing.", r.title, r.id, r.id, r.short),
 				Why: "The user asked to be nudged about a routine at this time.", At: at}
 		}})
+	}
+	return items, rows.Err()
+}
+
+func goalCheckInObjective(goalID, title, scheduleID, instruction string) string {
+	return fmt.Sprintf("It is time for the user's regular check-in on their goal %q (Life goal %s, from Life schedule %s). %s\n"+
+		"Read the goal with the Life goals_get tool and this week's commitments with commitments_list. Compare progress with the weekly target. "+
+		"If they are behind or have stalled, do not pressure them: offer one smaller next step (steps_add if they agree, or suggest it) and ask what got in the way. "+
+		"If they are on track, say so in a line. Either way call notify_user with entity \"goal\" and id %q, a short title and a kind one-line body.",
+		title, goalID, scheduleID, instruction, goalID)
+}
+
+// --- monitors ---
+
+type monitorRow struct {
+	id, name, objective, session, armedSession string
+	every                                      time.Duration
+	enabled, deleted                           bool
+	next                                       time.Time
+	armed                                      *time.Time
+}
+
+func desiredMonitorWake(r monitorRow, now time.Time) *time.Time {
+	if r.deleted || !r.enabled {
+		return nil
+	}
+	at := r.next
+	if !at.After(now) {
+		if at.After(now.Add(-wakeGrace)) {
+			return &at
+		}
+		// Missed checks are skipped, not replayed: the next one is the first slot still ahead.
+		missed := now.Sub(at)/r.every + 1
+		at = at.Add(missed * r.every)
+	}
+	return &at
+}
+
+func (s *Service) monitorWakes(ctx context.Context, now time.Time) ([]wakeItem, error) {
+	rows, err := s.pool.Query(ctx, `SELECT id::text,name,objective,every_minutes,enabled,deleted_at IS NOT NULL,next_at,armed_for,coalesce(session_id,''),coalesce(armed_session,'')
+		FROM life.monitors WHERE armed_for IS NOT NULL OR (enabled AND deleted_at IS NULL)`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []wakeItem
+	for rows.Next() {
+		var r monitorRow
+		var every int
+		if err = rows.Scan(&r.id, &r.name, &r.objective, &every, &r.enabled, &r.deleted, &r.next, &r.armed, &r.session, &r.armedSession); err != nil {
+			return nil, err
+		}
+		r.every = time.Duration(every) * time.Minute
+		items = append(items, wakeItem{table: "monitors", id: r.id, want: desiredMonitorWake(r, now), armed: r.armed, session: sessionScope(r.session), armedSession: r.armedSession,
+			moved: `UPDATE life.monitors SET next_at=$2 WHERE id=$1 AND $2 > next_at`,
+			wake: func(at time.Time) Wake {
+				return Wake{Name: wakeName("monitor", r.id), Kind: "monitor", Subject: "monitor:" + r.id, At: at,
+					Objective: fmt.Sprintf("Time to check the user's monitor %q (Life monitor %s). What they asked you to watch: %s\n"+
+						"Check it now, using whatever tools you need. Then call the Life monitors_record tool with one line on what you found and triggered true only if the user should hear about it. "+
+						"If triggered, also call notify_user with entity \"monitor\" and id %q, a short title and a one-line body. If not, say nothing to the user.", r.name, r.id, r.objective, r.id),
+					Why: "A monitor the user set is due for a check."}
+			}})
 	}
 	return items, rows.Err()
 }

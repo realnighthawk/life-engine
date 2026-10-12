@@ -18,6 +18,7 @@ type Schedule struct {
 	Enabled     bool       `json:"enabled"`
 	NextAt      time.Time  `json:"next_at"`
 	LastFiredAt *time.Time `json:"last_fired_at"`
+	Link        *Link      `json:"link" jsonschema:"the record this is about; a schedule linked to a goal is that goal's check-in"`
 	Version     int64      `json:"version"`
 	DeletedAt   *time.Time `json:"deleted_at"`
 	CreatedAt   time.Time  `json:"created_at"`
@@ -30,6 +31,7 @@ type ScheduleData struct {
 	TimeZone    string     `json:"time_zone,omitempty" jsonschema:"IANA zone; defaults to the person's setting"`
 	Recurrence  Recurrence `json:"recurrence" jsonschema:"how often; schedules always repeat (use a reminder for a one-off)"`
 	Enabled     *bool      `json:"enabled,omitempty" jsonschema:"default true; a disabled schedule never fires"`
+	Link        *Link      `json:"link,omitempty" jsonschema:"optional record this is about; link a goal (entity goal) to make this that goal's regular check-in"`
 }
 type CreateScheduleInput struct {
 	Meta
@@ -44,12 +46,12 @@ type ListSchedulesInput struct {
 	ListInput
 }
 
-const scheduleCols = `id::text,name,instruction,time_of_day,time_zone,recurrence,enabled,next_at,last_fired_at,version,deleted_at,created_at,updated_at`
+const scheduleCols = `id::text,name,instruction,time_of_day,time_zone,recurrence,enabled,next_at,last_fired_at,link,version,deleted_at,created_at,updated_at`
 
 func scanSchedule(row scanner) (Schedule, error) {
 	var s Schedule
-	var rec []byte
-	if err := row.Scan(&s.ID, &s.Name, &s.Instruction, &s.TimeOfDay, &s.TimeZone, &rec, &s.Enabled, &s.NextAt, &s.LastFiredAt, &s.Version, &s.DeletedAt, &s.CreatedAt, &s.UpdatedAt); err != nil {
+	var rec, link []byte
+	if err := row.Scan(&s.ID, &s.Name, &s.Instruction, &s.TimeOfDay, &s.TimeZone, &rec, &s.Enabled, &s.NextAt, &s.LastFiredAt, &link, &s.Version, &s.DeletedAt, &s.CreatedAt, &s.UpdatedAt); err != nil {
 		return s, err
 	}
 	for _, t := range []*time.Time{s.LastFiredAt, s.DeletedAt} {
@@ -58,6 +60,12 @@ func scanSchedule(row scanner) (Schedule, error) {
 		}
 	}
 	s.NextAt, s.CreatedAt, s.UpdatedAt = s.NextAt.UTC(), s.CreatedAt.UTC(), s.UpdatedAt.UTC()
+	if len(link) > 0 {
+		s.Link = new(Link)
+		if err := json.Unmarshal(link, s.Link); err != nil {
+			return s, err
+		}
+	}
 	return s, json.Unmarshal(rec, &s.Recurrence)
 }
 
@@ -78,10 +86,14 @@ type scheduleValues struct {
 	rec                        Recurrence
 	enabled                    bool
 	next                       time.Time
+	link                       *Link
 }
 
 func (u *unit) scheduleValues(ctx context.Context, d ScheduleData) (scheduleValues, error) {
-	v := scheduleValues{name: strings.TrimSpace(d.Name), instruction: strings.TrimSpace(d.Instruction), tod: d.TimeOfDay, tz: d.TimeZone, rec: d.Recurrence, enabled: d.Enabled == nil || *d.Enabled}
+	v := scheduleValues{name: strings.TrimSpace(d.Name), instruction: strings.TrimSpace(d.Instruction), tod: d.TimeOfDay, tz: d.TimeZone, rec: d.Recurrence, enabled: d.Enabled == nil || *d.Enabled, link: d.Link}
+	if v.link != nil && (!oneOf(v.link.Entity, linkEntities...) || v.link.ID == "") {
+		return v, invalid("link.entity must name a record kind, with an id")
+	}
 	if v.name == "" || len(v.name) > 80 {
 		return v, invalid("name must be 1-80 characters")
 	}
@@ -136,8 +148,8 @@ func createSchedule(ctx context.Context, u *unit, in CreateScheduleInput) (Sched
 	if e = u.nameFree(ctx, v.name, key); e != nil {
 		return Schedule{}, e
 	}
-	if _, e = u.tx.Exec(ctx, `INSERT INTO life.schedules(id,name,instruction,time_of_day,time_zone,recurrence,enabled,next_at,session_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,NULLIF($9,''))`,
-		key, v.name, v.instruction, v.tod, v.tz, jsonOrNil(&v.rec), v.enabled, v.next, u.session); e != nil {
+	if _, e = u.tx.Exec(ctx, `INSERT INTO life.schedules(id,name,instruction,time_of_day,time_zone,recurrence,enabled,next_at,session_id,link) VALUES($1,$2,$3,$4,$5,$6,$7,$8,NULLIF($9,''),$10)`,
+		key, v.name, v.instruction, v.tod, v.tz, jsonOrNil(&v.rec), v.enabled, v.next, u.session, jsonOrNil(v.link)); e != nil {
 		return Schedule{}, e
 	}
 	s, e := u.getSchedule(ctx, key, false)
@@ -165,8 +177,8 @@ func updateSchedule(ctx context.Context, u *unit, in UpdateScheduleInput) (Sched
 	if e = u.nameFree(ctx, v.name, old.ID); e != nil {
 		return old, e
 	}
-	if _, e = u.tx.Exec(ctx, `UPDATE life.schedules SET name=$2,instruction=$3,time_of_day=$4,time_zone=$5,recurrence=$6,enabled=$7,next_at=$8,version=version+1,updated_at=now() WHERE id=$1`,
-		old.ID, v.name, v.instruction, v.tod, v.tz, jsonOrNil(&v.rec), v.enabled, v.next); e != nil {
+	if _, e = u.tx.Exec(ctx, `UPDATE life.schedules SET name=$2,instruction=$3,time_of_day=$4,time_zone=$5,recurrence=$6,enabled=$7,next_at=$8,link=$9,version=version+1,updated_at=now() WHERE id=$1`,
+		old.ID, v.name, v.instruction, v.tod, v.tz, jsonOrNil(&v.rec), v.enabled, v.next, jsonOrNil(v.link)); e != nil {
 		return old, e
 	}
 	return u.scheduleChanged(ctx, old)

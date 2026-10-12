@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"slices"
+	"strings"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/realnighthawk/life-engine/internal/engine"
 )
 
@@ -44,7 +46,13 @@ func (f *fakeWaker) Exists(_ context.Context, _, name string) (bool, error) {
 
 func newSynced(t *testing.T) (*engine.Service, *fakeWaker, func()) {
 	t.Helper()
-	s, _ := integrationEnv(t)
+	s, f, sync, _ := newSyncedPool(t)
+	return s, f, sync
+}
+
+func newSyncedPool(t *testing.T) (*engine.Service, *fakeWaker, func(), *pgxpool.Pool) {
+	t.Helper()
+	s, pool := integrationEnv(t)
 	f := &fakeWaker{armed: map[string]engine.Wake{}}
 	s.UseWaker(f)
 	return s, f, func() {
@@ -52,7 +60,7 @@ func newSynced(t *testing.T) (*engine.Service, *fakeWaker, func()) {
 		if e := s.SyncWakes(context.Background()); e != nil {
 			t.Fatal(e)
 		}
-	}
+	}, pool
 }
 
 func TestReminderWakeFollowsTheRow(t *testing.T) {
@@ -196,5 +204,65 @@ func TestMovingAReminderToAnotherSessionTakesItOffTheOld(t *testing.T) {
 	}
 	if !slices.Contains(f.log, "cancel agent:main:ios:user:u1/reminder-"+r.ID) {
 		t.Fatalf("the old session's wake was not cancelled: %v", f.log)
+	}
+}
+
+func TestGoalCheckInIsAScheduleLinkedToTheGoal(t *testing.T) {
+	s, f, sync := newSynced(t)
+	g := execute[engine.Goal](t, s, "goals_create", map[string]any{"idempotency_key": "g1", "title": "Run a 10k", "weekly_target": 3})
+	sc := execute[engine.Schedule](t, s, "schedules_create", map[string]any{"idempotency_key": "g2", "name": "Run check-in", "instruction": "How is the running going?",
+		"time_of_day": "18:00", "time_zone": "UTC", "recurrence": map[string]any{"freq": "weekly", "weekdays": []int{0}}, "link": map[string]any{"entity": "goal", "id": g.ID}})
+	if sc.Link == nil || sc.Link.ID != g.ID {
+		t.Fatalf("link not stored: %+v", sc.Link)
+	}
+	sync()
+	w, ok := f.armed["schedule-"+sc.ID]
+	if !ok || w.Kind != "goal_checkin" || w.Subject != "goal:"+g.ID || !strings.Contains(w.Objective, "Run a 10k") || !strings.Contains(w.Objective, "goals_get") {
+		t.Fatalf("goal check-in wake: %+v", w)
+	}
+	errorCode(t, s, "schedules_create", map[string]any{"idempotency_key": "g3", "name": "Bad link", "instruction": "x", "time_of_day": "09:00",
+		"recurrence": map[string]any{"freq": "daily"}, "link": map[string]any{"entity": "banana", "id": g.ID}}, "invalid_input")
+}
+
+func TestMonitorWakeAndRecordedChecks(t *testing.T) {
+	s, f, sync, pool := newSyncedPool(t)
+	m := execute[engine.Monitor](t, s, "monitors_create", map[string]any{"idempotency_key": "m1", "name": "Flight prices", "objective": "Tell me if London to Lisbon drops under 80", "every_minutes": 60})
+	if !m.Enabled || m.LastCheckedAt != nil || !m.NextAt.After(time.Now().Add(59*time.Minute)) {
+		t.Fatalf("created: %+v", m)
+	}
+	errorCode(t, s, "monitors_create", map[string]any{"idempotency_key": "m2", "name": "flight PRICES", "objective": "x", "every_minutes": 60}, "conflict")
+	errorCode(t, s, "monitors_create", map[string]any{"idempotency_key": "m3", "name": "Too often", "objective": "x", "every_minutes": 5}, "invalid_input")
+
+	sync()
+	w, ok := f.armed["monitor-"+m.ID]
+	if !ok || w.Kind != "monitor" || w.Subject != "monitor:"+m.ID || !w.At.Equal(m.NextAt) || !strings.Contains(w.Objective, "monitors_record") {
+		t.Fatalf("monitor wake: %+v", f.armed)
+	}
+
+	// The agent records each check; that is not an edit by the person, so the version holds.
+	rec := execute[engine.Monitor](t, s, "monitors_record", map[string]any{"idempotency_key": "m4", "id": m.ID, "result": "Cheapest is 112, no change", "triggered": false})
+	if rec.LastCheckedAt == nil || rec.LastResult != "Cheapest is 112, no change" || rec.LastTriggeredAt != nil || rec.Version != m.Version {
+		t.Fatalf("recorded: %+v", rec)
+	}
+	rec = execute[engine.Monitor](t, s, "monitors_record", map[string]any{"idempotency_key": "m5", "id": m.ID, "result": "Dropped to 74", "triggered": true})
+	if rec.LastTriggeredAt == nil {
+		t.Fatalf("a triggered check must be remembered: %+v", rec)
+	}
+
+	// An hour late and then some: missed checks are skipped, the next slot is the first one still ahead.
+	if _, e := pool.Exec(context.Background(), "UPDATE life.monitors SET next_at = now() - interval '150 minutes' WHERE id=$1", m.ID); e != nil {
+		t.Fatal(e)
+	}
+	sync()
+	after := execute[engine.Monitor](t, s, "monitors_get", map[string]any{"id": m.ID})
+	if !after.NextAt.After(time.Now()) || after.NextAt.After(time.Now().Add(time.Hour)) || !f.armed["monitor-"+m.ID].At.Equal(after.NextAt) {
+		t.Fatalf("not moved on to the next slot: next %v armed %v", after.NextAt, f.armed["monitor-"+m.ID].At)
+	}
+
+	upd := execute[engine.Monitor](t, s, "monitors_update", map[string]any{"idempotency_key": "m6", "id": m.ID, "expected_version": after.Version, "name": "Flight prices",
+		"objective": "Tell me if London to Lisbon drops under 80", "every_minutes": 60, "enabled": false})
+	sync()
+	if _, armed := f.armed["monitor-"+m.ID]; upd.Enabled || armed {
+		t.Fatalf("a paused monitor must have no wake: %+v", upd)
 	}
 }

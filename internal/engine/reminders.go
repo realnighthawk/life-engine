@@ -156,7 +156,7 @@ func (d ReminderData) values() (reminderValues, error) {
 }
 
 // linkEntities are the record kinds a reminder or notice can point at.
-var linkEntities = []string{"reminder", "schedule", "goal", "step", "plan_item", "routine", "journal_entry", "note", "capture"}
+var linkEntities = []string{"reminder", "schedule", "monitor", "goal", "step", "plan_item", "routine", "journal_entry", "note", "capture"}
 
 func jsonOrNil(v any) any {
 	switch x := v.(type) {

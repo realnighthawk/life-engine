@@ -18,7 +18,7 @@ func (s *Service) registerOperations() {
 	})
 	register(s, "settings_get", "Read the person's settings: their time zone (which decides what 'today' means) and working hours.", false, func(c context.Context, u *unit, _ struct{}) (Settings, error) { return u.getSettings(c) })
 	register(s, "settings_set", "Set the person's time zone and working hours (versioned). Set the time zone first: today's plan and closing the day depend on it.", true, setSettings)
-	register(s, "schedules_create", "Create a recurring prompt the person asked you to run, such as 'every Sunday evening, review my week'. It appears in their app where they can pause or edit it. Use this, not a private wake, for anything the person asked to happen on a schedule; use a wake only for your own follow-ups. When it fires you are woken with the instruction.", true, createSchedule)
+	register(s, "schedules_create", "Create a recurring prompt the person asked you to run, such as 'every Sunday evening, review my week'. It appears in their app where they can pause or edit it. Use this, not a private wake, for anything the person asked to happen on a schedule; use a wake only for your own follow-ups. When it fires you are woken with the instruction. To give a goal a regular check-in, link the goal (link entity goal): you are then woken to look at its progress and offer a smaller next step if it has stalled.", true, createSchedule)
 	register(s, "schedules_get", "Read one schedule, including when it next fires.", false, func(c context.Context, u *unit, in GetInput) (Schedule, error) { return u.getSchedule(c, in.ID, false) })
 	register(s, "schedules_list", "List the person's recurring prompts, soonest first.", false, listSchedules)
 	register(s, "schedules_update", "Replace a schedule's name, instruction, time, repeat or enabled flag using the version you last read.", true, updateSchedule)
@@ -27,6 +27,17 @@ func (s *Service) registerOperations() {
 	})
 	register(s, "schedules_restore", "Restore a deleted schedule; it resumes from now.", true, func(c context.Context, u *unit, in EditInput) (Schedule, error) {
 		return lifecycleSchedule(c, u, in, true)
+	})
+	register(s, "monitors_create", "Create a monitor: something the person asked you to keep an eye on, checked on an interval (15 minutes to 31 days), with the person told only when it matters. It appears in their app where they can pause or edit it. Use this, not a private wake, for anything the person asked you to watch. When a check is due you are woken with the objective: check it, call monitors_record with what you found, and only if the person should hear about it set triggered and call notify_user.", true, createMonitor)
+	register(s, "monitors_get", "Read one monitor, including its last result and when it is next checked.", false, func(c context.Context, u *unit, in GetInput) (Monitor, error) { return u.getMonitor(c, in.ID, false) })
+	register(s, "monitors_list", "List the person's monitors, next check first.", false, listMonitors)
+	register(s, "monitors_update", "Replace a monitor's name, objective, interval or enabled flag using the version you last read.", true, updateMonitor)
+	register(s, "monitors_record", "Record the outcome of a check you just ran: one line on what you found, and whether the person should be told. Call it every time a monitor wakes you, including when nothing needs saying.", true, recordCheck)
+	register(s, "monitors_delete", "Delete a monitor (it can be restored).", true, func(c context.Context, u *unit, in EditInput) (Monitor, error) {
+		return lifecycleMonitor(c, u, in, false)
+	})
+	register(s, "monitors_restore", "Restore a deleted monitor; it resumes from now.", true, func(c context.Context, u *unit, in EditInput) (Monitor, error) {
+		return lifecycleMonitor(c, u, in, true)
 	})
 	register(s, "goals_create", "Create a goal the person wants to make progress on, optionally with starting steps (small, concrete actions with minutes). Break a big goal into steps of 10-30 minutes so there is always a next action to show.", true, createGoal)
 	register(s, "goals_get", "Read a goal with its steps, progress and next step.", false, func(c context.Context, u *unit, in GetInput) (Goal, error) { return u.getGoal(c, in.ID, false) })
