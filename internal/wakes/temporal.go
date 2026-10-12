@@ -6,7 +6,6 @@ package wakes
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/realnighthawk/life-engine/internal/engine"
 	enumspb "go.temporal.io/api/enums/v1"
@@ -55,11 +54,18 @@ func (t *Temporal) options(w engine.Wake) client.ScheduleOptions {
 	id := t.id(w.Name)
 	return client.ScheduleOptions{
 		ID: id,
-		// A one-shot, exactly as arm_wake builds it: start at the instant, one interval, closed a second later.
+		// A one-shot at an exact instant is a calendar spec for that second (UTC). An interval spec cannot do it: intervals
+		// align to the epoch, not to StartAt, so "start at T, every 10 years" has no occurrence inside [T, T+1s].
 		Spec: client.ScheduleSpec{
-			StartAt:   w.At,
-			EndAt:     w.At.Add(time.Second),
-			Intervals: []client.ScheduleIntervalSpec{{Every: 3650 * 24 * time.Hour}},
+			Calendars: []client.ScheduleCalendarSpec{{
+				Year:       []client.ScheduleRange{{Start: w.At.UTC().Year()}},
+				Month:      []client.ScheduleRange{{Start: int(w.At.UTC().Month())}},
+				DayOfMonth: []client.ScheduleRange{{Start: w.At.UTC().Day()}},
+				Hour:       []client.ScheduleRange{{Start: w.At.UTC().Hour()}},
+				Minute:     []client.ScheduleRange{{Start: w.At.UTC().Minute()}},
+				Second:     []client.ScheduleRange{{Start: w.At.UTC().Second()}},
+			}},
+			TimeZoneName: "UTC",
 		},
 		Action: &client.ScheduleWorkflowAction{
 			ID:        id,

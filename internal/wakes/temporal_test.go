@@ -10,7 +10,8 @@ import (
 )
 
 // TestScheduleShape pins what tenant-worker/tenant_worker/tools_wake.py arm_wake builds for a one-shot time wake: same id
-// scheme, same workflow, same input keys, a single action, skip overlap. If arm_wake changes, this changes with it.
+// scheme, same workflow, same input keys, one action, skip overlap, and a calendar spec for the exact second (not an
+// interval; see temporal.go). If arm_wake changes, this changes with it. TestLiveTemporal proves it fires when set.
 func TestScheduleShape(t *testing.T) {
 	w := &Temporal{cfg: Config{Namespace: "agents", TaskQueue: "agent-loop", TenantSlug: "acme", SessionKey: "agent:main:ios:user:u1"}}
 	at := time.Date(2026, 10, 12, 17, 0, 0, 0, time.UTC)
@@ -20,8 +21,12 @@ func TestScheduleShape(t *testing.T) {
 	if o.ID != id || o.RemainingActions != 1 || o.Overlap != enumspb.SCHEDULE_OVERLAP_POLICY_SKIP {
 		t.Fatalf("schedule: %+v", o)
 	}
-	if !o.Spec.StartAt.Equal(at) || !o.Spec.EndAt.Equal(at.Add(time.Second)) || len(o.Spec.Intervals) != 1 || o.Spec.Intervals[0].Every != 3650*24*time.Hour {
+	if len(o.Spec.Calendars) != 1 || o.Spec.TimeZoneName != "UTC" {
 		t.Fatalf("spec: %+v", o.Spec)
+	}
+	c := o.Spec.Calendars[0]
+	if c.Year[0].Start != 2026 || c.Month[0].Start != 10 || c.DayOfMonth[0].Start != 12 || c.Hour[0].Start != 17 || c.Minute[0].Start != 0 || c.Second[0].Start != 0 {
+		t.Fatalf("calendar: %+v", c)
 	}
 	act := o.Action.(*client.ScheduleWorkflowAction)
 	if act.Workflow != "WakeWorkflow" || act.TaskQueue != "agent-loop" || act.ID != id {
