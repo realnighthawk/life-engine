@@ -42,7 +42,7 @@ func (s *Service) registerOperations() {
 		return lifecycleMonitor(c, u, in, true)
 	})
 	register(s, "goals_create", "Create a goal: an END STATE the person wants to reach (\"run a 10k by March\", \"lose 5 kg\"). Never use it for a behaviour that repeats forever (drinking water daily is a routine). Steps are ONE-OFF tasks, small and concrete, 10-30 minutes, so there is always a next action. Anything done repeatedly is a routine, not a step: look at the person's existing routines first, pass the ones that serve this goal in routine_ids, and create a routine (routines_create) for what is missing.", true, createGoal)
-	register(s, "goals_link_routine", "Say that a routine serves a goal (idempotent). Use this when the person has a routine that moves a goal forward, instead of copying it into the goal's steps. Look at their existing routines first and link what already fits.", true, func(c context.Context, u *unit, in LinkRoutineInput) (Goal, error) {
+	register(s, "goals_link_routine", "Say that a routine serves a goal (idempotent). Use this when the person has a routine that moves a goal forward, instead of copying it into the goal's steps. Look at their existing routines first and link what already fits. If one of the goal's steps only repeats that routine (\"log meals today\"), remove the step with steps_delete so the same thing is not tracked twice.", true, func(c context.Context, u *unit, in LinkRoutineInput) (Goal, error) {
 		return linkGoalRoutine(c, u, in, true)
 	})
 	register(s, "goals_unlink_routine", "Say that a routine no longer serves a goal. The routine itself is untouched.", true, func(c context.Context, u *unit, in LinkRoutineInput) (Goal, error) {

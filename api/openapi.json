@@ -15888,7 +15888,7 @@
     },
     "/api/v1/operations/goals_link_routine": {
       "post": {
-        "description": "Say that a routine serves a goal (idempotent). Use this when the person has a routine that moves a goal forward, instead of copying it into the goal's steps. Look at their existing routines first and link what already fits.",
+        "description": "Say that a routine serves a goal (idempotent). Use this when the person has a routine that moves a goal forward, instead of copying it into the goal's steps. Look at their existing routines first and link what already fits. If one of the goal's steps only repeats that routine (\"log meals today\"), remove the step with steps_delete so the same thing is not tracked twice.",
         "operationId": "goals_link_routine",
         "requestBody": {
           "content": {
