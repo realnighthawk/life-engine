@@ -7995,6 +7995,376 @@
         ],
         "type": "object"
       },
+      "reminders_ack_input": {
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "description": "RFC 3339 occurrence being cleared; default the reminder's current due time",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id"
+        ],
+        "type": "object"
+      },
+      "reminders_ack_output": {
+        "additionalProperties": false,
+        "properties": {
+          "completed_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "due_at": {
+            "description": "when it is due; null for an undated reminder",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "last_completed_at": {
+            "description": "for recurring reminders, the last time one occurrence was completed",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "link": {
+            "additionalProperties": false,
+            "properties": {
+              "entity": {
+                "description": "reminder, schedule, goal, step, plan_item, routine, journal_entry, note or capture",
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entity",
+              "id"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
+          "notes": {
+            "type": "string"
+          },
+          "recurrence": {
+            "additionalProperties": false,
+            "properties": {
+              "freq": {
+                "description": "daily, weekly or monthly",
+                "type": "string"
+              },
+              "interval": {
+                "description": "repeat every N days/weeks/months, 1-365, default 1",
+                "type": "integer"
+              },
+              "weekdays": {
+                "description": "weekly only: days of the week, 0 = Sunday to 6 = Saturday; empty repeats on the due date's weekday",
+                "items": {
+                  "type": "integer"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              }
+            },
+            "required": [
+              "freq"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
+          "session_id": {
+            "description": "the conversation that created it, when the agent did",
+            "type": "string"
+          },
+          "snoozed_until": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "source": {
+            "description": "user or agent",
+            "type": "string"
+          },
+          "state": {
+            "description": "pending or done",
+            "type": "string"
+          },
+          "time_zone": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "turn_seq": {
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "notes",
+          "due_at",
+          "snoozed_until",
+          "time_zone",
+          "recurrence",
+          "source",
+          "turn_seq",
+          "link",
+          "state",
+          "completed_at",
+          "last_completed_at",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "reminders_agenda_input": {
+        "additionalProperties": false,
+        "properties": {
+          "day": {
+            "description": "local date YYYY-MM-DD; default today",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "reminders_agenda_output": {
+        "additionalProperties": false,
+        "properties": {
+          "day": {
+            "type": "string"
+          },
+          "items": {
+            "description": "soonest first",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "at": {
+                  "description": "when this occurrence is due",
+                  "type": "string"
+                },
+                "overdue": {
+                  "description": "an open one-off from an earlier day, carried onto today",
+                  "type": "boolean"
+                },
+                "reminder": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "completed_at": {
+                      "type": [
+                        "null",
+                        "string"
+                      ]
+                    },
+                    "created_at": {
+                      "type": "string"
+                    },
+                    "deleted_at": {
+                      "type": [
+                        "null",
+                        "string"
+                      ]
+                    },
+                    "due_at": {
+                      "description": "when it is due; null for an undated reminder",
+                      "type": [
+                        "null",
+                        "string"
+                      ]
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "last_completed_at": {
+                      "description": "for recurring reminders, the last time one occurrence was completed",
+                      "type": [
+                        "null",
+                        "string"
+                      ]
+                    },
+                    "link": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "entity": {
+                          "description": "reminder, schedule, goal, step, plan_item, routine, journal_entry, note or capture",
+                          "type": "string"
+                        },
+                        "id": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "entity",
+                        "id"
+                      ],
+                      "type": [
+                        "null",
+                        "object"
+                      ]
+                    },
+                    "notes": {
+                      "type": "string"
+                    },
+                    "recurrence": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "freq": {
+                          "description": "daily, weekly or monthly",
+                          "type": "string"
+                        },
+                        "interval": {
+                          "description": "repeat every N days/weeks/months, 1-365, default 1",
+                          "type": "integer"
+                        },
+                        "weekdays": {
+                          "description": "weekly only: days of the week, 0 = Sunday to 6 = Saturday; empty repeats on the due date's weekday",
+                          "items": {
+                            "type": "integer"
+                          },
+                          "type": [
+                            "null",
+                            "array"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "freq"
+                      ],
+                      "type": [
+                        "null",
+                        "object"
+                      ]
+                    },
+                    "session_id": {
+                      "description": "the conversation that created it, when the agent did",
+                      "type": "string"
+                    },
+                    "snoozed_until": {
+                      "type": [
+                        "null",
+                        "string"
+                      ]
+                    },
+                    "source": {
+                      "description": "user or agent",
+                      "type": "string"
+                    },
+                    "state": {
+                      "description": "pending or done",
+                      "type": "string"
+                    },
+                    "time_zone": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "turn_seq": {
+                      "type": [
+                        "null",
+                        "integer"
+                      ]
+                    },
+                    "updated_at": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "title",
+                    "notes",
+                    "due_at",
+                    "snoozed_until",
+                    "time_zone",
+                    "recurrence",
+                    "source",
+                    "turn_seq",
+                    "link",
+                    "state",
+                    "completed_at",
+                    "last_completed_at",
+                    "version",
+                    "deleted_at",
+                    "created_at",
+                    "updated_at"
+                  ],
+                  "type": "object"
+                },
+                "state": {
+                  "description": "upcoming; due (it has fired and not yet been cleared); or acknowledged",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "reminder",
+                "at",
+                "state",
+                "overdue"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          }
+        },
+        "required": [
+          "day",
+          "items"
+        ],
+        "type": "object"
+      },
       "reminders_complete_input": {
         "additionalProperties": false,
         "properties": {
@@ -18418,6 +18788,216 @@
           }
         ],
         "x-mcp-tool": "plan_replan_preview",
+        "x-read-only": true
+      }
+    },
+    "/api/v1/operations/reminders_ack": {
+      "post": {
+        "description": "Clear one occurrence of a reminder (\"Got it\"). A one-off is finished by it; a repeating reminder carries on and only that occurrence is cleared. Use reminders_complete to finish a reminder outright.",
+        "operationId": "reminders_ack",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/reminders_ack_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/reminders_ack_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "reminders_ack",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/reminders_agenda": {
+      "post": {
+        "description": "A day's cues, one entry per occurrence, each upcoming, due (fired, not yet cleared) or acknowledged. A repeating reminder appears once for each time it falls that day. This is what the person's Today screen shows.",
+        "operationId": "reminders_agenda",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/reminders_agenda_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/reminders_agenda_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "reminders_agenda",
         "x-read-only": true
       }
     },

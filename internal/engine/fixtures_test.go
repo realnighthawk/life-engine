@@ -125,6 +125,8 @@ func TestWriteClientFixtures(t *testing.T) {
 
 	// A reminder that is due, as the notice mcp-hub drains.
 	call("reminder_due", "reminders_create", map[string]any{"idempotency_key": k(), "title": "Call the bank", "due_at": time.Now().UTC().Add(-time.Minute).Format(time.RFC3339), "time_zone": "Europe/London"})
+	call("reminders_agenda", "reminders_agenda", map[string]any{})
+	call("reminder_acked", "reminders_ack", map[string]any{"idempotency_key": k(), "id": id(rem)})
 	pending := call("events_pending", "events_pending", map[string]any{})
 	if items := pending["items"].([]any); len(items) == 0 {
 		t.Fatal("expected a due notice")

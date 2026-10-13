@@ -8,6 +8,8 @@ func (s *Service) registerOperations() {
 	register(s, "reminders_get", "Read one reminder, including whether it is done, snoozed or repeating.", false, func(c context.Context, u *unit, in GetInput) (Reminder, error) { return u.getReminder(c, in.ID, false) })
 	register(s, "reminders_list", "List the person's reminders: pending by default, or done or all, optionally within a due range or matching text. Soonest first; undated last.", false, listReminders)
 	register(s, "reminders_update", "Replace a reminder's editable fields (title, notes, due time, zone, repeat, link) using the version you last read. Changing the due time clears any snooze.", true, updateReminder)
+	register(s, "reminders_agenda", "A day's cues, one entry per occurrence, each upcoming, due (fired, not yet cleared) or acknowledged. A repeating reminder appears once for each time it falls that day. This is what the person's Today screen shows.", false, remindersAgenda)
+	register(s, "reminders_ack", "Clear one occurrence of a reminder (\"Got it\"). A one-off is finished by it; a repeating reminder carries on and only that occurrence is cleared. Use reminders_complete to finish a reminder outright.", true, ackReminder)
 	register(s, "reminders_complete", "Mark a reminder done. A repeating reminder stays pending and moves to its next occurrence if it was due.", true, completeReminder)
 	register(s, "reminders_snooze", "Be reminded again at a later time without changing the reminder's schedule.", true, snoozeReminder)
 	register(s, "reminders_delete", "Delete a reminder (it can be restored).", true, func(c context.Context, u *unit, in EditInput) (Reminder, error) {
