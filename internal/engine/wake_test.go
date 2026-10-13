@@ -35,17 +35,18 @@ func TestDesiredWake(t *testing.T) {
 
 func TestDesiredRoutineWake(t *testing.T) {
 	now := time.Date(2026, 10, 12, 12, 0, 0, 0, time.UTC) // a Monday
-	clock := func(v string) *string { return &v }
 	cases := []struct {
 		name string
 		r    routineRow
 		want string
 	}{
-		{"later today", routineRow{remindAt: clock("18:30"), tz: "UTC"}, "2026-10-12T18:30:00Z"},
-		{"already passed, so tomorrow", routineRow{remindAt: clock("08:00"), tz: "UTC"}, "2026-10-13T08:00:00Z"},
-		{"only on Wednesdays", routineRow{remindAt: clock("08:00"), tz: "UTC", weekdays: []int16{3}}, "2026-10-14T08:00:00Z"},
-		{"on the local clock", routineRow{remindAt: clock("07:00"), tz: "America/New_York"}, "2026-10-13T11:00:00Z"},
-		{"just due stays", routineRow{remindAt: clock("11:59"), tz: "UTC"}, "2026-10-12T11:59:00Z"},
+		{"later today", routineRow{cues: []string{"18:30"}, tz: "UTC"}, "2026-10-12T18:30:00Z"},
+		{"already passed, so tomorrow", routineRow{cues: []string{"08:00"}, tz: "UTC"}, "2026-10-13T08:00:00Z"},
+		{"only on Wednesdays", routineRow{cues: []string{"08:00"}, tz: "UTC", weekdays: []int16{3}}, "2026-10-14T08:00:00Z"},
+		{"on the local clock", routineRow{cues: []string{"07:00"}, tz: "America/New_York"}, "2026-10-13T11:00:00Z"},
+		{"just due stays", routineRow{cues: []string{"11:59"}, tz: "UTC"}, "2026-10-12T11:59:00Z"},
+		{"the next of three cues", routineRow{cues: []string{"09:00", "13:00", "17:00"}, tz: "UTC"}, "2026-10-12T13:00:00Z"},
+		{"after the last cue, the first tomorrow", routineRow{cues: []string{"09:00", "10:00", "11:00"}, tz: "UTC"}, "2026-10-13T09:00:00Z"},
 	}
 	for _, c := range cases {
 		got := desiredRoutineWake(c.r, now)
@@ -54,6 +55,6 @@ func TestDesiredRoutineWake(t *testing.T) {
 		}
 	}
 	if desiredRoutineWake(routineRow{tz: "UTC"}, now) != nil {
-		t.Error("no remind_at means no wake")
+		t.Error("no cues means no wake")
 	}
 }

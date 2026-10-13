@@ -1,6 +1,0 @@
-{
-  "error": {
-    "code": "invalid_input",
-    "message": "title must be 1-200 characters"
-  }
-}

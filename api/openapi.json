@@ -4426,6 +4426,10 @@
                 "items": {
                   "additionalProperties": false,
                   "properties": {
+                    "count": {
+                      "description": "times done on this day so far",
+                      "type": "integer"
+                    },
                     "days_since_last": {
                       "description": "days since the last check-in, or null if never",
                       "type": [
@@ -4434,6 +4438,7 @@
                       ]
                     },
                     "done": {
+                      "description": "count has reached the target",
                       "type": "boolean"
                     },
                     "gap": {
@@ -4449,6 +4454,16 @@
                         "created_at": {
                           "type": "string"
                         },
+                        "cues": {
+                          "description": "HH:MM local times the person is nudged; each nudge checks the day's count first",
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": [
+                            "null",
+                            "array"
+                          ]
+                        },
                         "deleted_at": {
                           "type": [
                             "null",
@@ -4461,19 +4476,16 @@
                         "minutes": {
                           "type": "integer"
                         },
-                        "remind_at": {
-                          "description": "HH:MM local time the person wants a nudge, or null",
-                          "type": [
-                            "null",
-                            "string"
-                          ]
-                        },
                         "short_minutes": {
                           "type": "integer"
                         },
                         "short_title": {
                           "description": "the smaller version for a busy day",
                           "type": "string"
+                        },
+                        "target_per_day": {
+                          "description": "times to do it on each day it applies; the day is done when the count reaches this",
+                          "type": "integer"
                         },
                         "time_zone": {
                           "type": "string"
@@ -4505,7 +4517,8 @@
                         "short_title",
                         "short_minutes",
                         "weekdays",
-                        "remind_at",
+                        "target_per_day",
+                        "cues",
                         "time_zone",
                         "version",
                         "deleted_at",
@@ -4522,6 +4535,10 @@
                       "description": "consecutive scheduled days done; days it does not apply neither extend nor break it",
                       "type": "integer"
                     },
+                    "target": {
+                      "description": "times to do it on this day",
+                      "type": "integer"
+                    },
                     "variant": {
                       "type": "string"
                     }
@@ -4529,6 +4546,8 @@
                   "required": [
                     "routine",
                     "scheduled",
+                    "target",
+                    "count",
                     "done",
                     "streak",
                     "days_since_last",
@@ -9556,6 +9575,10 @@
       "routine_checkins_set_output": {
         "additionalProperties": false,
         "properties": {
+          "count": {
+            "description": "times done on this day so far",
+            "type": "integer"
+          },
           "days_since_last": {
             "description": "days since the last check-in, or null if never",
             "type": [
@@ -9564,6 +9587,7 @@
             ]
           },
           "done": {
+            "description": "count has reached the target",
             "type": "boolean"
           },
           "gap": {
@@ -9579,6 +9603,16 @@
               "created_at": {
                 "type": "string"
               },
+              "cues": {
+                "description": "HH:MM local times the person is nudged; each nudge checks the day's count first",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              },
               "deleted_at": {
                 "type": [
                   "null",
@@ -9591,19 +9625,16 @@
               "minutes": {
                 "type": "integer"
               },
-              "remind_at": {
-                "description": "HH:MM local time the person wants a nudge, or null",
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
               "short_minutes": {
                 "type": "integer"
               },
               "short_title": {
                 "description": "the smaller version for a busy day",
                 "type": "string"
+              },
+              "target_per_day": {
+                "description": "times to do it on each day it applies; the day is done when the count reaches this",
+                "type": "integer"
               },
               "time_zone": {
                 "type": "string"
@@ -9635,7 +9666,8 @@
               "short_title",
               "short_minutes",
               "weekdays",
-              "remind_at",
+              "target_per_day",
+              "cues",
               "time_zone",
               "version",
               "deleted_at",
@@ -9652,6 +9684,10 @@
             "description": "consecutive scheduled days done; days it does not apply neither extend nor break it",
             "type": "integer"
           },
+          "target": {
+            "description": "times to do it on this day",
+            "type": "integer"
+          },
           "variant": {
             "type": "string"
           }
@@ -9659,6 +9695,8 @@
         "required": [
           "routine",
           "scheduled",
+          "target",
+          "count",
           "done",
           "streak",
           "days_since_last",
@@ -9670,6 +9708,16 @@
       "routines_create_input": {
         "additionalProperties": false,
         "properties": {
+          "cues": {
+            "description": "HH:MM local times to be nudged, up to 8, for example [\"09:00\",\"13:00\",\"17:00\"]; a nudge only speaks if the day is not yet done",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
           "id": {
             "type": "string"
           },
@@ -9681,13 +9729,6 @@
             "description": "1-240, default 15",
             "type": "integer"
           },
-          "remind_at": {
-            "description": "HH:MM local time for a nudge if it is not done yet",
-            "type": [
-              "null",
-              "string"
-            ]
-          },
           "short_minutes": {
             "description": "1-240, default 5",
             "type": "integer"
@@ -9695,6 +9736,13 @@
           "short_title": {
             "description": "the busy-day version; default 'A smaller version'",
             "type": "string"
+          },
+          "target_per_day": {
+            "description": "times to do it each day it applies, 1-12, default 1 (3 for drink water)",
+            "type": [
+              "null",
+              "integer"
+            ]
           },
           "time_zone": {
             "description": "IANA zone; defaults to the person's setting",
@@ -9727,6 +9775,16 @@
           "created_at": {
             "type": "string"
           },
+          "cues": {
+            "description": "HH:MM local times the person is nudged; each nudge checks the day's count first",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
           "deleted_at": {
             "type": [
               "null",
@@ -9739,19 +9797,16 @@
           "minutes": {
             "type": "integer"
           },
-          "remind_at": {
-            "description": "HH:MM local time the person wants a nudge, or null",
-            "type": [
-              "null",
-              "string"
-            ]
-          },
           "short_minutes": {
             "type": "integer"
           },
           "short_title": {
             "description": "the smaller version for a busy day",
             "type": "string"
+          },
+          "target_per_day": {
+            "description": "times to do it on each day it applies; the day is done when the count reaches this",
+            "type": "integer"
           },
           "time_zone": {
             "type": "string"
@@ -9783,7 +9838,8 @@
           "short_title",
           "short_minutes",
           "weekdays",
-          "remind_at",
+          "target_per_day",
+          "cues",
           "time_zone",
           "version",
           "deleted_at",
@@ -9821,6 +9877,16 @@
           "created_at": {
             "type": "string"
           },
+          "cues": {
+            "description": "HH:MM local times the person is nudged; each nudge checks the day's count first",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
           "deleted_at": {
             "type": [
               "null",
@@ -9833,19 +9899,16 @@
           "minutes": {
             "type": "integer"
           },
-          "remind_at": {
-            "description": "HH:MM local time the person wants a nudge, or null",
-            "type": [
-              "null",
-              "string"
-            ]
-          },
           "short_minutes": {
             "type": "integer"
           },
           "short_title": {
             "description": "the smaller version for a busy day",
             "type": "string"
+          },
+          "target_per_day": {
+            "description": "times to do it on each day it applies; the day is done when the count reaches this",
+            "type": "integer"
           },
           "time_zone": {
             "type": "string"
@@ -9877,7 +9940,8 @@
           "short_title",
           "short_minutes",
           "weekdays",
-          "remind_at",
+          "target_per_day",
+          "cues",
           "time_zone",
           "version",
           "deleted_at",
@@ -9905,6 +9969,16 @@
           "created_at": {
             "type": "string"
           },
+          "cues": {
+            "description": "HH:MM local times the person is nudged; each nudge checks the day's count first",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
           "deleted_at": {
             "type": [
               "null",
@@ -9917,19 +9991,16 @@
           "minutes": {
             "type": "integer"
           },
-          "remind_at": {
-            "description": "HH:MM local time the person wants a nudge, or null",
-            "type": [
-              "null",
-              "string"
-            ]
-          },
           "short_minutes": {
             "type": "integer"
           },
           "short_title": {
             "description": "the smaller version for a busy day",
             "type": "string"
+          },
+          "target_per_day": {
+            "description": "times to do it on each day it applies; the day is done when the count reaches this",
+            "type": "integer"
           },
           "time_zone": {
             "type": "string"
@@ -9961,12 +10032,200 @@
           "short_title",
           "short_minutes",
           "weekdays",
-          "remind_at",
+          "target_per_day",
+          "cues",
           "time_zone",
           "version",
           "deleted_at",
           "created_at",
           "updated_at"
+        ],
+        "type": "object"
+      },
+      "routines_history_input": {
+        "additionalProperties": false,
+        "properties": {
+          "days": {
+            "description": "how many days back to include, 7-120, default 30",
+            "type": "integer"
+          },
+          "routine_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "routine_id"
+        ],
+        "type": "object"
+      },
+      "routines_history_output": {
+        "additionalProperties": false,
+        "properties": {
+          "best_streak": {
+            "description": "longest run of scheduled days done in the last 400 days",
+            "type": "integer"
+          },
+          "days": {
+            "description": "oldest first, ending today",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "count": {
+                  "type": "integer"
+                },
+                "day": {
+                  "type": "string"
+                },
+                "done": {
+                  "type": "boolean"
+                },
+                "scheduled": {
+                  "type": "boolean"
+                },
+                "target": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "day",
+                "scheduled",
+                "count",
+                "target",
+                "done"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "last_30": {
+            "additionalProperties": false,
+            "properties": {
+              "done": {
+                "description": "scheduled days whose count reached the target",
+                "type": "integer"
+              },
+              "scheduled": {
+                "description": "days in the window the routine applied",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "done",
+              "scheduled"
+            ],
+            "type": "object"
+          },
+          "last_7": {
+            "additionalProperties": false,
+            "properties": {
+              "done": {
+                "description": "scheduled days whose count reached the target",
+                "type": "integer"
+              },
+              "scheduled": {
+                "description": "days in the window the routine applied",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "done",
+              "scheduled"
+            ],
+            "type": "object"
+          },
+          "routine": {
+            "additionalProperties": false,
+            "properties": {
+              "created_at": {
+                "type": "string"
+              },
+              "cues": {
+                "description": "HH:MM local times the person is nudged; each nudge checks the day's count first",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              },
+              "deleted_at": {
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "id": {
+                "type": "string"
+              },
+              "minutes": {
+                "type": "integer"
+              },
+              "short_minutes": {
+                "type": "integer"
+              },
+              "short_title": {
+                "description": "the smaller version for a busy day",
+                "type": "string"
+              },
+              "target_per_day": {
+                "description": "times to do it on each day it applies; the day is done when the count reaches this",
+                "type": "integer"
+              },
+              "time_zone": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "updated_at": {
+                "type": "string"
+              },
+              "version": {
+                "type": "integer"
+              },
+              "weekdays": {
+                "description": "days it applies, 0 = Sunday to 6; empty means every day",
+                "items": {
+                  "type": "integer"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "minutes",
+              "short_title",
+              "short_minutes",
+              "weekdays",
+              "target_per_day",
+              "cues",
+              "time_zone",
+              "version",
+              "deleted_at",
+              "created_at",
+              "updated_at"
+            ],
+            "type": "object"
+          },
+          "streak": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "routine",
+          "days",
+          "last_7",
+          "last_30",
+          "streak",
+          "best_streak"
         ],
         "type": "object"
       },
@@ -10002,6 +10261,16 @@
                 "created_at": {
                   "type": "string"
                 },
+                "cues": {
+                  "description": "HH:MM local times the person is nudged; each nudge checks the day's count first",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": [
+                    "null",
+                    "array"
+                  ]
+                },
                 "deleted_at": {
                   "type": [
                     "null",
@@ -10014,19 +10283,16 @@
                 "minutes": {
                   "type": "integer"
                 },
-                "remind_at": {
-                  "description": "HH:MM local time the person wants a nudge, or null",
-                  "type": [
-                    "null",
-                    "string"
-                  ]
-                },
                 "short_minutes": {
                   "type": "integer"
                 },
                 "short_title": {
                   "description": "the smaller version for a busy day",
                   "type": "string"
+                },
+                "target_per_day": {
+                  "description": "times to do it on each day it applies; the day is done when the count reaches this",
+                  "type": "integer"
                 },
                 "time_zone": {
                   "type": "string"
@@ -10058,7 +10324,8 @@
                 "short_title",
                 "short_minutes",
                 "weekdays",
-                "remind_at",
+                "target_per_day",
+                "cues",
                 "time_zone",
                 "version",
                 "deleted_at",
@@ -10087,6 +10354,171 @@
           "items",
           "total",
           "next_offset"
+        ],
+        "type": "object"
+      },
+      "routines_log_input": {
+        "additionalProperties": false,
+        "properties": {
+          "day": {
+            "description": "local date YYYY-MM-DD, today or earlier; default today",
+            "type": "string"
+          },
+          "delta": {
+            "description": "change to the day's count: 1 (default) records one more time, -1 takes one back",
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          },
+          "routine_id": {
+            "type": "string"
+          },
+          "variant": {
+            "description": "full (default) or short, for the time(s) being recorded",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "routine_id"
+        ],
+        "type": "object"
+      },
+      "routines_log_output": {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "description": "times done on this day so far",
+            "type": "integer"
+          },
+          "days_since_last": {
+            "description": "days since the last check-in, or null if never",
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "done": {
+            "description": "count has reached the target",
+            "type": "boolean"
+          },
+          "gap": {
+            "description": "three or more days without a check-in",
+            "type": "boolean"
+          },
+          "hint": {
+            "type": "string"
+          },
+          "routine": {
+            "additionalProperties": false,
+            "properties": {
+              "created_at": {
+                "type": "string"
+              },
+              "cues": {
+                "description": "HH:MM local times the person is nudged; each nudge checks the day's count first",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              },
+              "deleted_at": {
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "id": {
+                "type": "string"
+              },
+              "minutes": {
+                "type": "integer"
+              },
+              "short_minutes": {
+                "type": "integer"
+              },
+              "short_title": {
+                "description": "the smaller version for a busy day",
+                "type": "string"
+              },
+              "target_per_day": {
+                "description": "times to do it on each day it applies; the day is done when the count reaches this",
+                "type": "integer"
+              },
+              "time_zone": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "updated_at": {
+                "type": "string"
+              },
+              "version": {
+                "type": "integer"
+              },
+              "weekdays": {
+                "description": "days it applies, 0 = Sunday to 6; empty means every day",
+                "items": {
+                  "type": "integer"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "minutes",
+              "short_title",
+              "short_minutes",
+              "weekdays",
+              "target_per_day",
+              "cues",
+              "time_zone",
+              "version",
+              "deleted_at",
+              "created_at",
+              "updated_at"
+            ],
+            "type": "object"
+          },
+          "scheduled": {
+            "description": "whether the routine applies on this day",
+            "type": "boolean"
+          },
+          "streak": {
+            "description": "consecutive scheduled days done; days it does not apply neither extend nor break it",
+            "type": "integer"
+          },
+          "target": {
+            "description": "times to do it on this day",
+            "type": "integer"
+          },
+          "variant": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "routine",
+          "scheduled",
+          "target",
+          "count",
+          "done",
+          "streak",
+          "days_since_last",
+          "gap",
+          "hint"
         ],
         "type": "object"
       },
@@ -10119,6 +10551,16 @@
           "created_at": {
             "type": "string"
           },
+          "cues": {
+            "description": "HH:MM local times the person is nudged; each nudge checks the day's count first",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
           "deleted_at": {
             "type": [
               "null",
@@ -10131,19 +10573,16 @@
           "minutes": {
             "type": "integer"
           },
-          "remind_at": {
-            "description": "HH:MM local time the person wants a nudge, or null",
-            "type": [
-              "null",
-              "string"
-            ]
-          },
           "short_minutes": {
             "type": "integer"
           },
           "short_title": {
             "description": "the smaller version for a busy day",
             "type": "string"
+          },
+          "target_per_day": {
+            "description": "times to do it on each day it applies; the day is done when the count reaches this",
+            "type": "integer"
           },
           "time_zone": {
             "type": "string"
@@ -10175,7 +10614,8 @@
           "short_title",
           "short_minutes",
           "weekdays",
-          "remind_at",
+          "target_per_day",
+          "cues",
           "time_zone",
           "version",
           "deleted_at",
@@ -10204,6 +10644,10 @@
             "items": {
               "additionalProperties": false,
               "properties": {
+                "count": {
+                  "description": "times done on this day so far",
+                  "type": "integer"
+                },
                 "days_since_last": {
                   "description": "days since the last check-in, or null if never",
                   "type": [
@@ -10212,6 +10656,7 @@
                   ]
                 },
                 "done": {
+                  "description": "count has reached the target",
                   "type": "boolean"
                 },
                 "gap": {
@@ -10227,6 +10672,16 @@
                     "created_at": {
                       "type": "string"
                     },
+                    "cues": {
+                      "description": "HH:MM local times the person is nudged; each nudge checks the day's count first",
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": [
+                        "null",
+                        "array"
+                      ]
+                    },
                     "deleted_at": {
                       "type": [
                         "null",
@@ -10239,19 +10694,16 @@
                     "minutes": {
                       "type": "integer"
                     },
-                    "remind_at": {
-                      "description": "HH:MM local time the person wants a nudge, or null",
-                      "type": [
-                        "null",
-                        "string"
-                      ]
-                    },
                     "short_minutes": {
                       "type": "integer"
                     },
                     "short_title": {
                       "description": "the smaller version for a busy day",
                       "type": "string"
+                    },
+                    "target_per_day": {
+                      "description": "times to do it on each day it applies; the day is done when the count reaches this",
+                      "type": "integer"
                     },
                     "time_zone": {
                       "type": "string"
@@ -10283,7 +10735,8 @@
                     "short_title",
                     "short_minutes",
                     "weekdays",
-                    "remind_at",
+                    "target_per_day",
+                    "cues",
                     "time_zone",
                     "version",
                     "deleted_at",
@@ -10300,6 +10753,10 @@
                   "description": "consecutive scheduled days done; days it does not apply neither extend nor break it",
                   "type": "integer"
                 },
+                "target": {
+                  "description": "times to do it on this day",
+                  "type": "integer"
+                },
                 "variant": {
                   "type": "string"
                 }
@@ -10307,6 +10764,8 @@
               "required": [
                 "routine",
                 "scheduled",
+                "target",
+                "count",
                 "done",
                 "streak",
                 "days_since_last",
@@ -10330,6 +10789,16 @@
       "routines_update_input": {
         "additionalProperties": false,
         "properties": {
+          "cues": {
+            "description": "HH:MM local times to be nudged, up to 8, for example [\"09:00\",\"13:00\",\"17:00\"]; a nudge only speaks if the day is not yet done",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
           "expected_version": {
             "description": "the version you last read; a stale version is rejected",
             "type": "integer"
@@ -10346,13 +10815,6 @@
             "description": "1-240, default 15",
             "type": "integer"
           },
-          "remind_at": {
-            "description": "HH:MM local time for a nudge if it is not done yet",
-            "type": [
-              "null",
-              "string"
-            ]
-          },
           "short_minutes": {
             "description": "1-240, default 5",
             "type": "integer"
@@ -10360,6 +10822,13 @@
           "short_title": {
             "description": "the busy-day version; default 'A smaller version'",
             "type": "string"
+          },
+          "target_per_day": {
+            "description": "times to do it each day it applies, 1-12, default 1 (3 for drink water)",
+            "type": [
+              "null",
+              "integer"
+            ]
           },
           "time_zone": {
             "description": "IANA zone; defaults to the person's setting",
@@ -10394,6 +10863,16 @@
           "created_at": {
             "type": "string"
           },
+          "cues": {
+            "description": "HH:MM local times the person is nudged; each nudge checks the day's count first",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
           "deleted_at": {
             "type": [
               "null",
@@ -10406,19 +10885,16 @@
           "minutes": {
             "type": "integer"
           },
-          "remind_at": {
-            "description": "HH:MM local time the person wants a nudge, or null",
-            "type": [
-              "null",
-              "string"
-            ]
-          },
           "short_minutes": {
             "type": "integer"
           },
           "short_title": {
             "description": "the smaller version for a busy day",
             "type": "string"
+          },
+          "target_per_day": {
+            "description": "times to do it on each day it applies; the day is done when the count reaches this",
+            "type": "integer"
           },
           "time_zone": {
             "type": "string"
@@ -10450,7 +10926,8 @@
           "short_title",
           "short_minutes",
           "weekdays",
-          "remind_at",
+          "target_per_day",
+          "cues",
           "time_zone",
           "version",
           "deleted_at",
@@ -18051,7 +18528,7 @@
     },
     "/api/v1/operations/reminders_create": {
       "post": {
-        "description": "Create a reminder for the person: something to be reminded of, optionally at a time and optionally repeating (daily, weekly on chosen weekdays, or monthly). Use this whenever the person asks to be reminded, instead of arming a private wake. It appears in their app, and when it is due they are notified without you being woken. Set source to agent and pass session_id when you create it.",
+        "description": "Create a reminder for the person: something to be reminded of, optionally at a time and optionally repeating (daily, weekly on chosen weekdays, or monthly). Use this for a one-off cue or an event (call Sam at 5, pay rent on the 1st), never for a behaviour the person wants to repeat and track, which is a routine (routines_create). It appears in their app. When it is due you are woken to check it is still wanted and tell the person with notify_user.",
         "operationId": "reminders_create",
         "requestBody": {
           "content": {
@@ -18891,7 +19368,7 @@
     },
     "/api/v1/operations/routines_create": {
       "post": {
-        "description": "Create a small routine with a busy-day version, optional weekdays and an optional nudge time. The person checks in daily; missed days are information, not failure.",
+        "description": "Create a routine: something the person wants to DO repeatedly, such as drinking water 3 times a day, stretching each morning or running Monday, Wednesday and Friday. Use this, not reminders, for any repeating behaviour; a reminder is only a one-off cue or an event. Give it a target_per_day (default 1), cues (the times to be nudged, for example three for three times a day), a short busy-day version and optional weekdays. It appears in their app with a tracker. Missed days are information, not failure.",
         "operationId": "routines_create",
         "requestBody": {
           "content": {
@@ -19204,6 +19681,111 @@
         "x-read-only": true
       }
     },
+    "/api/v1/operations/routines_history": {
+      "post": {
+        "description": "A routine's recent days, how consistent the person has been over the last 7 and 30 days, and their best run, for a tracker. A missed day lowers the rate; it never resets the history to zero.",
+        "operationId": "routines_history",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/routines_history_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/routines_history_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "routines_history",
+        "x-read-only": true
+      }
+    },
     "/api/v1/operations/routines_list": {
       "post": {
         "description": "List the person's routines.",
@@ -19307,6 +19889,111 @@
         ],
         "x-mcp-tool": "routines_list",
         "x-read-only": true
+      }
+    },
+    "/api/v1/operations/routines_log": {
+      "post": {
+        "description": "Record that the person did a routine one more time today (or on a past day), or take one back with delta -1. A routine done several times a day (drink water 3 times) is done when the count reaches its target. Prefer this to routine_checkins_set for anything counted.",
+        "operationId": "routines_log",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/routines_log_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/routines_log_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "routines_log",
+        "x-read-only": false
       }
     },
     "/api/v1/operations/routines_restore": {

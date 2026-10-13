@@ -274,42 +274,45 @@ func (s *Service) scheduleWakes(ctx context.Context, now time.Time) ([]wakeItem,
 
 type routineRow struct {
 	id, title, short, tz  string
-	remindAt              *string
+	cues                  []string
 	weekdays              []int16
 	armed                 *time.Time
 	session, armedSession string
 	deleted               bool
+	count, target         int
 }
 
-// desiredRoutineWake is the next local remind_at on a day the routine applies. Whether it is already done that day is
-// the agent's check at fire time (routines_status), not the schedule's.
+// desiredRoutineWake is the next cue, on a day the routine applies, in the routine's own time zone. Whether the day's count
+// has already reached the target is the agent's check at fire time (routines_status), not the schedule's.
 func desiredRoutineWake(r routineRow, now time.Time) *time.Time {
-	if r.deleted || r.remindAt == nil {
+	if r.deleted || len(r.cues) == 0 {
 		return nil
 	}
 	loc, err := zone(r.tz)
 	if err != nil {
 		return nil
 	}
-	clock, err := time.Parse("15:04", *r.remindAt)
-	if err != nil {
-		return nil
-	}
 	// Left alone for the grace window after it is due, as with the others.
 	from := now.Add(-wakeGrace)
 	local := from.In(loc)
-	for d := 0; d < 9; d++ {
+	var best *time.Time
+	for d := 0; d < 9 && best == nil; d++ {
 		day := local.AddDate(0, 0, d)
-		t := time.Date(day.Year(), day.Month(), day.Day(), clock.Hour(), clock.Minute(), 0, 0, loc)
-		if !t.After(from) {
+		if len(r.weekdays) > 0 && !hasDay(r.weekdays, int(day.Weekday())) {
 			continue
 		}
-		if len(r.weekdays) == 0 || hasDay(r.weekdays, int(t.Weekday())) {
-			t = t.UTC()
-			return &t
+		for _, cue := range r.cues {
+			clock, err := time.Parse("15:04", cue)
+			if err != nil {
+				continue
+			}
+			t := time.Date(day.Year(), day.Month(), day.Day(), clock.Hour(), clock.Minute(), 0, 0, loc).UTC()
+			if t.After(from) && (best == nil || t.Before(*best)) {
+				best = &t
+			}
 		}
 	}
-	return nil
+	return best
 }
 
 func hasDay(days []int16, d int) bool {
@@ -322,8 +325,8 @@ func hasDay(days []int16, d int) bool {
 }
 
 func (s *Service) routineWakes(ctx context.Context, now time.Time) ([]wakeItem, error) {
-	rows, err := s.pool.Query(ctx, `SELECT id::text,title,short_title,time_zone,remind_at,weekdays,armed_for,deleted_at IS NOT NULL,coalesce(session_id,''),coalesce(armed_session,'')
-		FROM life.routines WHERE armed_for IS NOT NULL OR (remind_at IS NOT NULL AND deleted_at IS NULL)`)
+	rows, err := s.pool.Query(ctx, `SELECT id::text,title,short_title,time_zone,cues,weekdays,armed_for,deleted_at IS NOT NULL,coalesce(session_id,''),coalesce(armed_session,'')
+		FROM life.routines WHERE armed_for IS NOT NULL OR (cardinality(cues) > 0 AND deleted_at IS NULL)`)
 	if err != nil {
 		return nil, err
 	}
@@ -331,14 +334,15 @@ func (s *Service) routineWakes(ctx context.Context, now time.Time) ([]wakeItem, 
 	var items []wakeItem
 	for rows.Next() {
 		var r routineRow
-		if err = rows.Scan(&r.id, &r.title, &r.short, &r.tz, &r.remindAt, &r.weekdays, &r.armed, &r.deleted, &r.session, &r.armedSession); err != nil {
+		if err = rows.Scan(&r.id, &r.title, &r.short, &r.tz, &r.cues, &r.weekdays, &r.armed, &r.deleted, &r.session, &r.armedSession); err != nil {
 			return nil, err
 		}
 		items = append(items, wakeItem{table: "routines", id: r.id, want: desiredRoutineWake(r, now), armed: r.armed, session: sessionScope(r.session), armedSession: r.armedSession, wake: func(at time.Time) Wake {
 			return Wake{Name: wakeName("routine", r.id), Kind: "routine", Subject: "routine:" + r.id,
-				Objective: fmt.Sprintf("It is the time the user chose to be nudged about their routine %q (Life routine %s). Check today with the Life "+
-					"routines_status tool. If it applies today and is not done, call notify_user with entity \"routine\" and id %q, a kind one-line nudge, "+
-					"and mention the short version (%s) as an easy option. If it is done or does not apply today, do nothing and say nothing.", r.title, r.id, r.id, r.short),
+				Objective: fmt.Sprintf("It is the %s nudge time the user chose for their routine %q (Life routine %s). Check today with the Life "+
+					"routines_status tool. If it applies today and today's count has not reached the target, call notify_user with entity \"routine\" and id %q, "+
+					"a kind one-line nudge that says how far along they are (for example 1 of 3) and offers the short version (%s) as an easy option. "+
+					"If the day is already done or it does not apply today, do nothing and say nothing.", cueLabel(at, r.tz), r.title, r.id, r.id, r.short),
 				Why: "The user asked to be nudged about a routine at this time.", At: at}
 		}})
 	}
@@ -405,4 +409,13 @@ func (s *Service) monitorWakes(ctx context.Context, now time.Time) ([]wakeItem, 
 			}})
 	}
 	return items, rows.Err()
+}
+
+// cueLabel is the clock time of an instant in the routine's own zone, for the wake's wording.
+func cueLabel(at time.Time, tz string) string {
+	loc, err := zone(tz)
+	if err != nil {
+		return at.UTC().Format("15:04")
+	}
+	return at.In(loc).Format("15:04")
 }

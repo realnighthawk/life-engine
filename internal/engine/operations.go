@@ -4,7 +4,7 @@ import "context"
 
 // Descriptions are written for the agent to choose a tool by outcome, so they say what the person gets, not how it is stored.
 func (s *Service) registerOperations() {
-	register(s, "reminders_create", "Create a reminder for the person: something to be reminded of, optionally at a time and optionally repeating (daily, weekly on chosen weekdays, or monthly). Use this whenever the person asks to be reminded, instead of arming a private wake. It appears in their app, and when it is due they are notified without you being woken. Set source to agent and pass session_id when you create it.", true, createReminder)
+	register(s, "reminders_create", "Create a reminder for the person: something to be reminded of, optionally at a time and optionally repeating (daily, weekly on chosen weekdays, or monthly). Use this for a one-off cue or an event (call Sam at 5, pay rent on the 1st), never for a behaviour the person wants to repeat and track, which is a routine (routines_create). It appears in their app. When it is due you are woken to check it is still wanted and tell the person with notify_user.", true, createReminder)
 	register(s, "reminders_get", "Read one reminder, including whether it is done, snoozed or repeating.", false, func(c context.Context, u *unit, in GetInput) (Reminder, error) { return u.getReminder(c, in.ID, false) })
 	register(s, "reminders_list", "List the person's reminders: pending by default, or done or all, optionally within a due range or matching text. Soonest first; undated last.", false, listReminders)
 	register(s, "reminders_update", "Replace a reminder's editable fields (title, notes, due time, zone, repeat, link) using the version you last read. Changing the due time clears any snooze.", true, updateReminder)
@@ -71,7 +71,7 @@ func (s *Service) registerOperations() {
 	register(s, "plan_proposal_apply", "Accept a proposal, making all its changes at once. Fails if the plan changed since it was offered.", true, applyProposal)
 	register(s, "plan_proposal_discard", "Decline a proposal.", true, discardProposal)
 	register(s, "next_action", "The one thing to do with the minutes the person has: today's priorities first, then the next step of a goal, then anything else that fits. Returns null when nothing fits, which is a good moment to suggest a break.", false, nextAction)
-	register(s, "routines_create", "Create a small routine with a busy-day version, optional weekdays and an optional nudge time. The person checks in daily; missed days are information, not failure.", true, createRoutine)
+	register(s, "routines_create", "Create a routine: something the person wants to DO repeatedly, such as drinking water 3 times a day, stretching each morning or running Monday, Wednesday and Friday. Use this, not reminders, for any repeating behaviour; a reminder is only a one-off cue or an event. Give it a target_per_day (default 1), cues (the times to be nudged, for example three for three times a day), a short busy-day version and optional weekdays. It appears in their app with a tracker. Missed days are information, not failure.", true, createRoutine)
 	register(s, "routines_get", "Read one routine.", false, func(c context.Context, u *unit, in GetInput) (Routine, error) { return u.getRoutine(c, in.ID, false) })
 	register(s, "routines_list", "List the person's routines.", false, listRoutines)
 	register(s, "routines_update", "Replace a routine's fields using the version you last read.", true, updateRoutine)
@@ -82,6 +82,8 @@ func (s *Service) registerOperations() {
 		return lifecycleRoutine(c, u, in, true)
 	})
 	register(s, "routine_checkins_set", "Record that the person did a routine on a day, in its full or short version, or clear it with none. Idempotent per routine and day.", true, setCheckin)
+	register(s, "routines_log", "Record that the person did a routine one more time today (or on a past day), or take one back with delta -1. A routine done several times a day (drink water 3 times) is done when the count reaches its target. Prefer this to routine_checkins_set for anything counted.", true, logRoutine)
+	register(s, "routines_history", "A routine's recent days, how consistent the person has been over the last 7 and 30 days, and their best run, for a tracker. A missed day lowers the rate; it never resets the history to zero.", false, routineHistory)
 	register(s, "routines_status", "How each routine is going on a day: done or not, the streak, days since the last check-in, whether there has been a gap of 3+ days, and a hint for an easy restart.", false, routinesStatus)
 	register(s, "journal_create", "Save a journal entry in the person's words: what happened, how it went, what they learned. Connect it to goals when it relates to them, and add one adjustment for tomorrow if they chose one. Set source to agent and pass session_id when you write it for them.", true, createJournal)
 	register(s, "journal_get", "Read one journal entry with its attachments.", false, func(c context.Context, u *unit, in GetInput) (JournalEntry, error) {
