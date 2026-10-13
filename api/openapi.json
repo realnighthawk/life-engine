@@ -5603,6 +5603,73 @@
         ],
         "type": "object"
       },
+      "life_notify_input": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "description": "one or two lines of detail, at most 2000 characters",
+            "type": "string"
+          },
+          "id": {
+            "description": "client-generated UUID, so a retry cannot notify twice",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          },
+          "link": {
+            "additionalProperties": false,
+            "description": "the record to open when the person taps it",
+            "properties": {
+              "entity": {
+                "description": "reminder, schedule, goal, step, plan_item, routine, journal_entry, note or capture",
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "entity",
+              "id"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
+          "priority": {
+            "description": "normal (default) or high; high is for something time-sensitive that should break quiet hours",
+            "type": "string"
+          },
+          "title": {
+            "description": "what the person sees first, at most 200 characters",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "title"
+        ],
+        "type": "object"
+      },
+      "life_notify_output": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "created_at"
+        ],
+        "type": "object"
+      },
       "monitors_create_input": {
         "additionalProperties": false,
         "properties": {
@@ -7387,73 +7454,6 @@
           "deleted_at",
           "created_at",
           "updated_at"
-        ],
-        "type": "object"
-      },
-      "notify_input": {
-        "additionalProperties": false,
-        "properties": {
-          "body": {
-            "description": "one or two lines of detail, at most 2000 characters",
-            "type": "string"
-          },
-          "id": {
-            "description": "client-generated UUID, so a retry cannot notify twice",
-            "type": "string"
-          },
-          "idempotency_key": {
-            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
-            "type": "string"
-          },
-          "link": {
-            "additionalProperties": false,
-            "description": "the record to open when the person taps it",
-            "properties": {
-              "entity": {
-                "description": "reminder, schedule, goal, step, plan_item, routine, journal_entry, note or capture",
-                "type": "string"
-              },
-              "id": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "entity",
-              "id"
-            ],
-            "type": [
-              "null",
-              "object"
-            ]
-          },
-          "priority": {
-            "description": "normal (default) or high; high is for something time-sensitive that should break quiet hours",
-            "type": "string"
-          },
-          "title": {
-            "description": "what the person sees first, at most 200 characters",
-            "type": "string"
-          }
-        },
-        "required": [
-          "idempotency_key",
-          "title"
-        ],
-        "type": "object"
-      },
-      "notify_output": {
-        "additionalProperties": false,
-        "properties": {
-          "created_at": {
-            "type": "string"
-          },
-          "id": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "created_at"
         ],
         "type": "object"
       },
@@ -17318,6 +17318,111 @@
         "x-read-only": true
       }
     },
+    "/api/v1/operations/life_notify": {
+      "post": {
+        "description": "Tell the person something outside the conversation: it reaches this app as a notification (and its inbox), and no other app. Use it sparingly, for something they would want to know now or would miss; never for chatter, progress or things you can say in the reply. Link the record it is about so tapping opens it. Not for reminders (create a reminder) or timed work (arm a schedule).",
+        "operationId": "life_notify",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/life_notify_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/life_notify_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "life_notify",
+        "x-read-only": false
+      }
+    },
     "/api/v1/operations/monitors_create": {
       "post": {
         "description": "Create a monitor: something the person asked you to keep an eye on, checked on an interval (15 minutes to 31 days), with the person told only when it matters. It appears in their app where they can pause or edit it. Use this, not a private wake, for anything the person asked you to watch. When a check is due you are woken with the objective: check it, call monitors_record with what you found, and only if the person should hear about it set triggered and call notify_user.",
@@ -18785,111 +18890,6 @@
           }
         ],
         "x-mcp-tool": "notes_update",
-        "x-read-only": false
-      }
-    },
-    "/api/v1/operations/notify": {
-      "post": {
-        "description": "Tell the person something outside the conversation: it reaches this app as a notification (and its inbox), and no other app. Use it sparingly, for something they would want to know now or would miss; never for chatter, progress or things you can say in the reply. Link the record it is about so tapping opens it. Not for reminders (create a reminder) or timed work (arm a schedule).",
-        "operationId": "notify",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/notify_input"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/notify_output"
-                }
-              }
-            },
-            "description": "Operation result"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Invalid input"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Authentication required by router"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Record not found"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Stale version, conflicting identity, or record in use"
-          },
-          "413": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Request body exceeds 1 MiB"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Internal error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Temporarily unavailable; retry with the same request key"
-          }
-        },
-        "security": [
-          {
-            "routerBearer": []
-          }
-        ],
-        "x-mcp-tool": "notify",
         "x-read-only": false
       }
     },

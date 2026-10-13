@@ -10,9 +10,9 @@ func TestNotifyIsHandedOverOnceAndOnlyOnce(t *testing.T) {
 	s := integrationService(t)
 	id := "5b1e5d3c-9f0a-4c2e-8f3a-0a1b2c3d4e5f"
 	in := map[string]any{"idempotency_key": key(), "id": id, "title": "Weigh-in", "body": "It is Sunday", "priority": "high", "link": map[string]any{"entity": "routine", "id": "r1"}}
-	execute[engine.NotifyResult](t, s, "notify", in)
+	execute[engine.NotifyResult](t, s, "life_notify", in)
 	in["idempotency_key"] = key() // same notice id, new request: still one notice
-	execute[engine.NotifyResult](t, s, "notify", in)
+	execute[engine.NotifyResult](t, s, "life_notify", in)
 
 	pending := execute[engine.EventsResult](t, s, "events_pending", map[string]any{})
 	var found []engine.Event
