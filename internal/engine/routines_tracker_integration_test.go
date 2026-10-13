@@ -1,6 +1,7 @@
 package engine_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -54,8 +55,12 @@ func TestRoutineTargetCuesAndCounting(t *testing.T) {
 }
 
 func TestRoutineHistoryIsARateNotAStreakThatResets(t *testing.T) {
-	s := integrationService(t)
+	s, pool := integrationEnv(t)
 	r := execute[engine.Routine](t, s, "routines_create", map[string]any{"idempotency_key": key(), "title": "Walk"})
+	// The routine has existed for a while, so the days logged below were days it could be done on.
+	if _, e := pool.Exec(context.Background(), "UPDATE life.routines SET created_at = now() - interval '60 days' WHERE id=$1", r.ID); e != nil {
+		t.Fatal(e)
+	}
 	day := func(back int) string { return time.Now().UTC().AddDate(0, 0, -back).Format("2006-01-02") }
 	// Done 6, 5, 4, 2 and 1 days ago (missed 3 days ago); nothing today yet.
 	for _, back := range []int{6, 5, 4, 2, 1} {
@@ -151,5 +156,42 @@ func TestGoalsAreServedByLinkedRoutines(t *testing.T) {
 	}
 	if list := execute[engine.Page[engine.Goal]](t, s, "goals_list", map[string]any{}); list.Total != 2 || list.Items[0].RoutineIDs == nil {
 		t.Fatalf("list: %+v", list)
+	}
+}
+
+// A rate counts only the days a routine existed: one made two days ago is not "2 of 30".
+func TestRoutineRateIgnoresDaysBeforeItExisted(t *testing.T) {
+	s := integrationService(t)
+	r := execute[engine.Routine](t, s, "routines_create", map[string]any{"idempotency_key": key(), "title": "New habit"})
+	execute[engine.RoutineStatus](t, s, "routines_log", map[string]any{"idempotency_key": key(), "routine_id": r.ID})
+	h := execute[engine.RoutineHistory](t, s, "routines_history", map[string]any{"routine_id": r.ID})
+	if h.Last30.Scheduled != 1 || h.Last30.Done != 1 || h.Last7.Scheduled != 1 {
+		t.Fatalf("only today existed: %+v %+v", h.Last7, h.Last30)
+	}
+	if h.Days[0].Scheduled || !h.Days[len(h.Days)-1].Scheduled {
+		t.Fatalf("days before it existed are not scheduled: first %+v last %+v", h.Days[0], h.Days[len(h.Days)-1])
+	}
+}
+
+// A goal's progress is read from the routines that serve it, summed.
+func TestGoalConsistencyIsSummedFromItsRoutines(t *testing.T) {
+	s, pool := integrationEnv(t)
+	day := func(back int) string { return time.Now().UTC().AddDate(0, 0, -back).Format("2006-01-02") }
+	a := execute[engine.Routine](t, s, "routines_create", map[string]any{"idempotency_key": key(), "title": "Walk", "time_zone": "UTC"})
+	b := execute[engine.Routine](t, s, "routines_create", map[string]any{"idempotency_key": key(), "title": "Stretch", "time_zone": "UTC", "weekdays": []int{0, 1, 2, 3, 4, 5, 6}})
+	if _, e := pool.Exec(context.Background(), "UPDATE life.routines SET created_at = now() - interval '60 days'"); e != nil {
+		t.Fatal(e)
+	}
+	for _, back := range []int{1, 2, 3} {
+		execute[engine.RoutineStatus](t, s, "routine_checkins_set", map[string]any{"idempotency_key": key(), "routine_id": a.ID, "day": day(back), "variant": "full"})
+	}
+	execute[engine.RoutineStatus](t, s, "routine_checkins_set", map[string]any{"idempotency_key": key(), "routine_id": b.ID, "day": day(1), "variant": "full"})
+	g := execute[engine.Goal](t, s, "goals_create", map[string]any{"idempotency_key": key(), "title": "Get fitter", "routine_ids": []string{a.ID, b.ID}})
+	if g.Consistency.Last7.Scheduled != 14 || g.Consistency.Last7.Done != 4 || g.Consistency.Last30.Scheduled != 60 || g.Consistency.Last30.Done != 4 {
+		t.Fatalf("summed over both routines: %+v", g.Consistency)
+	}
+	lonely := execute[engine.Goal](t, s, "goals_create", map[string]any{"idempotency_key": key(), "title": "No routines yet"})
+	if lonely.Consistency.Last30.Scheduled != 0 {
+		t.Fatalf("a goal with no routines has nothing to measure: %+v", lonely.Consistency)
 	}
 }

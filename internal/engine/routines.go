@@ -575,10 +575,13 @@ func routineHistory(ctx context.Context, u *unit, in RoutineHistoryInput) (Routi
 	}
 	done := doneDays(logs, r.TargetPerDay)
 	now := toDayNumber(today)
+	// A day before the routine existed was never one it could have been done on, so it counts toward no rate.
+	loc, _ := zone(r.TimeZone)
+	created := toDayNumber(r.CreatedAt.In(loc).Format("2006-01-02"))
 	out := RoutineHistory{Routine: r, Days: make([]HistoryDay, 0, days), Streak: streak(now, r.scheduledOn, done)}
 	for i := days - 1; i >= 0; i-- {
 		n := now - dayNumber(i)
-		h := HistoryDay{Day: fromDayNumber(n), Scheduled: r.scheduledOn(n), Count: logs[n].count, Target: r.TargetPerDay, Done: done[n]}
+		h := HistoryDay{Day: fromDayNumber(n), Scheduled: r.scheduledOn(n) && n >= created, Count: logs[n].count, Target: r.TargetPerDay, Done: done[n]}
 		out.Days = append(out.Days, h)
 		if h.Scheduled {
 			if i < 7 {
@@ -597,7 +600,7 @@ func routineHistory(ctx context.Context, u *unit, in RoutineHistoryInput) (Routi
 	}
 	run := 0
 	for n := now - 399; n <= now; n++ {
-		if !r.scheduledOn(n) {
+		if !r.scheduledOn(n) || n < created {
 			continue
 		}
 		if done[n] {

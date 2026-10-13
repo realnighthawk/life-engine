@@ -19,6 +19,13 @@ type Step struct {
 	UpdatedAt time.Time  `json:"updated_at"`
 }
 
+// GoalConsistency is the scheduled days the linked routines were done on, summed over the routines. A goal's progress is read from
+// the routines, not ticked off on the goal.
+type GoalConsistency struct {
+	Last7  Consistency `json:"last_7"`
+	Last30 Consistency `json:"last_30"`
+}
+
 type GoalProgress struct {
 	Done  int `json:"done"`
 	Total int `json:"total"`
@@ -26,18 +33,19 @@ type GoalProgress struct {
 
 // Goal always carries its steps, so a screen needs one read.
 type Goal struct {
-	ID           string       `json:"id"`
-	Title        string       `json:"title"`
-	Why          string       `json:"why"`
-	WeeklyTarget int          `json:"weekly_target" jsonschema:"steps the person aims to finish each week"`
-	ArchivedAt   *time.Time   `json:"archived_at"`
-	Version      int64        `json:"version"`
-	Steps        []Step       `json:"steps"`
-	RoutineIDs   []string     `json:"routine_ids" jsonschema:"routines that serve this goal; they are tracked as routines, not as steps"`
-	Progress     GoalProgress `json:"progress"`
-	NextStep     *Step        `json:"next_step" jsonschema:"the first step not yet done, or null"`
-	CreatedAt    time.Time    `json:"created_at"`
-	UpdatedAt    time.Time    `json:"updated_at"`
+	ID           string          `json:"id"`
+	Title        string          `json:"title"`
+	Why          string          `json:"why"`
+	WeeklyTarget int             `json:"weekly_target" jsonschema:"steps the person aims to finish each week"`
+	ArchivedAt   *time.Time      `json:"archived_at"`
+	Version      int64           `json:"version"`
+	Steps        []Step          `json:"steps"`
+	RoutineIDs   []string        `json:"routine_ids" jsonschema:"routines that serve this goal; they are tracked as routines, not as steps"`
+	Consistency  GoalConsistency `json:"consistency" jsonschema:"how well the routines that serve this goal were kept, summed over them. A measure of keeping up, not of how far the outcome has moved"`
+	Progress     GoalProgress    `json:"progress"`
+	NextStep     *Step           `json:"next_step" jsonschema:"the first step not yet done, or null"`
+	CreatedAt    time.Time       `json:"created_at"`
+	UpdatedAt    time.Time       `json:"updated_at"`
 }
 
 type StepData struct {
@@ -182,6 +190,16 @@ func (u *unit) goals(ctx context.Context, where string, args ...any) ([]Goal, er
 		goals[i].RoutineIDs = links[goals[i].ID]
 		if goals[i].RoutineIDs == nil {
 			goals[i].RoutineIDs = []string{}
+		}
+		for _, rid := range goals[i].RoutineIDs {
+			h, err := routineHistory(ctx, u, RoutineHistoryInput{RoutineID: rid, Days: 30})
+			if err != nil {
+				return nil, err
+			}
+			goals[i].Consistency.Last7.Done += h.Last7.Done
+			goals[i].Consistency.Last7.Scheduled += h.Last7.Scheduled
+			goals[i].Consistency.Last30.Done += h.Last30.Done
+			goals[i].Consistency.Last30.Scheduled += h.Last30.Scheduled
 		}
 	}
 	return goals, nil

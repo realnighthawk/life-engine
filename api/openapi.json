@@ -1315,6 +1315,53 @@
               "string"
             ]
           },
+          "consistency": {
+            "additionalProperties": false,
+            "description": "how well the routines that serve this goal were kept, summed over them. A measure of keeping up, not of how far the outcome has moved",
+            "properties": {
+              "last_30": {
+                "additionalProperties": false,
+                "properties": {
+                  "done": {
+                    "description": "scheduled days whose count reached the target",
+                    "type": "integer"
+                  },
+                  "scheduled": {
+                    "description": "days in the window the routine applied",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "done",
+                  "scheduled"
+                ],
+                "type": "object"
+              },
+              "last_7": {
+                "additionalProperties": false,
+                "properties": {
+                  "done": {
+                    "description": "scheduled days whose count reached the target",
+                    "type": "integer"
+                  },
+                  "scheduled": {
+                    "description": "days in the window the routine applied",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "done",
+                  "scheduled"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "last_7",
+              "last_30"
+            ],
+            "type": "object"
+          },
           "created_at": {
             "type": "string"
           },
@@ -1479,6 +1526,7 @@
           "version",
           "steps",
           "routine_ids",
+          "consistency",
           "progress",
           "next_step",
           "created_at",
@@ -1561,6 +1609,53 @@
               "string"
             ]
           },
+          "consistency": {
+            "additionalProperties": false,
+            "description": "how well the routines that serve this goal were kept, summed over them. A measure of keeping up, not of how far the outcome has moved",
+            "properties": {
+              "last_30": {
+                "additionalProperties": false,
+                "properties": {
+                  "done": {
+                    "description": "scheduled days whose count reached the target",
+                    "type": "integer"
+                  },
+                  "scheduled": {
+                    "description": "days in the window the routine applied",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "done",
+                  "scheduled"
+                ],
+                "type": "object"
+              },
+              "last_7": {
+                "additionalProperties": false,
+                "properties": {
+                  "done": {
+                    "description": "scheduled days whose count reached the target",
+                    "type": "integer"
+                  },
+                  "scheduled": {
+                    "description": "days in the window the routine applied",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "done",
+                  "scheduled"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "last_7",
+              "last_30"
+            ],
+            "type": "object"
+          },
           "created_at": {
             "type": "string"
           },
@@ -1725,6 +1820,7 @@
           "version",
           "steps",
           "routine_ids",
+          "consistency",
           "progress",
           "next_step",
           "created_at",
@@ -1754,6 +1850,53 @@
               "string"
             ]
           },
+          "consistency": {
+            "additionalProperties": false,
+            "description": "how well the routines that serve this goal were kept, summed over them. A measure of keeping up, not of how far the outcome has moved",
+            "properties": {
+              "last_30": {
+                "additionalProperties": false,
+                "properties": {
+                  "done": {
+                    "description": "scheduled days whose count reached the target",
+                    "type": "integer"
+                  },
+                  "scheduled": {
+                    "description": "days in the window the routine applied",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "done",
+                  "scheduled"
+                ],
+                "type": "object"
+              },
+              "last_7": {
+                "additionalProperties": false,
+                "properties": {
+                  "done": {
+                    "description": "scheduled days whose count reached the target",
+                    "type": "integer"
+                  },
+                  "scheduled": {
+                    "description": "days in the window the routine applied",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "done",
+                  "scheduled"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "last_7",
+              "last_30"
+            ],
+            "type": "object"
+          },
           "created_at": {
             "type": "string"
           },
@@ -1918,6 +2061,7 @@
           "version",
           "steps",
           "routine_ids",
+          "consistency",
           "progress",
           "next_step",
           "created_at",
@@ -1955,6 +2099,53 @@
               "string"
             ]
           },
+          "consistency": {
+            "additionalProperties": false,
+            "description": "how well the routines that serve this goal were kept, summed over them. A measure of keeping up, not of how far the outcome has moved",
+            "properties": {
+              "last_30": {
+                "additionalProperties": false,
+                "properties": {
+                  "done": {
+                    "description": "scheduled days whose count reached the target",
+                    "type": "integer"
+                  },
+                  "scheduled": {
+                    "description": "days in the window the routine applied",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "done",
+                  "scheduled"
+                ],
+                "type": "object"
+              },
+              "last_7": {
+                "additionalProperties": false,
+                "properties": {
+                  "done": {
+                    "description": "scheduled days whose count reached the target",
+                    "type": "integer"
+                  },
+                  "scheduled": {
+                    "description": "days in the window the routine applied",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "done",
+                  "scheduled"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "last_7",
+              "last_30"
+            ],
+            "type": "object"
+          },
           "created_at": {
             "type": "string"
           },
@@ -2119,6 +2310,7 @@
           "version",
           "steps",
           "routine_ids",
+          "consistency",
           "progress",
           "next_step",
           "created_at",
@@ -2160,6 +2352,53 @@
                     "null",
                     "string"
                   ]
+                },
+                "consistency": {
+                  "additionalProperties": false,
+                  "description": "how well the routines that serve this goal were kept, summed over them. A measure of keeping up, not of how far the outcome has moved",
+                  "properties": {
+                    "last_30": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "done": {
+                          "description": "scheduled days whose count reached the target",
+                          "type": "integer"
+                        },
+                        "scheduled": {
+                          "description": "days in the window the routine applied",
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "done",
+                        "scheduled"
+                      ],
+                      "type": "object"
+                    },
+                    "last_7": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "done": {
+                          "description": "scheduled days whose count reached the target",
+                          "type": "integer"
+                        },
+                        "scheduled": {
+                          "description": "days in the window the routine applied",
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "done",
+                        "scheduled"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "last_7",
+                    "last_30"
+                  ],
+                  "type": "object"
                 },
                 "created_at": {
                   "type": "string"
@@ -2325,6 +2564,7 @@
                 "version",
                 "steps",
                 "routine_ids",
+                "consistency",
                 "progress",
                 "next_step",
                 "created_at",
@@ -2387,6 +2627,53 @@
               "string"
             ]
           },
+          "consistency": {
+            "additionalProperties": false,
+            "description": "how well the routines that serve this goal were kept, summed over them. A measure of keeping up, not of how far the outcome has moved",
+            "properties": {
+              "last_30": {
+                "additionalProperties": false,
+                "properties": {
+                  "done": {
+                    "description": "scheduled days whose count reached the target",
+                    "type": "integer"
+                  },
+                  "scheduled": {
+                    "description": "days in the window the routine applied",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "done",
+                  "scheduled"
+                ],
+                "type": "object"
+              },
+              "last_7": {
+                "additionalProperties": false,
+                "properties": {
+                  "done": {
+                    "description": "scheduled days whose count reached the target",
+                    "type": "integer"
+                  },
+                  "scheduled": {
+                    "description": "days in the window the routine applied",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "done",
+                  "scheduled"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "last_7",
+              "last_30"
+            ],
+            "type": "object"
+          },
           "created_at": {
             "type": "string"
           },
@@ -2551,6 +2838,7 @@
           "version",
           "steps",
           "routine_ids",
+          "consistency",
           "progress",
           "next_step",
           "created_at",
@@ -2588,6 +2876,53 @@
               "string"
             ]
           },
+          "consistency": {
+            "additionalProperties": false,
+            "description": "how well the routines that serve this goal were kept, summed over them. A measure of keeping up, not of how far the outcome has moved",
+            "properties": {
+              "last_30": {
+                "additionalProperties": false,
+                "properties": {
+                  "done": {
+                    "description": "scheduled days whose count reached the target",
+                    "type": "integer"
+                  },
+                  "scheduled": {
+                    "description": "days in the window the routine applied",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "done",
+                  "scheduled"
+                ],
+                "type": "object"
+              },
+              "last_7": {
+                "additionalProperties": false,
+                "properties": {
+                  "done": {
+                    "description": "scheduled days whose count reached the target",
+                    "type": "integer"
+                  },
+                  "scheduled": {
+                    "description": "days in the window the routine applied",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "done",
+                  "scheduled"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "last_7",
+              "last_30"
+            ],
+            "type": "object"
+          },
           "created_at": {
             "type": "string"
           },
@@ -2752,6 +3087,7 @@
           "version",
           "steps",
           "routine_ids",
+          "consistency",
           "progress",
           "next_step",
           "created_at",
@@ -2807,6 +3143,53 @@
               "string"
             ]
           },
+          "consistency": {
+            "additionalProperties": false,
+            "description": "how well the routines that serve this goal were kept, summed over them. A measure of keeping up, not of how far the outcome has moved",
+            "properties": {
+              "last_30": {
+                "additionalProperties": false,
+                "properties": {
+                  "done": {
+                    "description": "scheduled days whose count reached the target",
+                    "type": "integer"
+                  },
+                  "scheduled": {
+                    "description": "days in the window the routine applied",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "done",
+                  "scheduled"
+                ],
+                "type": "object"
+              },
+              "last_7": {
+                "additionalProperties": false,
+                "properties": {
+                  "done": {
+                    "description": "scheduled days whose count reached the target",
+                    "type": "integer"
+                  },
+                  "scheduled": {
+                    "description": "days in the window the routine applied",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "done",
+                  "scheduled"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "last_7",
+              "last_30"
+            ],
+            "type": "object"
+          },
           "created_at": {
             "type": "string"
           },
@@ -2971,6 +3354,7 @@
           "version",
           "steps",
           "routine_ids",
+          "consistency",
           "progress",
           "next_step",
           "created_at",
@@ -4327,6 +4711,53 @@
                     "string"
                   ]
                 },
+                "consistency": {
+                  "additionalProperties": false,
+                  "description": "how well the routines that serve this goal were kept, summed over them. A measure of keeping up, not of how far the outcome has moved",
+                  "properties": {
+                    "last_30": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "done": {
+                          "description": "scheduled days whose count reached the target",
+                          "type": "integer"
+                        },
+                        "scheduled": {
+                          "description": "days in the window the routine applied",
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "done",
+                        "scheduled"
+                      ],
+                      "type": "object"
+                    },
+                    "last_7": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "done": {
+                          "description": "scheduled days whose count reached the target",
+                          "type": "integer"
+                        },
+                        "scheduled": {
+                          "description": "days in the window the routine applied",
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "done",
+                        "scheduled"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "last_7",
+                    "last_30"
+                  ],
+                  "type": "object"
+                },
                 "created_at": {
                   "type": "string"
                 },
@@ -4491,6 +4922,7 @@
                 "version",
                 "steps",
                 "routine_ids",
+                "consistency",
                 "progress",
                 "next_step",
                 "created_at",
@@ -13140,6 +13572,53 @@
               "string"
             ]
           },
+          "consistency": {
+            "additionalProperties": false,
+            "description": "how well the routines that serve this goal were kept, summed over them. A measure of keeping up, not of how far the outcome has moved",
+            "properties": {
+              "last_30": {
+                "additionalProperties": false,
+                "properties": {
+                  "done": {
+                    "description": "scheduled days whose count reached the target",
+                    "type": "integer"
+                  },
+                  "scheduled": {
+                    "description": "days in the window the routine applied",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "done",
+                  "scheduled"
+                ],
+                "type": "object"
+              },
+              "last_7": {
+                "additionalProperties": false,
+                "properties": {
+                  "done": {
+                    "description": "scheduled days whose count reached the target",
+                    "type": "integer"
+                  },
+                  "scheduled": {
+                    "description": "days in the window the routine applied",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "done",
+                  "scheduled"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "last_7",
+              "last_30"
+            ],
+            "type": "object"
+          },
           "created_at": {
             "type": "string"
           },
@@ -13304,6 +13783,7 @@
           "version",
           "steps",
           "routine_ids",
+          "consistency",
           "progress",
           "next_step",
           "created_at",
