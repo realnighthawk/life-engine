@@ -41,7 +41,13 @@ func (s *Service) registerOperations() {
 	register(s, "monitors_restore", "Restore a deleted monitor; it resumes from now.", true, func(c context.Context, u *unit, in EditInput) (Monitor, error) {
 		return lifecycleMonitor(c, u, in, true)
 	})
-	register(s, "goals_create", "Create a goal the person wants to make progress on, optionally with starting steps (small, concrete actions with minutes). Break a big goal into steps of 10-30 minutes so there is always a next action to show.", true, createGoal)
+	register(s, "goals_create", "Create a goal: an END STATE the person wants to reach (\"run a 10k by March\", \"lose 5 kg\"). Never use it for a behaviour that repeats forever (drinking water daily is a routine). Steps are ONE-OFF tasks, small and concrete, 10-30 minutes, so there is always a next action. Anything done repeatedly is a routine, not a step: look at the person's existing routines first, pass the ones that serve this goal in routine_ids, and create a routine (routines_create) for what is missing.", true, createGoal)
+	register(s, "goals_link_routine", "Say that a routine serves a goal (idempotent). Use this when the person has a routine that moves a goal forward, instead of copying it into the goal's steps. Look at their existing routines first and link what already fits.", true, func(c context.Context, u *unit, in LinkRoutineInput) (Goal, error) {
+		return linkGoalRoutine(c, u, in, true)
+	})
+	register(s, "goals_unlink_routine", "Say that a routine no longer serves a goal. The routine itself is untouched.", true, func(c context.Context, u *unit, in LinkRoutineInput) (Goal, error) {
+		return linkGoalRoutine(c, u, in, false)
+	})
 	register(s, "goals_get", "Read a goal with its steps, progress and next step.", false, func(c context.Context, u *unit, in GetInput) (Goal, error) { return u.getGoal(c, in.ID, false) })
 	register(s, "goals_list", "List the person's goals with their steps, progress and next step. State deleted means archived.", false, listGoals)
 	register(s, "goals_update", "Replace a goal's title, reason and weekly target using the version you last read.", true, updateGoal)
@@ -73,7 +79,7 @@ func (s *Service) registerOperations() {
 	register(s, "plan_proposal_apply", "Accept a proposal, making all its changes at once. Fails if the plan changed since it was offered.", true, applyProposal)
 	register(s, "plan_proposal_discard", "Decline a proposal.", true, discardProposal)
 	register(s, "next_action", "The one thing to do with the minutes the person has: today's priorities first, then the next step of a goal, then anything else that fits. Returns null when nothing fits, which is a good moment to suggest a break.", false, nextAction)
-	register(s, "routines_create", "Create a routine: something the person wants to DO repeatedly, such as drinking water 3 times a day, stretching each morning or running Monday, Wednesday and Friday. Use this, not reminders, for any repeating behaviour; a reminder is only a one-off cue or an event. Give it a target_per_day (default 1), cues (the times to be nudged, for example three for three times a day), a short busy-day version and optional weekdays. It appears in their app with a tracker. Missed days are information, not failure.", true, createRoutine)
+	register(s, "routines_create", "Create a routine: something the person wants to DO repeatedly, such as drinking water 3 times a day, stretching each morning or running Monday, Wednesday and Friday. Use this, not reminders, for any repeating behaviour; if it serves a goal, link it with goals_link_routine; a reminder is only a one-off cue or an event. Give it a target_per_day (default 1), cues (the times to be nudged, for example three for three times a day), a short busy-day version and optional weekdays. It appears in their app with a tracker. Missed days are information, not failure.", true, createRoutine)
 	register(s, "routines_get", "Read one routine.", false, func(c context.Context, u *unit, in GetInput) (Routine, error) { return u.getRoutine(c, in.ID, false) })
 	register(s, "routines_list", "List the person's routines.", false, listRoutines)
 	register(s, "routines_update", "Replace a routine's fields using the version you last read.", true, updateRoutine)

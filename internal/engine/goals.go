@@ -33,6 +33,7 @@ type Goal struct {
 	ArchivedAt   *time.Time   `json:"archived_at"`
 	Version      int64        `json:"version"`
 	Steps        []Step       `json:"steps"`
+	RoutineIDs   []string     `json:"routine_ids" jsonschema:"routines that serve this goal; they are tracked as routines, not as steps"`
 	Progress     GoalProgress `json:"progress"`
 	NextStep     *Step        `json:"next_step" jsonschema:"the first step not yet done, or null"`
 	CreatedAt    time.Time    `json:"created_at"`
@@ -52,7 +53,8 @@ type CreateGoalInput struct {
 	Meta
 	ID string `json:"id,omitempty"`
 	GoalData
-	Steps []StepData `json:"steps,omitempty" jsonschema:"optional starting steps in order; add more later with steps_add"`
+	Steps      []StepData `json:"steps,omitempty" jsonschema:"optional starting steps in order, each a ONE-OFF task; anything repeated is a routine, passed in routine_ids"`
+	RoutineIDs []string   `json:"routine_ids,omitempty" jsonschema:"ids of existing routines that serve this goal (reuse what the person already has before creating a routine)"`
 }
 type UpdateGoalInput struct {
 	EditInput
@@ -158,8 +160,29 @@ func (u *unit) goals(ctx context.Context, where string, args ...any) ([]Goal, er
 	if err := srows.Err(); err != nil {
 		return nil, err
 	}
+	lrows, err := u.tx.Query(ctx, `SELECT gr.goal_id::text, gr.routine_id::text FROM life.goal_routines gr
+		JOIN life.routines r ON r.id = gr.routine_id AND r.deleted_at IS NULL WHERE gr.goal_id = ANY($1::uuid[]) ORDER BY gr.created_at, gr.routine_id`, ids)
+	if err != nil {
+		return nil, err
+	}
+	defer lrows.Close()
+	links := map[string][]string{}
+	for lrows.Next() {
+		var gid, rid string
+		if err := lrows.Scan(&gid, &rid); err != nil {
+			return nil, err
+		}
+		links[gid] = append(links[gid], rid)
+	}
+	if err := lrows.Err(); err != nil {
+		return nil, err
+	}
 	for i := range goals {
 		goals[i].fill(steps[goals[i].ID])
+		goals[i].RoutineIDs = links[goals[i].ID]
+		if goals[i].RoutineIDs == nil {
+			goals[i].RoutineIDs = []string{}
+		}
 	}
 	return goals, nil
 }
@@ -248,11 +271,64 @@ func createGoal(ctx context.Context, u *unit, in CreateGoalInput) (Goal, error) 
 			return Goal{}, e
 		}
 	}
+	for _, rid := range in.RoutineIDs {
+		if e = u.linkRoutine(ctx, key, rid); e != nil {
+			return Goal{}, e
+		}
+	}
 	g, e := u.getGoal(ctx, key, false)
 	if e != nil {
 		return g, e
 	}
 	return g, u.audit(ctx, "goal", key, nil, g)
+}
+
+// linkRoutine records that a routine serves a goal. It is idempotent, and the routine must exist and not be deleted.
+func (u *unit) linkRoutine(ctx context.Context, goalID, routineID string) error {
+	r, e := u.getRoutine(ctx, routineID, false)
+	if e != nil {
+		return e
+	}
+	if r.DeletedAt != nil {
+		return conflict("That routine is deleted; restore it before linking it")
+	}
+	_, e = u.tx.Exec(ctx, `INSERT INTO life.goal_routines(goal_id, routine_id) VALUES($1,$2) ON CONFLICT DO NOTHING`, goalID, r.ID)
+	return e
+}
+
+type LinkRoutineInput struct {
+	Meta
+	GoalID    string `json:"goal_id"`
+	RoutineID string `json:"routine_id"`
+}
+
+func linkGoalRoutine(ctx context.Context, u *unit, in LinkRoutineInput, link bool) (Goal, error) {
+	old, e := u.getGoal(ctx, in.GoalID, true)
+	if e != nil {
+		return old, e
+	}
+	if old.ArchivedAt != nil {
+		return old, conflict("Restore the goal before changing its routines")
+	}
+	if link {
+		e = u.linkRoutine(ctx, old.ID, in.RoutineID)
+	} else {
+		var rid string
+		if rid, e = id(in.RoutineID); e == nil {
+			_, e = u.tx.Exec(ctx, `DELETE FROM life.goal_routines WHERE goal_id=$1 AND routine_id=$2`, old.ID, rid)
+		}
+	}
+	if e != nil {
+		return old, e
+	}
+	g, e := u.getGoal(ctx, old.ID, false)
+	if e != nil {
+		return g, e
+	}
+	if len(g.RoutineIDs) != len(old.RoutineIDs) {
+		e = u.audit(ctx, "goal", g.ID, old, g)
+	}
+	return g, e
 }
 
 func updateGoal(ctx context.Context, u *unit, in UpdateGoalInput) (Goal, error) {

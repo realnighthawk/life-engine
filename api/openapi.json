@@ -1389,6 +1389,16 @@
             ],
             "type": "object"
           },
+          "routine_ids": {
+            "description": "routines that serve this goal; they are tracked as routines, not as steps",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
           "steps": {
             "items": {
               "additionalProperties": false,
@@ -1468,6 +1478,7 @@
           "archived_at",
           "version",
           "steps",
+          "routine_ids",
           "progress",
           "next_step",
           "created_at",
@@ -1485,8 +1496,18 @@
             "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
             "type": "string"
           },
+          "routine_ids": {
+            "description": "ids of existing routines that serve this goal (reuse what the person already has before creating a routine)",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
           "steps": {
-            "description": "optional starting steps in order; add more later with steps_add",
+            "description": "optional starting steps in order, each a ONE-OFF task; anything repeated is a routine, passed in routine_ids",
             "items": {
               "additionalProperties": false,
               "properties": {
@@ -1614,6 +1635,16 @@
             ],
             "type": "object"
           },
+          "routine_ids": {
+            "description": "routines that serve this goal; they are tracked as routines, not as steps",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
           "steps": {
             "items": {
               "additionalProperties": false,
@@ -1693,6 +1724,7 @@
           "archived_at",
           "version",
           "steps",
+          "routine_ids",
           "progress",
           "next_step",
           "created_at",
@@ -1796,6 +1828,16 @@
             ],
             "type": "object"
           },
+          "routine_ids": {
+            "description": "routines that serve this goal; they are tracked as routines, not as steps",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
           "steps": {
             "items": {
               "additionalProperties": false,
@@ -1875,6 +1917,208 @@
           "archived_at",
           "version",
           "steps",
+          "routine_ids",
+          "progress",
+          "next_step",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "goals_link_routine_input": {
+        "additionalProperties": false,
+        "properties": {
+          "goal_id": {
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          },
+          "routine_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "goal_id",
+          "routine_id"
+        ],
+        "type": "object"
+      },
+      "goals_link_routine_output": {
+        "additionalProperties": false,
+        "properties": {
+          "archived_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "next_step": {
+            "additionalProperties": false,
+            "description": "the first step not yet done, or null",
+            "properties": {
+              "created_at": {
+                "type": "string"
+              },
+              "done_at": {
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "goal_id": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "minutes": {
+                "type": "integer"
+              },
+              "position": {
+                "description": "1-based order within the goal",
+                "type": "integer"
+              },
+              "title": {
+                "type": "string"
+              },
+              "updated_at": {
+                "type": "string"
+              },
+              "version": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id",
+              "goal_id",
+              "title",
+              "minutes",
+              "position",
+              "done_at",
+              "version",
+              "created_at",
+              "updated_at"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
+          "progress": {
+            "additionalProperties": false,
+            "properties": {
+              "done": {
+                "type": "integer"
+              },
+              "total": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "done",
+              "total"
+            ],
+            "type": "object"
+          },
+          "routine_ids": {
+            "description": "routines that serve this goal; they are tracked as routines, not as steps",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "steps": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "created_at": {
+                  "type": "string"
+                },
+                "done_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "goal_id": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "minutes": {
+                  "type": "integer"
+                },
+                "position": {
+                  "description": "1-based order within the goal",
+                  "type": "integer"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "goal_id",
+                "title",
+                "minutes",
+                "position",
+                "done_at",
+                "version",
+                "created_at",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "weekly_target": {
+            "description": "steps the person aims to finish each week",
+            "type": "integer"
+          },
+          "why": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "why",
+          "weekly_target",
+          "archived_at",
+          "version",
+          "steps",
+          "routine_ids",
           "progress",
           "next_step",
           "created_at",
@@ -1991,6 +2235,16 @@
                   ],
                   "type": "object"
                 },
+                "routine_ids": {
+                  "description": "routines that serve this goal; they are tracked as routines, not as steps",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": [
+                    "null",
+                    "array"
+                  ]
+                },
                 "steps": {
                   "items": {
                     "additionalProperties": false,
@@ -2070,6 +2324,7 @@
                 "archived_at",
                 "version",
                 "steps",
+                "routine_ids",
                 "progress",
                 "next_step",
                 "created_at",
@@ -2206,6 +2461,16 @@
             ],
             "type": "object"
           },
+          "routine_ids": {
+            "description": "routines that serve this goal; they are tracked as routines, not as steps",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
           "steps": {
             "items": {
               "additionalProperties": false,
@@ -2285,6 +2550,208 @@
           "archived_at",
           "version",
           "steps",
+          "routine_ids",
+          "progress",
+          "next_step",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "goals_unlink_routine_input": {
+        "additionalProperties": false,
+        "properties": {
+          "goal_id": {
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          },
+          "routine_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "goal_id",
+          "routine_id"
+        ],
+        "type": "object"
+      },
+      "goals_unlink_routine_output": {
+        "additionalProperties": false,
+        "properties": {
+          "archived_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "next_step": {
+            "additionalProperties": false,
+            "description": "the first step not yet done, or null",
+            "properties": {
+              "created_at": {
+                "type": "string"
+              },
+              "done_at": {
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "goal_id": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "minutes": {
+                "type": "integer"
+              },
+              "position": {
+                "description": "1-based order within the goal",
+                "type": "integer"
+              },
+              "title": {
+                "type": "string"
+              },
+              "updated_at": {
+                "type": "string"
+              },
+              "version": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id",
+              "goal_id",
+              "title",
+              "minutes",
+              "position",
+              "done_at",
+              "version",
+              "created_at",
+              "updated_at"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
+          "progress": {
+            "additionalProperties": false,
+            "properties": {
+              "done": {
+                "type": "integer"
+              },
+              "total": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "done",
+              "total"
+            ],
+            "type": "object"
+          },
+          "routine_ids": {
+            "description": "routines that serve this goal; they are tracked as routines, not as steps",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "steps": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "created_at": {
+                  "type": "string"
+                },
+                "done_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "goal_id": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "minutes": {
+                  "type": "integer"
+                },
+                "position": {
+                  "description": "1-based order within the goal",
+                  "type": "integer"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "goal_id",
+                "title",
+                "minutes",
+                "position",
+                "done_at",
+                "version",
+                "created_at",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "weekly_target": {
+            "description": "steps the person aims to finish each week",
+            "type": "integer"
+          },
+          "why": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "why",
+          "weekly_target",
+          "archived_at",
+          "version",
+          "steps",
+          "routine_ids",
           "progress",
           "next_step",
           "created_at",
@@ -2414,6 +2881,16 @@
             ],
             "type": "object"
           },
+          "routine_ids": {
+            "description": "routines that serve this goal; they are tracked as routines, not as steps",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
           "steps": {
             "items": {
               "additionalProperties": false,
@@ -2493,6 +2970,7 @@
           "archived_at",
           "version",
           "steps",
+          "routine_ids",
           "progress",
           "next_step",
           "created_at",
@@ -3923,6 +4401,16 @@
                   ],
                   "type": "object"
                 },
+                "routine_ids": {
+                  "description": "routines that serve this goal; they are tracked as routines, not as steps",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": [
+                    "null",
+                    "array"
+                  ]
+                },
                 "steps": {
                   "items": {
                     "additionalProperties": false,
@@ -4002,6 +4490,7 @@
                 "archived_at",
                 "version",
                 "steps",
+                "routine_ids",
                 "progress",
                 "next_step",
                 "created_at",
@@ -12725,6 +13214,16 @@
             ],
             "type": "object"
           },
+          "routine_ids": {
+            "description": "routines that serve this goal; they are tracked as routines, not as steps",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
           "steps": {
             "items": {
               "additionalProperties": false,
@@ -12804,6 +13303,7 @@
           "archived_at",
           "version",
           "steps",
+          "routine_ids",
           "progress",
           "next_step",
           "created_at",
@@ -14698,7 +15198,7 @@
     },
     "/api/v1/operations/goals_create": {
       "post": {
-        "description": "Create a goal the person wants to make progress on, optionally with starting steps (small, concrete actions with minutes). Break a big goal into steps of 10-30 minutes so there is always a next action to show.",
+        "description": "Create a goal: an END STATE the person wants to reach (\"run a 10k by March\", \"lose 5 kg\"). Never use it for a behaviour that repeats forever (drinking water daily is a routine). Steps are ONE-OFF tasks, small and concrete, 10-30 minutes, so there is always a next action. Anything done repeatedly is a routine, not a step: look at the person's existing routines first, pass the ones that serve this goal in routine_ids, and create a routine (routines_create) for what is missing.",
         "operationId": "goals_create",
         "requestBody": {
           "content": {
@@ -14904,6 +15404,111 @@
         ],
         "x-mcp-tool": "goals_get",
         "x-read-only": true
+      }
+    },
+    "/api/v1/operations/goals_link_routine": {
+      "post": {
+        "description": "Say that a routine serves a goal (idempotent). Use this when the person has a routine that moves a goal forward, instead of copying it into the goal's steps. Look at their existing routines first and link what already fits.",
+        "operationId": "goals_link_routine",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/goals_link_routine_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/goals_link_routine_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "goals_link_routine",
+        "x-read-only": false
       }
     },
     "/api/v1/operations/goals_list": {
@@ -15113,6 +15718,111 @@
           }
         ],
         "x-mcp-tool": "goals_restore",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/goals_unlink_routine": {
+      "post": {
+        "description": "Say that a routine no longer serves a goal. The routine itself is untouched.",
+        "operationId": "goals_unlink_routine",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/goals_unlink_routine_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/goals_unlink_routine_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "goals_unlink_routine",
         "x-read-only": false
       }
     },
@@ -19948,7 +20658,7 @@
     },
     "/api/v1/operations/routines_create": {
       "post": {
-        "description": "Create a routine: something the person wants to DO repeatedly, such as drinking water 3 times a day, stretching each morning or running Monday, Wednesday and Friday. Use this, not reminders, for any repeating behaviour; a reminder is only a one-off cue or an event. Give it a target_per_day (default 1), cues (the times to be nudged, for example three for three times a day), a short busy-day version and optional weekdays. It appears in their app with a tracker. Missed days are information, not failure.",
+        "description": "Create a routine: something the person wants to DO repeatedly, such as drinking water 3 times a day, stretching each morning or running Monday, Wednesday and Friday. Use this, not reminders, for any repeating behaviour; if it serves a goal, link it with goals_link_routine; a reminder is only a one-off cue or an event. Give it a target_per_day (default 1), cues (the times to be nudged, for example three for three times a day), a short busy-day version and optional weekdays. It appears in their app with a tracker. Missed days are information, not failure.",
         "operationId": "routines_create",
         "requestBody": {
           "content": {

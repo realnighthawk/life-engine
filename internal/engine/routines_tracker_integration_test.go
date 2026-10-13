@@ -115,3 +115,41 @@ func TestRoutineTodayIsInItsOwnTimeZone(t *testing.T) {
 		}
 	}
 }
+
+// A goal is served by routines that already exist; they are linked, not copied into its steps.
+func TestGoalsAreServedByLinkedRoutines(t *testing.T) {
+	s := integrationService(t)
+	water := execute[engine.Routine](t, s, "routines_create", map[string]any{"idempotency_key": key(), "title": "Drink water", "target_per_day": 3})
+	walk := execute[engine.Routine](t, s, "routines_create", map[string]any{"idempotency_key": key(), "title": "Walk"})
+	g := execute[engine.Goal](t, s, "goals_create", map[string]any{"idempotency_key": key(), "title": "Lose 5 kg",
+		"steps": []map[string]any{{"title": "Weigh in once"}}, "routine_ids": []string{water.ID}})
+	if len(g.RoutineIDs) != 1 || g.RoutineIDs[0] != water.ID || len(g.Steps) != 1 {
+		t.Fatalf("linked at creation: %+v", g)
+	}
+	// Linking is idempotent, and one routine can serve more than one goal.
+	g = execute[engine.Goal](t, s, "goals_link_routine", map[string]any{"idempotency_key": key(), "goal_id": g.ID, "routine_id": walk.ID})
+	again := execute[engine.Goal](t, s, "goals_link_routine", map[string]any{"idempotency_key": key(), "goal_id": g.ID, "routine_id": walk.ID})
+	if len(g.RoutineIDs) != 2 || len(again.RoutineIDs) != 2 {
+		t.Fatalf("link twice must stay one link: %+v %+v", g.RoutineIDs, again.RoutineIDs)
+	}
+	other := execute[engine.Goal](t, s, "goals_create", map[string]any{"idempotency_key": key(), "title": "Sleep better", "routine_ids": []string{water.ID}})
+	if len(other.RoutineIDs) != 1 {
+		t.Fatalf("a routine serves several goals: %+v", other.RoutineIDs)
+	}
+	errorCode(t, s, "goals_link_routine", map[string]any{"idempotency_key": key(), "goal_id": g.ID, "routine_id": "ffffffff-ffff-4fff-8fff-ffffffffffff"}, "not_found")
+	errorCode(t, s, "goals_create", map[string]any{"idempotency_key": key(), "title": "Bad", "routine_ids": []string{"ffffffff-ffff-4fff-8fff-ffffffffffff"}}, "not_found")
+
+	// Unlinking removes only the link; deleting a routine drops it from the goal without touching the goal.
+	g = execute[engine.Goal](t, s, "goals_unlink_routine", map[string]any{"idempotency_key": key(), "goal_id": g.ID, "routine_id": walk.ID})
+	if len(g.RoutineIDs) != 1 || g.RoutineIDs[0] != water.ID {
+		t.Fatalf("unlinked: %+v", g.RoutineIDs)
+	}
+	execute[engine.Routine](t, s, "routines_delete", map[string]any{"idempotency_key": key(), "id": water.ID, "expected_version": water.Version})
+	got := execute[engine.Goal](t, s, "goals_get", map[string]any{"id": g.ID})
+	if len(got.RoutineIDs) != 0 || got.Title != "Lose 5 kg" {
+		t.Fatalf("a deleted routine leaves the goal: %+v", got)
+	}
+	if list := execute[engine.Page[engine.Goal]](t, s, "goals_list", map[string]any{}); list.Total != 2 || list.Items[0].RoutineIDs == nil {
+		t.Fatalf("list: %+v", list)
+	}
+}
