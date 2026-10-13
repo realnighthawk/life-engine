@@ -389,7 +389,13 @@ func routinesStatus(ctx context.Context, u *unit, in RoutinesStatusInput) (Routi
 		return out, e
 	}
 	for _, r := range routines {
-		s, e := u.routineStatus(ctx, r, d)
+		rd := in.Day
+		if rd == "" {
+			if rd, e = u.routineToday(ctx, r); e != nil {
+				return out, e
+			}
+		}
+		s, e := u.routineStatus(ctx, r, rd)
 		if e != nil {
 			return out, e
 		}
@@ -398,8 +404,22 @@ func routinesStatus(ctx context.Context, u *unit, in RoutinesStatusInput) (Routi
 	return out, nil
 }
 
-func (u *unit) logDay(ctx context.Context, requested string) (today, d string, e error) {
-	today, _, _, e = u.today(ctx)
+// routineToday is the calendar day it is for this routine, in the routine's own time zone, so "today" for a person in Los
+// Angeles does not flip at five in the afternoon just because the account's default zone is UTC.
+func (u *unit) routineToday(ctx context.Context, r Routine) (string, error) {
+	loc, e := zone(r.TimeZone)
+	if e != nil {
+		return "", e
+	}
+	now, e := u.now(ctx)
+	if e != nil {
+		return "", e
+	}
+	return now.In(loc).Format("2006-01-02"), nil
+}
+
+func (u *unit) logDay(ctx context.Context, r Routine, requested string) (today, d string, e error) {
+	today, e = u.routineToday(ctx, r)
 	if e != nil {
 		return
 	}
@@ -427,7 +447,7 @@ func setCheckin(ctx context.Context, u *unit, in CheckinInput) (RoutineStatus, e
 	if !oneOf(in.Variant, "full", "short", "none") {
 		return RoutineStatus{}, invalid("variant must be full, short or none")
 	}
-	today, d, e := u.logDay(ctx, in.Day)
+	today, d, e := u.logDay(ctx, r, in.Day)
 	if e != nil {
 		return RoutineStatus{}, e
 	}
@@ -493,7 +513,7 @@ func logRoutine(ctx context.Context, u *unit, in LogInput) (RoutineStatus, error
 	if delta < -12 || delta > 12 || delta == 0 {
 		return RoutineStatus{}, invalid("delta must be a non-zero number between -12 and 12")
 	}
-	today, d, e := u.logDay(ctx, in.Day)
+	today, d, e := u.logDay(ctx, r, in.Day)
 	if e != nil {
 		return RoutineStatus{}, e
 	}
@@ -545,7 +565,7 @@ func routineHistory(ctx context.Context, u *unit, in RoutineHistoryInput) (Routi
 	if days < 7 || days > 120 {
 		return RoutineHistory{}, invalid("days must be 7-120")
 	}
-	today, _, _, e := u.today(ctx)
+	today, e := u.routineToday(ctx, r)
 	if e != nil {
 		return RoutineHistory{}, e
 	}

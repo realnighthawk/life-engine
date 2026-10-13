@@ -88,3 +88,30 @@ func TestRoutineCuesArmTheNextOne(t *testing.T) {
 		t.Fatalf("must arm the earliest cue still ahead: %+v", f.armed)
 	}
 }
+
+// A routine's "today" is today where its person is, not in the account's default zone. Kiritimati (UTC+14) and Pago Pago
+// (UTC-11) are 25 hours apart, so at any moment at least one of them is on a different calendar day from UTC.
+func TestRoutineTodayIsInItsOwnTimeZone(t *testing.T) {
+	s := integrationService(t)
+	for _, zone := range []string{"Pacific/Kiritimati", "Pacific/Pago_Pago", "America/Los_Angeles"} {
+		loc, _ := time.LoadLocation(zone)
+		local := time.Now().In(loc)
+		r := execute[engine.Routine](t, s, "routines_create", map[string]any{"idempotency_key": key(), "title": "Weigh in " + zone, "time_zone": zone, "weekdays": []int{int(local.Weekday())}})
+		st := execute[engine.RoutinesStatus](t, s, "routines_status", map[string]any{})
+		var found *engine.RoutineStatus
+		for i := range st.Items {
+			if st.Items[i].Routine.ID == r.ID {
+				found = &st.Items[i]
+			}
+		}
+		if found == nil || !found.Scheduled {
+			t.Fatalf("%s: a routine set for %s must be scheduled today where it lives: %+v", zone, local.Weekday(), found)
+		}
+		// Logging with no day lands on the routine's own today, and the history ends on that day.
+		logged := execute[engine.RoutineStatus](t, s, "routines_log", map[string]any{"idempotency_key": key(), "routine_id": r.ID})
+		h := execute[engine.RoutineHistory](t, s, "routines_history", map[string]any{"routine_id": r.ID, "days": 7})
+		if logged.Count != 1 || h.Days[len(h.Days)-1].Day != local.Format("2006-01-02") || h.Days[len(h.Days)-1].Count != 1 {
+			t.Fatalf("%s: logged today %s but history ends %+v", zone, local.Format("2006-01-02"), h.Days[len(h.Days)-1])
+		}
+	}
+}
