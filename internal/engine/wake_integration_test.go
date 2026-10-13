@@ -266,3 +266,31 @@ func TestMonitorWakeAndRecordedChecks(t *testing.T) {
 		t.Fatalf("a paused monitor must have no wake: %+v", upd)
 	}
 }
+
+func TestARepeatingReminderMovesItsDueTimeOnAfterItFires(t *testing.T) {
+	s, f, sync, pool := newSyncedPool(t)
+	r := execute[engine.Reminder](t, s, "reminders_create", map[string]any{"idempotency_key": "rp1", "title": "Drink water", "time_zone": "UTC",
+		"due_at": time.Now().Add(time.Hour).UTC().Format(time.RFC3339), "recurrence": map[string]any{"freq": "daily"}})
+	sync()
+	// It fired a while ago and nobody completed it: the Schedule has done its job and the reminder must show the next one.
+	if _, e := pool.Exec(context.Background(), "UPDATE life.reminders SET due_at = now() - interval '10 minutes' WHERE id=$1", r.ID); e != nil {
+		t.Fatal(e)
+	}
+	sync()
+	got := execute[engine.Reminder](t, s, "reminders_get", map[string]any{"id": r.ID})
+	if got.DueAt == nil || !got.DueAt.After(time.Now()) || got.DueAt.After(time.Now().Add(25*time.Hour)) {
+		t.Fatalf("due time not moved to the next occurrence: %v", got.DueAt)
+	}
+	if got.Version != r.Version {
+		t.Fatalf("moving the due time on is bookkeeping, not an edit: version %d -> %d", r.Version, got.Version)
+	}
+	if !f.armed["reminder-"+r.ID].At.Equal(*got.DueAt) {
+		t.Fatalf("armed for %v, due %v", f.armed["reminder-"+r.ID].At, got.DueAt)
+	}
+	// A one-off never moves.
+	one := execute[engine.Reminder](t, s, "reminders_create", map[string]any{"idempotency_key": "rp2", "title": "Once", "due_at": time.Now().Add(time.Hour).UTC().Format(time.RFC3339)})
+	sync()
+	if g := execute[engine.Reminder](t, s, "reminders_get", map[string]any{"id": one.ID}); !g.DueAt.Equal(*one.DueAt) {
+		t.Fatalf("a one-off moved: %v", g.DueAt)
+	}
+}

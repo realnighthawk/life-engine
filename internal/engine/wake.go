@@ -193,10 +193,14 @@ func (s *Service) reminderWakes(ctx context.Context, now time.Time) ([]wakeItem,
 				return nil, err
 			}
 		}
-		items = append(items, wakeItem{table: "reminders", id: r.id, want: desiredWake(r, now), armed: r.armedFor, session: sessionScope(r.session), armedSession: r.armedSession, wake: func(at time.Time) Wake {
-			return Wake{Name: reminderWakeName(r.id), Kind: "reminder", Subject: "reminder:" + r.id,
-				Objective: reminderObjective(r.id, r.title), Why: "A reminder you set for the user is due.", At: at}
-		}})
+		items = append(items, wakeItem{table: "reminders", id: r.id, want: desiredWake(r, now), armed: r.armedFor, session: sessionScope(r.session), armedSession: r.armedSession,
+			// Once a repeating reminder has fired, its due time moves on to the next occurrence. Bookkeeping, not an edit: the
+			// version holds, so a screen that already loaded it can still complete it.
+			moved: `UPDATE life.reminders SET due_at=$2 WHERE id=$1 AND recurrence IS NOT NULL AND snoozed_until IS NULL AND $2 > due_at`,
+			wake: func(at time.Time) Wake {
+				return Wake{Name: reminderWakeName(r.id), Kind: "reminder", Subject: "reminder:" + r.id,
+					Objective: reminderObjective(r.id, r.title), Why: "A reminder you set for the user is due.", At: at}
+			}})
 	}
 	return items, rows.Err()
 }
