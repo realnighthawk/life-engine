@@ -1283,6 +1283,273 @@
         ],
         "type": "object"
       },
+      "goal_measurements_delete_input": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "description": "the version you last read; a stale version is rejected",
+            "type": "integer"
+          },
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "expected_version"
+        ],
+        "type": "object"
+      },
+      "goal_measurements_delete_output": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "goal_id": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "measured_at": {
+            "type": "string"
+          },
+          "metric_id": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "value": {
+            "type": "number"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "goal_id",
+          "metric_id",
+          "unit",
+          "value",
+          "measured_at",
+          "notes",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "goal_measurements_record_input": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_tracker_revision": {
+            "description": "revision read from goals_tracker_get; rejects a changed metric definition",
+            "type": "integer"
+          },
+          "goal_id": {
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          },
+          "measured_at": {
+            "description": "RFC 3339 observation time; default now; must not be in the future",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "metric_id": {
+            "type": "string"
+          },
+          "notes": {
+            "description": "optional context, up to 1000 characters",
+            "type": "string"
+          },
+          "value": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "goal_id",
+          "metric_id",
+          "expected_tracker_revision",
+          "value"
+        ],
+        "type": "object"
+      },
+      "goal_measurements_record_output": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "goal_id": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "measured_at": {
+            "type": "string"
+          },
+          "metric_id": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "value": {
+            "type": "number"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "goal_id",
+          "metric_id",
+          "unit",
+          "value",
+          "measured_at",
+          "notes",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "goal_measurements_update_input": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "description": "the version you last read; a stale version is rejected",
+            "type": "integer"
+          },
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          },
+          "measured_at": {
+            "description": "RFC 3339 observation time; default now; must not be in the future",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "description": "optional context, up to 1000 characters",
+            "type": "string"
+          },
+          "value": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "expected_version",
+          "value"
+        ],
+        "type": "object"
+      },
+      "goal_measurements_update_output": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "goal_id": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "measured_at": {
+            "type": "string"
+          },
+          "metric_id": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "value": {
+            "type": "number"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "goal_id",
+          "metric_id",
+          "unit",
+          "value",
+          "measured_at",
+          "notes",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
       "goals_archive_input": {
         "additionalProperties": false,
         "properties": {
@@ -1503,6 +1770,126 @@
           "title": {
             "type": "string"
           },
+          "tracker": {
+            "additionalProperties": false,
+            "properties": {
+              "metrics": {
+                "description": "0-6 shared numeric measurements; observations are recorded separately, never generated here",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "description": "stable lowercase identifier, 1-64 characters; never change its unit after recording data",
+                      "type": "string"
+                    },
+                    "label": {
+                      "description": "human-readable measurement name, 1-80 characters",
+                      "type": "string"
+                    },
+                    "maximum": {
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "minimum": {
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "target": {
+                      "description": "optional desired value; not a fabricated observation",
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "unit": {
+                      "description": "measurement unit, 1-24 characters, e.g. kg, km, books",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "unit"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              },
+              "views": {
+                "description": "1-2 saved platform presentations, each with a different supported catalog_id; preserve existing presentations on revision",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "catalog_id": {
+                      "description": "exact versioned catalog id returned by tracker_catalog_get; includes app and platform",
+                      "type": "string"
+                    },
+                    "sections": {
+                      "description": "1-8 modules in display order; at most four expanded initially on the phone",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "id": {
+                            "description": "stable lowercase identifier, unique within the view",
+                            "type": "string"
+                          },
+                          "metric_id": {
+                            "description": "required for metric_trend/check_in; must name a metric in this definition; absent for other types",
+                            "type": "string"
+                          },
+                          "title": {
+                            "description": "short visible section heading, 1-80 characters",
+                            "type": "string"
+                          },
+                          "type": {
+                            "description": "metric_trend, milestones, routine_consistency or check_in; only supported modules",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "type",
+                          "title"
+                        ],
+                        "type": "object"
+                      },
+                      "type": [
+                        "null",
+                        "array"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "catalog_id",
+                    "sections"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              }
+            },
+            "required": [
+              "metrics",
+              "views"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
+          "tracker_revision": {
+            "type": "integer"
+          },
           "updated_at": {
             "type": "string"
           },
@@ -1518,6 +1905,7 @@
           }
         },
         "required": [
+          "tracker_revision",
           "id",
           "title",
           "why",
@@ -1581,6 +1969,124 @@
           "title": {
             "description": "what the person wants to make progress on, 1-200 characters",
             "type": "string"
+          },
+          "tracker": {
+            "additionalProperties": false,
+            "description": "agent-composed definition from tracker_catalog_get for the requesting app; validated and stored atomically with the goal",
+            "properties": {
+              "metrics": {
+                "description": "0-6 shared numeric measurements; observations are recorded separately, never generated here",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "description": "stable lowercase identifier, 1-64 characters; never change its unit after recording data",
+                      "type": "string"
+                    },
+                    "label": {
+                      "description": "human-readable measurement name, 1-80 characters",
+                      "type": "string"
+                    },
+                    "maximum": {
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "minimum": {
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "target": {
+                      "description": "optional desired value; not a fabricated observation",
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "unit": {
+                      "description": "measurement unit, 1-24 characters, e.g. kg, km, books",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "unit"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              },
+              "views": {
+                "description": "1-2 saved platform presentations, each with a different supported catalog_id; preserve existing presentations on revision",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "catalog_id": {
+                      "description": "exact versioned catalog id returned by tracker_catalog_get; includes app and platform",
+                      "type": "string"
+                    },
+                    "sections": {
+                      "description": "1-8 modules in display order; at most four expanded initially on the phone",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "id": {
+                            "description": "stable lowercase identifier, unique within the view",
+                            "type": "string"
+                          },
+                          "metric_id": {
+                            "description": "required for metric_trend/check_in; must name a metric in this definition; absent for other types",
+                            "type": "string"
+                          },
+                          "title": {
+                            "description": "short visible section heading, 1-80 characters",
+                            "type": "string"
+                          },
+                          "type": {
+                            "description": "metric_trend, milestones, routine_consistency or check_in; only supported modules",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "type",
+                          "title"
+                        ],
+                        "type": "object"
+                      },
+                      "type": [
+                        "null",
+                        "array"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "catalog_id",
+                    "sections"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              }
+            },
+            "required": [
+              "metrics",
+              "views"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
           },
           "weekly_target": {
             "description": "steps to finish each week, 0-21, default 3",
@@ -1797,6 +2303,126 @@
           "title": {
             "type": "string"
           },
+          "tracker": {
+            "additionalProperties": false,
+            "properties": {
+              "metrics": {
+                "description": "0-6 shared numeric measurements; observations are recorded separately, never generated here",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "description": "stable lowercase identifier, 1-64 characters; never change its unit after recording data",
+                      "type": "string"
+                    },
+                    "label": {
+                      "description": "human-readable measurement name, 1-80 characters",
+                      "type": "string"
+                    },
+                    "maximum": {
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "minimum": {
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "target": {
+                      "description": "optional desired value; not a fabricated observation",
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "unit": {
+                      "description": "measurement unit, 1-24 characters, e.g. kg, km, books",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "unit"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              },
+              "views": {
+                "description": "1-2 saved platform presentations, each with a different supported catalog_id; preserve existing presentations on revision",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "catalog_id": {
+                      "description": "exact versioned catalog id returned by tracker_catalog_get; includes app and platform",
+                      "type": "string"
+                    },
+                    "sections": {
+                      "description": "1-8 modules in display order; at most four expanded initially on the phone",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "id": {
+                            "description": "stable lowercase identifier, unique within the view",
+                            "type": "string"
+                          },
+                          "metric_id": {
+                            "description": "required for metric_trend/check_in; must name a metric in this definition; absent for other types",
+                            "type": "string"
+                          },
+                          "title": {
+                            "description": "short visible section heading, 1-80 characters",
+                            "type": "string"
+                          },
+                          "type": {
+                            "description": "metric_trend, milestones, routine_consistency or check_in; only supported modules",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "type",
+                          "title"
+                        ],
+                        "type": "object"
+                      },
+                      "type": [
+                        "null",
+                        "array"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "catalog_id",
+                    "sections"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              }
+            },
+            "required": [
+              "metrics",
+              "views"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
+          "tracker_revision": {
+            "type": "integer"
+          },
           "updated_at": {
             "type": "string"
           },
@@ -1812,6 +2438,7 @@
           }
         },
         "required": [
+          "tracker_revision",
           "id",
           "title",
           "why",
@@ -2038,6 +2665,126 @@
           "title": {
             "type": "string"
           },
+          "tracker": {
+            "additionalProperties": false,
+            "properties": {
+              "metrics": {
+                "description": "0-6 shared numeric measurements; observations are recorded separately, never generated here",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "description": "stable lowercase identifier, 1-64 characters; never change its unit after recording data",
+                      "type": "string"
+                    },
+                    "label": {
+                      "description": "human-readable measurement name, 1-80 characters",
+                      "type": "string"
+                    },
+                    "maximum": {
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "minimum": {
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "target": {
+                      "description": "optional desired value; not a fabricated observation",
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "unit": {
+                      "description": "measurement unit, 1-24 characters, e.g. kg, km, books",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "unit"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              },
+              "views": {
+                "description": "1-2 saved platform presentations, each with a different supported catalog_id; preserve existing presentations on revision",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "catalog_id": {
+                      "description": "exact versioned catalog id returned by tracker_catalog_get; includes app and platform",
+                      "type": "string"
+                    },
+                    "sections": {
+                      "description": "1-8 modules in display order; at most four expanded initially on the phone",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "id": {
+                            "description": "stable lowercase identifier, unique within the view",
+                            "type": "string"
+                          },
+                          "metric_id": {
+                            "description": "required for metric_trend/check_in; must name a metric in this definition; absent for other types",
+                            "type": "string"
+                          },
+                          "title": {
+                            "description": "short visible section heading, 1-80 characters",
+                            "type": "string"
+                          },
+                          "type": {
+                            "description": "metric_trend, milestones, routine_consistency or check_in; only supported modules",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "type",
+                          "title"
+                        ],
+                        "type": "object"
+                      },
+                      "type": [
+                        "null",
+                        "array"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "catalog_id",
+                    "sections"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              }
+            },
+            "required": [
+              "metrics",
+              "views"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
+          "tracker_revision": {
+            "type": "integer"
+          },
           "updated_at": {
             "type": "string"
           },
@@ -2053,6 +2800,7 @@
           }
         },
         "required": [
+          "tracker_revision",
           "id",
           "title",
           "why",
@@ -2287,6 +3035,126 @@
           "title": {
             "type": "string"
           },
+          "tracker": {
+            "additionalProperties": false,
+            "properties": {
+              "metrics": {
+                "description": "0-6 shared numeric measurements; observations are recorded separately, never generated here",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "description": "stable lowercase identifier, 1-64 characters; never change its unit after recording data",
+                      "type": "string"
+                    },
+                    "label": {
+                      "description": "human-readable measurement name, 1-80 characters",
+                      "type": "string"
+                    },
+                    "maximum": {
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "minimum": {
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "target": {
+                      "description": "optional desired value; not a fabricated observation",
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "unit": {
+                      "description": "measurement unit, 1-24 characters, e.g. kg, km, books",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "unit"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              },
+              "views": {
+                "description": "1-2 saved platform presentations, each with a different supported catalog_id; preserve existing presentations on revision",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "catalog_id": {
+                      "description": "exact versioned catalog id returned by tracker_catalog_get; includes app and platform",
+                      "type": "string"
+                    },
+                    "sections": {
+                      "description": "1-8 modules in display order; at most four expanded initially on the phone",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "id": {
+                            "description": "stable lowercase identifier, unique within the view",
+                            "type": "string"
+                          },
+                          "metric_id": {
+                            "description": "required for metric_trend/check_in; must name a metric in this definition; absent for other types",
+                            "type": "string"
+                          },
+                          "title": {
+                            "description": "short visible section heading, 1-80 characters",
+                            "type": "string"
+                          },
+                          "type": {
+                            "description": "metric_trend, milestones, routine_consistency or check_in; only supported modules",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "type",
+                          "title"
+                        ],
+                        "type": "object"
+                      },
+                      "type": [
+                        "null",
+                        "array"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "catalog_id",
+                    "sections"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              }
+            },
+            "required": [
+              "metrics",
+              "views"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
+          "tracker_revision": {
+            "type": "integer"
+          },
           "updated_at": {
             "type": "string"
           },
@@ -2302,6 +3170,7 @@
           }
         },
         "required": [
+          "tracker_revision",
           "id",
           "title",
           "why",
@@ -2541,6 +3410,126 @@
                 "title": {
                   "type": "string"
                 },
+                "tracker": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "metrics": {
+                      "description": "0-6 shared numeric measurements; observations are recorded separately, never generated here",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "id": {
+                            "description": "stable lowercase identifier, 1-64 characters; never change its unit after recording data",
+                            "type": "string"
+                          },
+                          "label": {
+                            "description": "human-readable measurement name, 1-80 characters",
+                            "type": "string"
+                          },
+                          "maximum": {
+                            "type": [
+                              "null",
+                              "number"
+                            ]
+                          },
+                          "minimum": {
+                            "type": [
+                              "null",
+                              "number"
+                            ]
+                          },
+                          "target": {
+                            "description": "optional desired value; not a fabricated observation",
+                            "type": [
+                              "null",
+                              "number"
+                            ]
+                          },
+                          "unit": {
+                            "description": "measurement unit, 1-24 characters, e.g. kg, km, books",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "label",
+                          "unit"
+                        ],
+                        "type": "object"
+                      },
+                      "type": [
+                        "null",
+                        "array"
+                      ]
+                    },
+                    "views": {
+                      "description": "1-2 saved platform presentations, each with a different supported catalog_id; preserve existing presentations on revision",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "catalog_id": {
+                            "description": "exact versioned catalog id returned by tracker_catalog_get; includes app and platform",
+                            "type": "string"
+                          },
+                          "sections": {
+                            "description": "1-8 modules in display order; at most four expanded initially on the phone",
+                            "items": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "id": {
+                                  "description": "stable lowercase identifier, unique within the view",
+                                  "type": "string"
+                                },
+                                "metric_id": {
+                                  "description": "required for metric_trend/check_in; must name a metric in this definition; absent for other types",
+                                  "type": "string"
+                                },
+                                "title": {
+                                  "description": "short visible section heading, 1-80 characters",
+                                  "type": "string"
+                                },
+                                "type": {
+                                  "description": "metric_trend, milestones, routine_consistency or check_in; only supported modules",
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "type",
+                                "title"
+                              ],
+                              "type": "object"
+                            },
+                            "type": [
+                              "null",
+                              "array"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "catalog_id",
+                          "sections"
+                        ],
+                        "type": "object"
+                      },
+                      "type": [
+                        "null",
+                        "array"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "metrics",
+                    "views"
+                  ],
+                  "type": [
+                    "null",
+                    "object"
+                  ]
+                },
+                "tracker_revision": {
+                  "type": "integer"
+                },
                 "updated_at": {
                   "type": "string"
                 },
@@ -2556,6 +3545,7 @@
                 }
               },
               "required": [
+                "tracker_revision",
                 "id",
                 "title",
                 "why",
@@ -2592,6 +3582,308 @@
           "items",
           "total",
           "next_offset"
+        ],
+        "type": "object"
+      },
+      "goals_propose_tracker_input": {
+        "additionalProperties": false,
+        "properties": {
+          "definition": {
+            "additionalProperties": false,
+            "properties": {
+              "metrics": {
+                "description": "0-6 shared numeric measurements; observations are recorded separately, never generated here",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "description": "stable lowercase identifier, 1-64 characters; never change its unit after recording data",
+                      "type": "string"
+                    },
+                    "label": {
+                      "description": "human-readable measurement name, 1-80 characters",
+                      "type": "string"
+                    },
+                    "maximum": {
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "minimum": {
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "target": {
+                      "description": "optional desired value; not a fabricated observation",
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "unit": {
+                      "description": "measurement unit, 1-24 characters, e.g. kg, km, books",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "unit"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              },
+              "views": {
+                "description": "1-2 saved platform presentations, each with a different supported catalog_id; preserve existing presentations on revision",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "catalog_id": {
+                      "description": "exact versioned catalog id returned by tracker_catalog_get; includes app and platform",
+                      "type": "string"
+                    },
+                    "sections": {
+                      "description": "1-8 modules in display order; at most four expanded initially on the phone",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "id": {
+                            "description": "stable lowercase identifier, unique within the view",
+                            "type": "string"
+                          },
+                          "metric_id": {
+                            "description": "required for metric_trend/check_in; must name a metric in this definition; absent for other types",
+                            "type": "string"
+                          },
+                          "title": {
+                            "description": "short visible section heading, 1-80 characters",
+                            "type": "string"
+                          },
+                          "type": {
+                            "description": "metric_trend, milestones, routine_consistency or check_in; only supported modules",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "type",
+                          "title"
+                        ],
+                        "type": "object"
+                      },
+                      "type": [
+                        "null",
+                        "array"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "catalog_id",
+                    "sections"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              }
+            },
+            "required": [
+              "metrics",
+              "views"
+            ],
+            "type": "object"
+          },
+          "expected_version": {
+            "description": "the version you last read; a stale version is rejected",
+            "type": "integer"
+          },
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          },
+          "reason": {
+            "description": "why this composition serves the goal, 1-1000 characters",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "expected_version",
+          "definition",
+          "reason"
+        ],
+        "type": "object"
+      },
+      "goals_propose_tracker_output": {
+        "additionalProperties": false,
+        "properties": {
+          "base_goal_version": {
+            "type": "integer"
+          },
+          "base_tracker_revision": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "definition": {
+            "additionalProperties": false,
+            "properties": {
+              "metrics": {
+                "description": "0-6 shared numeric measurements; observations are recorded separately, never generated here",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "description": "stable lowercase identifier, 1-64 characters; never change its unit after recording data",
+                      "type": "string"
+                    },
+                    "label": {
+                      "description": "human-readable measurement name, 1-80 characters",
+                      "type": "string"
+                    },
+                    "maximum": {
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "minimum": {
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "target": {
+                      "description": "optional desired value; not a fabricated observation",
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "unit": {
+                      "description": "measurement unit, 1-24 characters, e.g. kg, km, books",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "unit"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              },
+              "views": {
+                "description": "1-2 saved platform presentations, each with a different supported catalog_id; preserve existing presentations on revision",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "catalog_id": {
+                      "description": "exact versioned catalog id returned by tracker_catalog_get; includes app and platform",
+                      "type": "string"
+                    },
+                    "sections": {
+                      "description": "1-8 modules in display order; at most four expanded initially on the phone",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "id": {
+                            "description": "stable lowercase identifier, unique within the view",
+                            "type": "string"
+                          },
+                          "metric_id": {
+                            "description": "required for metric_trend/check_in; must name a metric in this definition; absent for other types",
+                            "type": "string"
+                          },
+                          "title": {
+                            "description": "short visible section heading, 1-80 characters",
+                            "type": "string"
+                          },
+                          "type": {
+                            "description": "metric_trend, milestones, routine_consistency or check_in; only supported modules",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "type",
+                          "title"
+                        ],
+                        "type": "object"
+                      },
+                      "type": [
+                        "null",
+                        "array"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "catalog_id",
+                    "sections"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              }
+            },
+            "required": [
+              "metrics",
+              "views"
+            ],
+            "type": "object"
+          },
+          "goal_id": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "goal_id",
+          "base_goal_version",
+          "base_tracker_revision",
+          "definition",
+          "reason",
+          "state",
+          "version",
+          "created_at",
+          "updated_at"
         ],
         "type": "object"
       },
@@ -2815,6 +4107,126 @@
           "title": {
             "type": "string"
           },
+          "tracker": {
+            "additionalProperties": false,
+            "properties": {
+              "metrics": {
+                "description": "0-6 shared numeric measurements; observations are recorded separately, never generated here",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "description": "stable lowercase identifier, 1-64 characters; never change its unit after recording data",
+                      "type": "string"
+                    },
+                    "label": {
+                      "description": "human-readable measurement name, 1-80 characters",
+                      "type": "string"
+                    },
+                    "maximum": {
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "minimum": {
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "target": {
+                      "description": "optional desired value; not a fabricated observation",
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "unit": {
+                      "description": "measurement unit, 1-24 characters, e.g. kg, km, books",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "unit"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              },
+              "views": {
+                "description": "1-2 saved platform presentations, each with a different supported catalog_id; preserve existing presentations on revision",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "catalog_id": {
+                      "description": "exact versioned catalog id returned by tracker_catalog_get; includes app and platform",
+                      "type": "string"
+                    },
+                    "sections": {
+                      "description": "1-8 modules in display order; at most four expanded initially on the phone",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "id": {
+                            "description": "stable lowercase identifier, unique within the view",
+                            "type": "string"
+                          },
+                          "metric_id": {
+                            "description": "required for metric_trend/check_in; must name a metric in this definition; absent for other types",
+                            "type": "string"
+                          },
+                          "title": {
+                            "description": "short visible section heading, 1-80 characters",
+                            "type": "string"
+                          },
+                          "type": {
+                            "description": "metric_trend, milestones, routine_consistency or check_in; only supported modules",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "type",
+                          "title"
+                        ],
+                        "type": "object"
+                      },
+                      "type": [
+                        "null",
+                        "array"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "catalog_id",
+                    "sections"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              }
+            },
+            "required": [
+              "metrics",
+              "views"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
+          "tracker_revision": {
+            "type": "integer"
+          },
           "updated_at": {
             "type": "string"
           },
@@ -2830,6 +4242,7 @@
           }
         },
         "required": [
+          "tracker_revision",
           "id",
           "title",
           "why",
@@ -2843,6 +4256,933 @@
           "next_step",
           "created_at",
           "updated_at"
+        ],
+        "type": "object"
+      },
+      "goals_tracker_apply_input": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "description": "the version you last read; a stale version is rejected",
+            "type": "integer"
+          },
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "expected_version"
+        ],
+        "type": "object"
+      },
+      "goals_tracker_apply_output": {
+        "additionalProperties": false,
+        "properties": {
+          "archived_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "consistency": {
+            "additionalProperties": false,
+            "description": "how well the routines that serve this goal were kept, summed over them. A measure of keeping up, not of how far the outcome has moved",
+            "properties": {
+              "last_30": {
+                "additionalProperties": false,
+                "properties": {
+                  "done": {
+                    "description": "scheduled days whose count reached the target",
+                    "type": "integer"
+                  },
+                  "scheduled": {
+                    "description": "days in the window the routine applied",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "done",
+                  "scheduled"
+                ],
+                "type": "object"
+              },
+              "last_7": {
+                "additionalProperties": false,
+                "properties": {
+                  "done": {
+                    "description": "scheduled days whose count reached the target",
+                    "type": "integer"
+                  },
+                  "scheduled": {
+                    "description": "days in the window the routine applied",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "done",
+                  "scheduled"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "last_7",
+              "last_30"
+            ],
+            "type": "object"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "next_step": {
+            "additionalProperties": false,
+            "description": "the first step not yet done, or null",
+            "properties": {
+              "created_at": {
+                "type": "string"
+              },
+              "done_at": {
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              "goal_id": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "minutes": {
+                "type": "integer"
+              },
+              "position": {
+                "description": "1-based order within the goal",
+                "type": "integer"
+              },
+              "title": {
+                "type": "string"
+              },
+              "updated_at": {
+                "type": "string"
+              },
+              "version": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id",
+              "goal_id",
+              "title",
+              "minutes",
+              "position",
+              "done_at",
+              "version",
+              "created_at",
+              "updated_at"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
+          "progress": {
+            "additionalProperties": false,
+            "properties": {
+              "done": {
+                "type": "integer"
+              },
+              "total": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "done",
+              "total"
+            ],
+            "type": "object"
+          },
+          "routine_ids": {
+            "description": "routines that serve this goal; they are tracked as routines, not as steps",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "steps": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "created_at": {
+                  "type": "string"
+                },
+                "done_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "goal_id": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "minutes": {
+                  "type": "integer"
+                },
+                "position": {
+                  "description": "1-based order within the goal",
+                  "type": "integer"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "goal_id",
+                "title",
+                "minutes",
+                "position",
+                "done_at",
+                "version",
+                "created_at",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "tracker": {
+            "additionalProperties": false,
+            "properties": {
+              "metrics": {
+                "description": "0-6 shared numeric measurements; observations are recorded separately, never generated here",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "description": "stable lowercase identifier, 1-64 characters; never change its unit after recording data",
+                      "type": "string"
+                    },
+                    "label": {
+                      "description": "human-readable measurement name, 1-80 characters",
+                      "type": "string"
+                    },
+                    "maximum": {
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "minimum": {
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "target": {
+                      "description": "optional desired value; not a fabricated observation",
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "unit": {
+                      "description": "measurement unit, 1-24 characters, e.g. kg, km, books",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "unit"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              },
+              "views": {
+                "description": "1-2 saved platform presentations, each with a different supported catalog_id; preserve existing presentations on revision",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "catalog_id": {
+                      "description": "exact versioned catalog id returned by tracker_catalog_get; includes app and platform",
+                      "type": "string"
+                    },
+                    "sections": {
+                      "description": "1-8 modules in display order; at most four expanded initially on the phone",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "id": {
+                            "description": "stable lowercase identifier, unique within the view",
+                            "type": "string"
+                          },
+                          "metric_id": {
+                            "description": "required for metric_trend/check_in; must name a metric in this definition; absent for other types",
+                            "type": "string"
+                          },
+                          "title": {
+                            "description": "short visible section heading, 1-80 characters",
+                            "type": "string"
+                          },
+                          "type": {
+                            "description": "metric_trend, milestones, routine_consistency or check_in; only supported modules",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "type",
+                          "title"
+                        ],
+                        "type": "object"
+                      },
+                      "type": [
+                        "null",
+                        "array"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "catalog_id",
+                    "sections"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              }
+            },
+            "required": [
+              "metrics",
+              "views"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
+          "tracker_revision": {
+            "type": "integer"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "weekly_target": {
+            "description": "steps the person aims to finish each week",
+            "type": "integer"
+          },
+          "why": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "tracker_revision",
+          "id",
+          "title",
+          "why",
+          "weekly_target",
+          "archived_at",
+          "version",
+          "steps",
+          "routine_ids",
+          "consistency",
+          "progress",
+          "next_step",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "goals_tracker_discard_input": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "description": "the version you last read; a stale version is rejected",
+            "type": "integer"
+          },
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "expected_version"
+        ],
+        "type": "object"
+      },
+      "goals_tracker_discard_output": {
+        "additionalProperties": false,
+        "properties": {
+          "base_goal_version": {
+            "type": "integer"
+          },
+          "base_tracker_revision": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "definition": {
+            "additionalProperties": false,
+            "properties": {
+              "metrics": {
+                "description": "0-6 shared numeric measurements; observations are recorded separately, never generated here",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "description": "stable lowercase identifier, 1-64 characters; never change its unit after recording data",
+                      "type": "string"
+                    },
+                    "label": {
+                      "description": "human-readable measurement name, 1-80 characters",
+                      "type": "string"
+                    },
+                    "maximum": {
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "minimum": {
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "target": {
+                      "description": "optional desired value; not a fabricated observation",
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "unit": {
+                      "description": "measurement unit, 1-24 characters, e.g. kg, km, books",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "unit"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              },
+              "views": {
+                "description": "1-2 saved platform presentations, each with a different supported catalog_id; preserve existing presentations on revision",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "catalog_id": {
+                      "description": "exact versioned catalog id returned by tracker_catalog_get; includes app and platform",
+                      "type": "string"
+                    },
+                    "sections": {
+                      "description": "1-8 modules in display order; at most four expanded initially on the phone",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "id": {
+                            "description": "stable lowercase identifier, unique within the view",
+                            "type": "string"
+                          },
+                          "metric_id": {
+                            "description": "required for metric_trend/check_in; must name a metric in this definition; absent for other types",
+                            "type": "string"
+                          },
+                          "title": {
+                            "description": "short visible section heading, 1-80 characters",
+                            "type": "string"
+                          },
+                          "type": {
+                            "description": "metric_trend, milestones, routine_consistency or check_in; only supported modules",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "type",
+                          "title"
+                        ],
+                        "type": "object"
+                      },
+                      "type": [
+                        "null",
+                        "array"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "catalog_id",
+                    "sections"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              }
+            },
+            "required": [
+              "metrics",
+              "views"
+            ],
+            "type": "object"
+          },
+          "goal_id": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "goal_id",
+          "base_goal_version",
+          "base_tracker_revision",
+          "definition",
+          "reason",
+          "state",
+          "version",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "goals_tracker_get_input": {
+        "additionalProperties": false,
+        "properties": {
+          "catalog_id": {
+            "description": "exact catalog supported by the requesting client",
+            "type": "string"
+          },
+          "goal_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "goal_id",
+          "catalog_id"
+        ],
+        "type": "object"
+      },
+      "goals_tracker_get_output": {
+        "additionalProperties": false,
+        "properties": {
+          "catalog_id": {
+            "type": "string"
+          },
+          "goal_id": {
+            "type": "string"
+          },
+          "goal_version": {
+            "type": "integer"
+          },
+          "measurements": {
+            "description": "most recent 120 observations per metric, ordered chronologically",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "created_at": {
+                  "type": "string"
+                },
+                "deleted_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "goal_id": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "measured_at": {
+                  "type": "string"
+                },
+                "metric_id": {
+                  "type": "string"
+                },
+                "notes": {
+                  "type": "string"
+                },
+                "unit": {
+                  "type": "string"
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "number"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "goal_id",
+                "metric_id",
+                "unit",
+                "value",
+                "measured_at",
+                "notes",
+                "version",
+                "deleted_at",
+                "created_at",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "metrics": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "description": "stable lowercase identifier, 1-64 characters; never change its unit after recording data",
+                  "type": "string"
+                },
+                "label": {
+                  "description": "human-readable measurement name, 1-80 characters",
+                  "type": "string"
+                },
+                "maximum": {
+                  "type": [
+                    "null",
+                    "number"
+                  ]
+                },
+                "minimum": {
+                  "type": [
+                    "null",
+                    "number"
+                  ]
+                },
+                "target": {
+                  "description": "optional desired value; not a fabricated observation",
+                  "type": [
+                    "null",
+                    "number"
+                  ]
+                },
+                "unit": {
+                  "description": "measurement unit, 1-24 characters, e.g. kg, km, books",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "label",
+                "unit"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "proposals": {
+            "description": "pending proposals that include this client's catalog",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "base_goal_version": {
+                  "type": "integer"
+                },
+                "base_tracker_revision": {
+                  "type": "integer"
+                },
+                "created_at": {
+                  "type": "string"
+                },
+                "definition": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "metrics": {
+                      "description": "0-6 shared numeric measurements; observations are recorded separately, never generated here",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "id": {
+                            "description": "stable lowercase identifier, 1-64 characters; never change its unit after recording data",
+                            "type": "string"
+                          },
+                          "label": {
+                            "description": "human-readable measurement name, 1-80 characters",
+                            "type": "string"
+                          },
+                          "maximum": {
+                            "type": [
+                              "null",
+                              "number"
+                            ]
+                          },
+                          "minimum": {
+                            "type": [
+                              "null",
+                              "number"
+                            ]
+                          },
+                          "target": {
+                            "description": "optional desired value; not a fabricated observation",
+                            "type": [
+                              "null",
+                              "number"
+                            ]
+                          },
+                          "unit": {
+                            "description": "measurement unit, 1-24 characters, e.g. kg, km, books",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "label",
+                          "unit"
+                        ],
+                        "type": "object"
+                      },
+                      "type": [
+                        "null",
+                        "array"
+                      ]
+                    },
+                    "views": {
+                      "description": "1-2 saved platform presentations, each with a different supported catalog_id; preserve existing presentations on revision",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "catalog_id": {
+                            "description": "exact versioned catalog id returned by tracker_catalog_get; includes app and platform",
+                            "type": "string"
+                          },
+                          "sections": {
+                            "description": "1-8 modules in display order; at most four expanded initially on the phone",
+                            "items": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "id": {
+                                  "description": "stable lowercase identifier, unique within the view",
+                                  "type": "string"
+                                },
+                                "metric_id": {
+                                  "description": "required for metric_trend/check_in; must name a metric in this definition; absent for other types",
+                                  "type": "string"
+                                },
+                                "title": {
+                                  "description": "short visible section heading, 1-80 characters",
+                                  "type": "string"
+                                },
+                                "type": {
+                                  "description": "metric_trend, milestones, routine_consistency or check_in; only supported modules",
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "type",
+                                "title"
+                              ],
+                              "type": "object"
+                            },
+                            "type": [
+                              "null",
+                              "array"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "catalog_id",
+                          "sections"
+                        ],
+                        "type": "object"
+                      },
+                      "type": [
+                        "null",
+                        "array"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "metrics",
+                    "views"
+                  ],
+                  "type": "object"
+                },
+                "goal_id": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "goal_id",
+                "base_goal_version",
+                "base_tracker_revision",
+                "definition",
+                "reason",
+                "state",
+                "version",
+                "created_at",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "tracker_revision": {
+            "type": "integer"
+          },
+          "view": {
+            "additionalProperties": false,
+            "description": "saved matching presentation, or null; never silently use another app's catalog",
+            "properties": {
+              "catalog_id": {
+                "description": "exact versioned catalog id returned by tracker_catalog_get; includes app and platform",
+                "type": "string"
+              },
+              "sections": {
+                "description": "1-8 modules in display order; at most four expanded initially on the phone",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "description": "stable lowercase identifier, unique within the view",
+                      "type": "string"
+                    },
+                    "metric_id": {
+                      "description": "required for metric_trend/check_in; must name a metric in this definition; absent for other types",
+                      "type": "string"
+                    },
+                    "title": {
+                      "description": "short visible section heading, 1-80 characters",
+                      "type": "string"
+                    },
+                    "type": {
+                      "description": "metric_trend, milestones, routine_consistency or check_in; only supported modules",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "type",
+                    "title"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              }
+            },
+            "required": [
+              "catalog_id",
+              "sections"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          }
+        },
+        "required": [
+          "goal_id",
+          "goal_version",
+          "tracker_revision",
+          "catalog_id",
+          "view",
+          "metrics",
+          "measurements",
+          "proposals"
         ],
         "type": "object"
       },
@@ -3064,6 +5404,126 @@
           "title": {
             "type": "string"
           },
+          "tracker": {
+            "additionalProperties": false,
+            "properties": {
+              "metrics": {
+                "description": "0-6 shared numeric measurements; observations are recorded separately, never generated here",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "description": "stable lowercase identifier, 1-64 characters; never change its unit after recording data",
+                      "type": "string"
+                    },
+                    "label": {
+                      "description": "human-readable measurement name, 1-80 characters",
+                      "type": "string"
+                    },
+                    "maximum": {
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "minimum": {
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "target": {
+                      "description": "optional desired value; not a fabricated observation",
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "unit": {
+                      "description": "measurement unit, 1-24 characters, e.g. kg, km, books",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "unit"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              },
+              "views": {
+                "description": "1-2 saved platform presentations, each with a different supported catalog_id; preserve existing presentations on revision",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "catalog_id": {
+                      "description": "exact versioned catalog id returned by tracker_catalog_get; includes app and platform",
+                      "type": "string"
+                    },
+                    "sections": {
+                      "description": "1-8 modules in display order; at most four expanded initially on the phone",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "id": {
+                            "description": "stable lowercase identifier, unique within the view",
+                            "type": "string"
+                          },
+                          "metric_id": {
+                            "description": "required for metric_trend/check_in; must name a metric in this definition; absent for other types",
+                            "type": "string"
+                          },
+                          "title": {
+                            "description": "short visible section heading, 1-80 characters",
+                            "type": "string"
+                          },
+                          "type": {
+                            "description": "metric_trend, milestones, routine_consistency or check_in; only supported modules",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "type",
+                          "title"
+                        ],
+                        "type": "object"
+                      },
+                      "type": [
+                        "null",
+                        "array"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "catalog_id",
+                    "sections"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              }
+            },
+            "required": [
+              "metrics",
+              "views"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
+          "tracker_revision": {
+            "type": "integer"
+          },
           "updated_at": {
             "type": "string"
           },
@@ -3079,6 +5539,7 @@
           }
         },
         "required": [
+          "tracker_revision",
           "id",
           "title",
           "why",
@@ -3331,6 +5792,126 @@
           "title": {
             "type": "string"
           },
+          "tracker": {
+            "additionalProperties": false,
+            "properties": {
+              "metrics": {
+                "description": "0-6 shared numeric measurements; observations are recorded separately, never generated here",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "description": "stable lowercase identifier, 1-64 characters; never change its unit after recording data",
+                      "type": "string"
+                    },
+                    "label": {
+                      "description": "human-readable measurement name, 1-80 characters",
+                      "type": "string"
+                    },
+                    "maximum": {
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "minimum": {
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "target": {
+                      "description": "optional desired value; not a fabricated observation",
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "unit": {
+                      "description": "measurement unit, 1-24 characters, e.g. kg, km, books",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "unit"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              },
+              "views": {
+                "description": "1-2 saved platform presentations, each with a different supported catalog_id; preserve existing presentations on revision",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "catalog_id": {
+                      "description": "exact versioned catalog id returned by tracker_catalog_get; includes app and platform",
+                      "type": "string"
+                    },
+                    "sections": {
+                      "description": "1-8 modules in display order; at most four expanded initially on the phone",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "id": {
+                            "description": "stable lowercase identifier, unique within the view",
+                            "type": "string"
+                          },
+                          "metric_id": {
+                            "description": "required for metric_trend/check_in; must name a metric in this definition; absent for other types",
+                            "type": "string"
+                          },
+                          "title": {
+                            "description": "short visible section heading, 1-80 characters",
+                            "type": "string"
+                          },
+                          "type": {
+                            "description": "metric_trend, milestones, routine_consistency or check_in; only supported modules",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "type",
+                          "title"
+                        ],
+                        "type": "object"
+                      },
+                      "type": [
+                        "null",
+                        "array"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "catalog_id",
+                    "sections"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              }
+            },
+            "required": [
+              "metrics",
+              "views"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
+          "tracker_revision": {
+            "type": "integer"
+          },
           "updated_at": {
             "type": "string"
           },
@@ -3346,6 +5927,7 @@
           }
         },
         "required": [
+          "tracker_revision",
           "id",
           "title",
           "why",
@@ -3366,7 +5948,7 @@
         "additionalProperties": false,
         "properties": {
           "entity_type": {
-            "description": "reminder, schedule, settings, goal, step, commitment, plan_item, plan_proposal, routine, journal_entry, note, capture or attachment",
+            "description": "goal_measurement, tracker_proposal, reminder, schedule, settings, goal, step, commitment, plan_item, plan_proposal, routine, journal_entry, note, capture or attachment",
             "type": "string"
           },
           "id": {
@@ -4899,6 +7481,126 @@
                 "title": {
                   "type": "string"
                 },
+                "tracker": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "metrics": {
+                      "description": "0-6 shared numeric measurements; observations are recorded separately, never generated here",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "id": {
+                            "description": "stable lowercase identifier, 1-64 characters; never change its unit after recording data",
+                            "type": "string"
+                          },
+                          "label": {
+                            "description": "human-readable measurement name, 1-80 characters",
+                            "type": "string"
+                          },
+                          "maximum": {
+                            "type": [
+                              "null",
+                              "number"
+                            ]
+                          },
+                          "minimum": {
+                            "type": [
+                              "null",
+                              "number"
+                            ]
+                          },
+                          "target": {
+                            "description": "optional desired value; not a fabricated observation",
+                            "type": [
+                              "null",
+                              "number"
+                            ]
+                          },
+                          "unit": {
+                            "description": "measurement unit, 1-24 characters, e.g. kg, km, books",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "label",
+                          "unit"
+                        ],
+                        "type": "object"
+                      },
+                      "type": [
+                        "null",
+                        "array"
+                      ]
+                    },
+                    "views": {
+                      "description": "1-2 saved platform presentations, each with a different supported catalog_id; preserve existing presentations on revision",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "catalog_id": {
+                            "description": "exact versioned catalog id returned by tracker_catalog_get; includes app and platform",
+                            "type": "string"
+                          },
+                          "sections": {
+                            "description": "1-8 modules in display order; at most four expanded initially on the phone",
+                            "items": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "id": {
+                                  "description": "stable lowercase identifier, unique within the view",
+                                  "type": "string"
+                                },
+                                "metric_id": {
+                                  "description": "required for metric_trend/check_in; must name a metric in this definition; absent for other types",
+                                  "type": "string"
+                                },
+                                "title": {
+                                  "description": "short visible section heading, 1-80 characters",
+                                  "type": "string"
+                                },
+                                "type": {
+                                  "description": "metric_trend, milestones, routine_consistency or check_in; only supported modules",
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "type",
+                                "title"
+                              ],
+                              "type": "object"
+                            },
+                            "type": [
+                              "null",
+                              "array"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "catalog_id",
+                          "sections"
+                        ],
+                        "type": "object"
+                      },
+                      "type": [
+                        "null",
+                        "array"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "metrics",
+                    "views"
+                  ],
+                  "type": [
+                    "null",
+                    "object"
+                  ]
+                },
+                "tracker_revision": {
+                  "type": "integer"
+                },
                 "updated_at": {
                   "type": "string"
                 },
@@ -4914,6 +7616,7 @@
                 }
               },
               "required": [
+                "tracker_revision",
                 "id",
                 "title",
                 "why",
@@ -13827,6 +16530,126 @@
           "title": {
             "type": "string"
           },
+          "tracker": {
+            "additionalProperties": false,
+            "properties": {
+              "metrics": {
+                "description": "0-6 shared numeric measurements; observations are recorded separately, never generated here",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "description": "stable lowercase identifier, 1-64 characters; never change its unit after recording data",
+                      "type": "string"
+                    },
+                    "label": {
+                      "description": "human-readable measurement name, 1-80 characters",
+                      "type": "string"
+                    },
+                    "maximum": {
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "minimum": {
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "target": {
+                      "description": "optional desired value; not a fabricated observation",
+                      "type": [
+                        "null",
+                        "number"
+                      ]
+                    },
+                    "unit": {
+                      "description": "measurement unit, 1-24 characters, e.g. kg, km, books",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "unit"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              },
+              "views": {
+                "description": "1-2 saved platform presentations, each with a different supported catalog_id; preserve existing presentations on revision",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "catalog_id": {
+                      "description": "exact versioned catalog id returned by tracker_catalog_get; includes app and platform",
+                      "type": "string"
+                    },
+                    "sections": {
+                      "description": "1-8 modules in display order; at most four expanded initially on the phone",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "id": {
+                            "description": "stable lowercase identifier, unique within the view",
+                            "type": "string"
+                          },
+                          "metric_id": {
+                            "description": "required for metric_trend/check_in; must name a metric in this definition; absent for other types",
+                            "type": "string"
+                          },
+                          "title": {
+                            "description": "short visible section heading, 1-80 characters",
+                            "type": "string"
+                          },
+                          "type": {
+                            "description": "metric_trend, milestones, routine_consistency or check_in; only supported modules",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "type",
+                          "title"
+                        ],
+                        "type": "object"
+                      },
+                      "type": [
+                        "null",
+                        "array"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "catalog_id",
+                    "sections"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              }
+            },
+            "required": [
+              "metrics",
+              "views"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
+          "tracker_revision": {
+            "type": "integer"
+          },
           "updated_at": {
             "type": "string"
           },
@@ -13842,6 +16665,7 @@
           }
         },
         "required": [
+          "tracker_revision",
           "id",
           "title",
           "why",
@@ -13935,6 +16759,106 @@
           "version",
           "created_at",
           "updated_at"
+        ],
+        "type": "object"
+      },
+      "tracker_catalog_get_input": {
+        "additionalProperties": false,
+        "properties": {
+          "catalog_id": {
+            "description": "omit to list all supported client catalogs; otherwise request an exact id",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "tracker_catalog_get_output": {
+        "additionalProperties": false,
+        "properties": {
+          "catalogs": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "app": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "layout": {
+                  "type": "string"
+                },
+                "modules": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "actions": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": [
+                          "null",
+                          "array"
+                        ]
+                      },
+                      "data_source": {
+                        "type": "string"
+                      },
+                      "purpose": {
+                        "type": "string"
+                      },
+                      "required_properties": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": [
+                          "null",
+                          "array"
+                        ]
+                      },
+                      "type": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "purpose",
+                      "required_properties",
+                      "data_source",
+                      "actions"
+                    ],
+                    "type": "object"
+                  },
+                  "type": [
+                    "null",
+                    "array"
+                  ]
+                },
+                "platform": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "app",
+                "platform",
+                "layout",
+                "modules"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "guidance": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "catalogs",
+          "guidance"
         ],
         "type": "object"
       },
@@ -15638,6 +18562,321 @@
         "x-read-only": true
       }
     },
+    "/api/v1/operations/goal_measurements_delete": {
+      "post": {
+        "description": "Remove an erroneous observation from the tracker; its audit history remains.",
+        "operationId": "goal_measurements_delete",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/goal_measurements_delete_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/goal_measurements_delete_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "goal_measurements_delete",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/goal_measurements_record": {
+      "post": {
+        "description": "Record an actual numeric observation for a goal's defined metric, with its observed time and notes. Never invent values or treat routine completion as an outcome measurement.",
+        "operationId": "goal_measurements_record",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/goal_measurements_record_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/goal_measurements_record_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "goal_measurements_record",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/goal_measurements_update": {
+      "post": {
+        "description": "Correct a recorded observation using the version last read; preserves its time unless supplied.",
+        "operationId": "goal_measurements_update",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/goal_measurements_update_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/goal_measurements_update_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "goal_measurements_update",
+        "x-read-only": false
+      }
+    },
     "/api/v1/operations/goals_archive": {
       "post": {
         "description": "Archive a goal (it can be restored).",
@@ -15745,7 +18984,7 @@
     },
     "/api/v1/operations/goals_create": {
       "post": {
-        "description": "Create a goal: an END STATE the person wants to reach (\"run a 10k by March\", \"lose 5 kg\"). Never use it for a behaviour that repeats forever (drinking water daily is a routine). Steps are ONE-OFF tasks, small and concrete, 10-30 minutes, so there is always a next action. Anything done repeatedly is a routine, not a step: look at the person's existing routines first, pass the ones that serve this goal in routine_ids, and create a routine (routines_create) for what is missing.",
+        "description": "For a client advertising a tracker catalog, read tracker_catalog_get and include a tailored tracker definition. Create a goal: an END STATE the person wants to reach (\"run a 10k by March\", \"lose 5 kg\"). Never use it for a behaviour that repeats forever (drinking water daily is a routine). Steps are ONE-OFF tasks, small and concrete, 10-30 minutes, so there is always a next action. Anything done repeatedly is a routine, not a step: look at the person's existing routines first, pass the ones that serve this goal in routine_ids, and create a routine (routines_create) for what is missing.",
         "operationId": "goals_create",
         "requestBody": {
           "content": {
@@ -16163,6 +19402,111 @@
         "x-read-only": true
       }
     },
+    "/api/v1/operations/goals_propose_tracker": {
+      "post": {
+        "description": "Compose or revise a tailored goal tracker from catalog modules and shared metric definitions. Read tracker_catalog_get and goals_get first. Preserve existing metrics and other platform views. Nothing changes until the person accepts the proposal in their app.",
+        "operationId": "goals_propose_tracker",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/goals_propose_tracker_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/goals_propose_tracker_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "goals_propose_tracker",
+        "x-read-only": false
+      }
+    },
     "/api/v1/operations/goals_restore": {
       "post": {
         "description": "Restore an archived goal.",
@@ -16266,6 +19610,321 @@
         ],
         "x-mcp-tool": "goals_restore",
         "x-read-only": false
+      }
+    },
+    "/api/v1/operations/goals_tracker_apply": {
+      "post": {
+        "description": "Accept a pending tracker proposal atomically, only after the person has explicitly accepted it. Rejects changed goals or tracker definitions.",
+        "operationId": "goals_tracker_apply",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/goals_tracker_apply_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/goals_tracker_apply_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "goals_tracker_apply",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/goals_tracker_discard": {
+      "post": {
+        "description": "Decline a pending tracker proposal.",
+        "operationId": "goals_tracker_discard",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/goals_tracker_discard_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/goals_tracker_discard_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "goals_tracker_discard",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/goals_tracker_get": {
+      "post": {
+        "description": "Read a goal's saved presentation for the exact requesting-client catalog, real measurements and pending tracker proposals. A missing view stays null; do not substitute another app's view.",
+        "operationId": "goals_tracker_get",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/goals_tracker_get_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/goals_tracker_get_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "goals_tracker_get",
+        "x-read-only": true
       }
     },
     "/api/v1/operations/goals_unlink_routine": {
@@ -23616,6 +27275,111 @@
         ],
         "x-mcp-tool": "steps_update",
         "x-read-only": false
+      }
+    },
+    "/api/v1/operations/tracker_catalog_get": {
+      "post": {
+        "description": "Read supported versioned tracker catalogs for each app/platform before composing a goal tracker. Modules bind to real goal data; never generate code or observations.",
+        "operationId": "tracker_catalog_get",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/tracker_catalog_get_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/tracker_catalog_get_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "tracker_catalog_get",
+        "x-read-only": true
       }
     },
     "/api/v1/operations/week_stats": {
