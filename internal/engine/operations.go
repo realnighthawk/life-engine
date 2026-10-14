@@ -4,6 +4,15 @@ import "context"
 
 // Descriptions are written for the agent to choose a tool by outcome, so they say what the person gets, not how it is stored.
 func (s *Service) registerOperations() {
+	register(s, "tracker_catalog_get", "Read supported versioned tracker catalogs for each app/platform before composing a goal tracker. Modules bind to real goal data; never generate code or observations.", false, getTrackerCatalog)
+	register(s, "goals_tracker_get", "Read a goal's saved presentation for the exact requesting-client catalog, real measurements and pending tracker proposals. A missing view stays null; do not substitute another app's view.", false, getTracker)
+	register(s, "goals_propose_tracker", "Compose or revise a tailored goal tracker from catalog modules and shared metric definitions. Read tracker_catalog_get and goals_get first. Preserve existing metrics and other platform views. Nothing changes until the person accepts the proposal in their app.", true, proposeTracker)
+	register(s, "goals_tracker_apply", "Accept a pending tracker proposal atomically, only after the person has explicitly accepted it. Rejects changed goals or tracker definitions.", true, applyTracker)
+	register(s, "goals_tracker_discard", "Decline a pending tracker proposal.", true, discardTracker)
+	register(s, "goal_measurements_record", "Record an actual numeric observation for a goal's defined metric, with its observed time and notes. Never invent values or treat routine completion as an outcome measurement.", true, recordMeasurement)
+	register(s, "goal_measurements_update", "Correct a recorded observation using the version last read; preserves its time unless supplied.", true, updateMeasurement)
+	register(s, "goal_measurements_delete", "Remove an erroneous observation from the tracker; its audit history remains.", true, deleteMeasurement)
+
 	register(s, "reminders_create", "Create a reminder for the person: something to be reminded of, optionally at a time and optionally repeating (daily, weekly on chosen weekdays, or monthly). Use this for a one-off cue or an event (call Sam at 5, pay rent on the 1st), never for a behaviour the person wants to repeat and track, which is a routine (routines_create). It appears in their app. When it is due you are woken to check it is still wanted and tell the person with notify_user.", true, createReminder)
 	register(s, "reminders_get", "Read one reminder, including whether it is done, snoozed or repeating.", false, func(c context.Context, u *unit, in GetInput) (Reminder, error) { return u.getReminder(c, in.ID, false) })
 	register(s, "reminders_list", "List the person's reminders: pending by default, or done or all, optionally within a due range or matching text. Soonest first; undated last.", false, listReminders)
@@ -41,7 +50,7 @@ func (s *Service) registerOperations() {
 	register(s, "monitors_restore", "Restore a deleted monitor; it resumes from now.", true, func(c context.Context, u *unit, in EditInput) (Monitor, error) {
 		return lifecycleMonitor(c, u, in, true)
 	})
-	register(s, "goals_create", "Create a goal: an END STATE the person wants to reach (\"run a 10k by March\", \"lose 5 kg\"). Never use it for a behaviour that repeats forever (drinking water daily is a routine). Steps are ONE-OFF tasks, small and concrete, 10-30 minutes, so there is always a next action. Anything done repeatedly is a routine, not a step: look at the person's existing routines first, pass the ones that serve this goal in routine_ids, and create a routine (routines_create) for what is missing.", true, createGoal)
+	register(s, "goals_create", "For a client advertising a tracker catalog, read tracker_catalog_get and include a tailored tracker definition. Create a goal: an END STATE the person wants to reach (\"run a 10k by March\", \"lose 5 kg\"). Never use it for a behaviour that repeats forever (drinking water daily is a routine). Steps are ONE-OFF tasks, small and concrete, 10-30 minutes, so there is always a next action. Anything done repeatedly is a routine, not a step: look at the person's existing routines first, pass the ones that serve this goal in routine_ids, and create a routine (routines_create) for what is missing.", true, createGoal)
 	register(s, "goals_link_routine", "Say that a routine serves a goal (idempotent). Use this when the person has a routine that moves a goal forward, instead of copying it into the goal's steps. Look at their existing routines first and link what already fits. If one of the goal's steps only repeats that routine (\"log meals today\"), remove the step with steps_delete so the same thing is not tracked twice.", true, func(c context.Context, u *unit, in LinkRoutineInput) (Goal, error) {
 		return linkGoalRoutine(c, u, in, true)
 	})
