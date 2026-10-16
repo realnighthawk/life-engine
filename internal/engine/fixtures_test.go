@@ -102,12 +102,12 @@ func TestWriteClientFixtures(t *testing.T) {
 	call("next_action_none", "next_action", map[string]any{"minutes": 1})
 
 	routine := call("routine", "routines_create", map[string]any{"idempotency_key": k(), "id": "77777777-7777-4777-8777-777777777777", "title": "Morning run", "minutes": 30, "short_title": "Walk around the block",
-		"short_minutes": 10, "weekdays": []int{1, 2, 3, 4, 5}, "cues": []string{"07:30"}, "target_per_day": 1})
+		"short_minutes": 10, "weekdays": []int{1, 2, 3, 4, 5}, "nudges": []map[string]any{{"at": "07:30"}}, "target_per_day": 1})
 	call("routine_status", "routine_checkins_set", map[string]any{"idempotency_key": k(), "routine_id": id(routine), "variant": "short"})
 	call("routines_status", "routines_status", map[string]any{})
 	call("goal_linked", "goals_link_routine", map[string]any{"idempotency_key": k(), "goal_id": id(goal), "routine_id": id(routine)})
 	water := call("routine_counted", "routines_create", map[string]any{"idempotency_key": k(), "id": "78787878-7878-4787-8787-787878787878", "title": "Drink water", "target_per_day": 3,
-		"cues": []string{"09:00", "13:00", "17:00"}, "short_title": "One glass", "minutes": 2, "short_minutes": 1})
+		"nudges": []map[string]any{{"at": "09:00"}, {"at": "13:00"}, {"at": "17:00"}}, "short_title": "One glass", "minutes": 2, "short_minutes": 1})
 	call("routine_log", "routines_log", map[string]any{"idempotency_key": k(), "routine_id": id(water)})
 	call("routine_history", "routines_history", map[string]any{"routine_id": id(water), "days": 14})
 

@@ -2,6 +2,7 @@ package engine
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"slices"
 	"strings"
@@ -16,22 +17,29 @@ type Routine struct {
 	ShortMinutes int        `json:"short_minutes"`
 	Weekdays     []int      `json:"weekdays" jsonschema:"days it applies, 0 = Sunday to 6; empty means every day"`
 	TargetPerDay int        `json:"target_per_day" jsonschema:"times to do it on each day it applies; the day is done when the count reaches this"`
-	Cues         []string   `json:"cues" jsonschema:"HH:MM local times the person is nudged; each nudge checks the day's count first"`
+	Nudges       []Nudge    `json:"nudges" jsonschema:"times the person may be nudged about this routine, ordered by time; each nudge checks the day's count first"`
 	TimeZone     string     `json:"time_zone"`
 	Version      int64      `json:"version"`
 	DeletedAt    *time.Time `json:"deleted_at"`
 	CreatedAt    time.Time  `json:"created_at"`
 	UpdatedAt    time.Time  `json:"updated_at"`
 }
+
+// A Nudge belongs to one routine (ADR 0007). It is the agent's cue to consider prompting the person, not a reminder: it is not
+// listed on the Today agenda and the person is told only if the agent decides to notify.
+type Nudge struct {
+	At      string `json:"at" jsonschema:"HH:MM local time, unique within the routine"`
+	Message string `json:"message,omitempty" jsonschema:"optional hint for the agent's wording, at most 200 characters, for example 'after lunch'"`
+}
 type RoutineData struct {
-	Title        string   `json:"title" jsonschema:"the usual version, 1-200 characters"`
-	Minutes      int      `json:"minutes,omitempty" jsonschema:"1-240, default 15"`
-	ShortTitle   string   `json:"short_title,omitempty" jsonschema:"the busy-day version; default 'A smaller version'"`
-	ShortMinutes int      `json:"short_minutes,omitempty" jsonschema:"1-240, default 5"`
-	Weekdays     []int    `json:"weekdays,omitempty" jsonschema:"0 = Sunday to 6; omit for every day"`
-	TargetPerDay *int     `json:"target_per_day,omitempty" jsonschema:"times to do it each day it applies, 1-12, default 1 (3 for drink water)"`
-	Cues         []string `json:"cues,omitempty" jsonschema:"HH:MM local times to be nudged, up to 8, for example [\"09:00\",\"13:00\",\"17:00\"]; a nudge only speaks if the day is not yet done"`
-	TimeZone     string   `json:"time_zone,omitempty" jsonschema:"IANA zone; defaults to the person's setting"`
+	Title        string  `json:"title" jsonschema:"the usual version, 1-200 characters"`
+	Minutes      int     `json:"minutes,omitempty" jsonschema:"1-240, default 15"`
+	ShortTitle   string  `json:"short_title,omitempty" jsonschema:"the busy-day version; default 'A smaller version'"`
+	ShortMinutes int     `json:"short_minutes,omitempty" jsonschema:"1-240, default 5"`
+	Weekdays     []int   `json:"weekdays,omitempty" jsonschema:"0 = Sunday to 6; omit for every day"`
+	TargetPerDay *int    `json:"target_per_day,omitempty" jsonschema:"times to do it each day it applies, 1-12, default 1 (3 for drink water)"`
+	Nudges       []Nudge `json:"nudges,omitempty" jsonschema:"up to 8 nudges, each a local HH:MM time and an optional hint for the wording, for example three for drink water; a nudge only speaks if the day is not yet done. On update this replaces all of them"`
+	TimeZone     string  `json:"time_zone,omitempty" jsonschema:"IANA zone; defaults to the person's setting"`
 }
 type CreateRoutineInput struct {
 	Meta
@@ -68,14 +76,20 @@ type RoutinesStatus struct {
 	Items []RoutineStatus `json:"items"`
 }
 
-const routineCols = `id::text,title,minutes,short_title,short_minutes,weekdays,target_per_day,cues,time_zone,version,deleted_at,created_at,updated_at`
+const routineCols = `id::text,title,minutes,short_title,short_minutes,weekdays,target_per_day,
+	coalesce((SELECT jsonb_agg(jsonb_build_object('at',n.at,'message',n.message) ORDER BY n.at) FROM life.routine_nudges n WHERE n.routine_id=routines.id),'[]'),
+	time_zone,version,deleted_at,created_at,updated_at`
 
 func scanRoutine(row scanner) (Routine, error) {
 	var r Routine
 	var wd []int16
-	err := row.Scan(&r.ID, &r.Title, &r.Minutes, &r.ShortTitle, &r.ShortMinutes, &wd, &r.TargetPerDay, &r.Cues, &r.TimeZone, &r.Version, &r.DeletedAt, &r.CreatedAt, &r.UpdatedAt)
-	if r.Cues == nil {
-		r.Cues = []string{}
+	var nudges []byte
+	err := row.Scan(&r.ID, &r.Title, &r.Minutes, &r.ShortTitle, &r.ShortMinutes, &wd, &r.TargetPerDay, &nudges, &r.TimeZone, &r.Version, &r.DeletedAt, &r.CreatedAt, &r.UpdatedAt)
+	if err != nil {
+		return r, err
+	}
+	if err = json.Unmarshal(nudges, &r.Nudges); err != nil {
+		return r, err
 	}
 	r.Weekdays = make([]int, len(wd))
 	for i, d := range wd {
@@ -103,7 +117,7 @@ type routineValues struct {
 	minutes, shortMin int
 	weekdays          []int16
 	target            int
-	cues              []string
+	nudges            []Nudge
 }
 
 func (u *unit) routineValues(ctx context.Context, d RoutineData) (routineValues, error) {
@@ -143,20 +157,22 @@ func (u *unit) routineValues(ctx context.Context, d RoutineData) (routineValues,
 	if v.target < 1 || v.target > 12 {
 		return v, invalid("target_per_day must be 1-12")
 	}
-	if len(d.Cues) > 8 {
-		return v, invalid("at most 8 cues")
+	if len(d.Nudges) > 8 {
+		return v, invalid("at most 8 nudges")
 	}
-	v.cues = []string{}
-	for _, c := range d.Cues {
-		if e := validClock("cues", c); e != nil {
+	v.nudges = []Nudge{}
+	for _, n := range d.Nudges {
+		if e := validClock("nudges.at", n.At); e != nil {
 			return v, e
 		}
-		if slices.Contains(v.cues, c) {
-			return v, invalid("cues must be different times")
+		if len(n.Message) > 200 {
+			return v, invalid("a nudge message must be at most 200 characters")
 		}
-		v.cues = append(v.cues, c)
+		if slices.ContainsFunc(v.nudges, func(x Nudge) bool { return x.At == n.At }) {
+			return v, invalid("nudges must be at different times")
+		}
+		v.nudges = append(v.nudges, Nudge{n.At, strings.TrimSpace(n.Message)})
 	}
-	slices.Sort(v.cues)
 	if v.tz == "" {
 		s, e := u.getSettings(ctx)
 		if e != nil {
@@ -179,8 +195,11 @@ func createRoutine(ctx context.Context, u *unit, in CreateRoutineInput) (Routine
 	if e != nil {
 		return Routine{}, e
 	}
-	if _, e = u.tx.Exec(ctx, `INSERT INTO life.routines(id,title,minutes,short_title,short_minutes,weekdays,target_per_day,cues,time_zone,session_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,NULLIF($10,''))`,
-		key, v.title, v.minutes, v.short, v.shortMin, v.weekdays, v.target, v.cues, v.tz, u.session); e != nil {
+	if _, e = u.tx.Exec(ctx, `INSERT INTO life.routines(id,title,minutes,short_title,short_minutes,weekdays,target_per_day,time_zone,session_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,NULLIF($9,''))`,
+		key, v.title, v.minutes, v.short, v.shortMin, v.weekdays, v.target, v.tz, u.session); e != nil {
+		return Routine{}, e
+	}
+	if e = u.replaceNudges(ctx, key, v.nudges); e != nil {
 		return Routine{}, e
 	}
 	r, e := u.getRoutine(ctx, key, false)
@@ -188,6 +207,86 @@ func createRoutine(ctx context.Context, u *unit, in CreateRoutineInput) (Routine
 		return r, e
 	}
 	return r, u.audit(ctx, "routine", key, nil, r)
+}
+
+func (u *unit) replaceNudges(ctx context.Context, routineID string, nudges []Nudge) error {
+	if _, e := u.tx.Exec(ctx, `DELETE FROM life.routine_nudges WHERE routine_id=$1`, routineID); e != nil {
+		return e
+	}
+	for _, n := range nudges {
+		if _, e := u.tx.Exec(ctx, `INSERT INTO life.routine_nudges(routine_id,at,message) VALUES($1,$2,$3)`, routineID, n.At, n.Message); e != nil {
+			return e
+		}
+	}
+	return nil
+}
+
+type SetNudgeInput struct {
+	EditInput
+	Nudge
+}
+type RemoveNudgeInput struct {
+	EditInput
+	At string `json:"at" jsonschema:"HH:MM of the nudge to remove"`
+}
+
+// setNudge adds a nudge to a routine, or changes the message of the one already at that time.
+func setNudge(ctx context.Context, u *unit, in SetNudgeInput) (Routine, error) {
+	old, e := u.editableRoutine(ctx, in.EditInput)
+	if e != nil {
+		return old, e
+	}
+	if e = validClock("at", in.At); e != nil {
+		return old, e
+	}
+	if len(in.Message) > 200 {
+		return old, invalid("a nudge message must be at most 200 characters")
+	}
+	if len(old.Nudges) >= 8 && !slices.ContainsFunc(old.Nudges, func(n Nudge) bool { return n.At == in.At }) {
+		return old, invalid("at most 8 nudges")
+	}
+	if _, e = u.tx.Exec(ctx, `INSERT INTO life.routine_nudges(routine_id,at,message) VALUES($1,$2,$3) ON CONFLICT (routine_id,at) DO UPDATE SET message=EXCLUDED.message`,
+		old.ID, in.At, strings.TrimSpace(in.Message)); e != nil {
+		return old, e
+	}
+	return u.touchRoutine(ctx, old)
+}
+
+func removeNudge(ctx context.Context, u *unit, in RemoveNudgeInput) (Routine, error) {
+	old, e := u.editableRoutine(ctx, in.EditInput)
+	if e != nil {
+		return old, e
+	}
+	tag, e := u.tx.Exec(ctx, `DELETE FROM life.routine_nudges WHERE routine_id=$1 AND at=$2`, old.ID, in.At)
+	if e != nil {
+		return old, e
+	}
+	if tag.RowsAffected() == 0 {
+		return old, notFound()
+	}
+	return u.touchRoutine(ctx, old)
+}
+
+func (u *unit) editableRoutine(ctx context.Context, in EditInput) (Routine, error) {
+	old, e := u.getRoutine(ctx, in.ID, true)
+	if e != nil {
+		return old, e
+	}
+	if e = version(in.ExpectedVersion, old.Version); e != nil {
+		return old, e
+	}
+	if old.DeletedAt != nil {
+		return old, conflict("Restore the routine before editing it")
+	}
+	return old, nil
+}
+
+// touchRoutine bumps the routine's version after its nudges changed, so a client holding the old version is told.
+func (u *unit) touchRoutine(ctx context.Context, old Routine) (Routine, error) {
+	if _, e := u.tx.Exec(ctx, `UPDATE life.routines SET version=version+1,updated_at=now() WHERE id=$1`, old.ID); e != nil {
+		return old, e
+	}
+	return u.routineChanged(ctx, old)
 }
 
 func (u *unit) routineChanged(ctx context.Context, old Routine) (Routine, error) {
@@ -213,8 +312,11 @@ func updateRoutine(ctx context.Context, u *unit, in UpdateRoutineInput) (Routine
 	if e != nil {
 		return old, e
 	}
-	if _, e = u.tx.Exec(ctx, `UPDATE life.routines SET title=$2,minutes=$3,short_title=$4,short_minutes=$5,weekdays=$6,target_per_day=$7,cues=$8,time_zone=$9,version=version+1,updated_at=now() WHERE id=$1`,
-		old.ID, v.title, v.minutes, v.short, v.shortMin, v.weekdays, v.target, v.cues, v.tz); e != nil {
+	if _, e = u.tx.Exec(ctx, `UPDATE life.routines SET title=$2,minutes=$3,short_title=$4,short_minutes=$5,weekdays=$6,target_per_day=$7,time_zone=$8,version=version+1,updated_at=now() WHERE id=$1`,
+		old.ID, v.title, v.minutes, v.short, v.shortMin, v.weekdays, v.target, v.tz); e != nil {
+		return old, e
+	}
+	if e = u.replaceNudges(ctx, old.ID, v.nudges); e != nil {
 		return old, e
 	}
 	return u.routineChanged(ctx, old)

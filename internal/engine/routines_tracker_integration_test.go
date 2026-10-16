@@ -8,19 +8,19 @@ import (
 	"github.com/realnighthawk/life-engine/internal/engine"
 )
 
-func TestRoutineTargetCuesAndCounting(t *testing.T) {
+func TestRoutineTargetNudgesAndCounting(t *testing.T) {
 	s := integrationService(t)
 	r := execute[engine.Routine](t, s, "routines_create", map[string]any{"idempotency_key": key(), "title": "Drink water", "target_per_day": 3,
-		"cues": []string{"17:00", "09:00", "13:00"}, "time_zone": "UTC"})
-	if r.TargetPerDay != 3 || len(r.Cues) != 3 || r.Cues[0] != "09:00" || r.Cues[2] != "17:00" {
+		"nudges": []map[string]any{{"at": "17:00"}, {"at": "09:00"}, {"at": "13:00"}}, "time_zone": "UTC"})
+	if r.TargetPerDay != 3 || len(r.Nudges) != 3 || r.Nudges[0].At != "09:00" || r.Nudges[2].At != "17:00" {
 		t.Fatalf("created: %+v", r)
 	}
 	errorCode(t, s, "routines_create", map[string]any{"idempotency_key": key(), "title": "Too many", "target_per_day": 13}, "invalid_input")
-	errorCode(t, s, "routines_create", map[string]any{"idempotency_key": key(), "title": "Twice", "cues": []string{"09:00", "09:00"}}, "invalid_input")
-	errorCode(t, s, "routines_create", map[string]any{"idempotency_key": key(), "title": "Bad", "cues": []string{"25:00"}}, "invalid_input")
-	errorCode(t, s, "routines_create", map[string]any{"idempotency_key": key(), "title": "Nine", "cues": []string{"01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00"}}, "invalid_input")
+	errorCode(t, s, "routines_create", map[string]any{"idempotency_key": key(), "title": "Twice", "nudges": []map[string]any{{"at": "09:00"}, {"at": "09:00"}}}, "invalid_input")
+	errorCode(t, s, "routines_create", map[string]any{"idempotency_key": key(), "title": "Bad", "nudges": []map[string]any{{"at": "25:00"}}}, "invalid_input")
+	errorCode(t, s, "routines_create", map[string]any{"idempotency_key": key(), "title": "Nine", "nudges": []map[string]any{{"at": "01:00"}, {"at": "02:00"}, {"at": "03:00"}, {"at": "04:00"}, {"at": "05:00"}, {"at": "06:00"}, {"at": "07:00"}, {"at": "08:00"}, {"at": "09:00"}}}, "invalid_input")
 	plain := execute[engine.Routine](t, s, "routines_create", map[string]any{"idempotency_key": key(), "title": "Stretch"})
-	if plain.TargetPerDay != 1 || plain.Cues == nil || len(plain.Cues) != 0 {
+	if plain.TargetPerDay != 1 || plain.Nudges == nil || len(plain.Nudges) != 0 {
 		t.Fatalf("defaults: %+v", plain)
 	}
 
@@ -82,14 +82,14 @@ func TestRoutineHistoryIsARateNotAStreakThatResets(t *testing.T) {
 	errorCode(t, s, "routines_history", map[string]any{"routine_id": r.ID, "days": 3}, "invalid_input")
 }
 
-func TestRoutineCuesArmTheNextOne(t *testing.T) {
+func TestRoutineNudgesArmTheNextOne(t *testing.T) {
 	s, f, sync := newSynced(t)
 	now := time.Now().UTC()
 	soon, later := now.Add(2*time.Hour).Format("15:04"), now.Add(5*time.Hour).Format("15:04")
-	r := execute[engine.Routine](t, s, "routines_create", map[string]any{"idempotency_key": key(), "title": "Drink water", "target_per_day": 3, "cues": []string{later, soon}, "time_zone": "UTC"})
+	r := execute[engine.Routine](t, s, "routines_create", map[string]any{"idempotency_key": key(), "title": "Drink water", "target_per_day": 3, "nudges": []map[string]any{{"at": later}, {"at": soon}}, "time_zone": "UTC"})
 	sync()
 	w, ok := f.armed["routine-"+r.ID]
-	if !ok || w.At.UTC().Format("15:04") != soon || w.Kind != "routine" {
+	if !ok || w.At.UTC().Format("15:04") != soon || w.Kind != "nudge" {
 		t.Fatalf("must arm the earliest cue still ahead: %+v", f.armed)
 	}
 }
@@ -193,5 +193,26 @@ func TestGoalConsistencyIsSummedFromItsRoutines(t *testing.T) {
 	lonely := execute[engine.Goal](t, s, "goals_create", map[string]any{"idempotency_key": key(), "title": "No routines yet"})
 	if lonely.Consistency.Last30.Scheduled != 0 {
 		t.Fatalf("a goal with no routines has nothing to measure: %+v", lonely.Consistency)
+	}
+}
+
+// A nudge belongs to its routine: set and removed through the routine's version, ordered by time, and never a reminder.
+func TestNudgesBelongToTheirRoutine(t *testing.T) {
+	s := integrationService(t)
+	r := execute[engine.Routine](t, s, "routines_create", map[string]any{"idempotency_key": key(), "title": "Stretch", "time_zone": "UTC"})
+	r2 := execute[engine.Routine](t, s, "nudges_set", map[string]any{"idempotency_key": key(), "id": r.ID, "expected_version": r.Version, "at": "18:00", "message": "after work"})
+	r3 := execute[engine.Routine](t, s, "nudges_set", map[string]any{"idempotency_key": key(), "id": r.ID, "expected_version": r2.Version, "at": "08:00"})
+	if len(r3.Nudges) != 2 || r3.Nudges[0].At != "08:00" || r3.Nudges[1].Message != "after work" || r3.Version != r.Version+2 {
+		t.Fatalf("nudges must be ordered and bump the routine's version: %+v", r3)
+	}
+	errorCode(t, s, "nudges_set", map[string]any{"idempotency_key": key(), "id": r.ID, "expected_version": r.Version, "at": "09:00"}, "conflict")
+	errorCode(t, s, "nudges_set", map[string]any{"idempotency_key": key(), "id": r.ID, "expected_version": r3.Version, "at": "9am"}, "invalid_input")
+	r4 := execute[engine.Routine](t, s, "nudges_remove", map[string]any{"idempotency_key": key(), "id": r.ID, "expected_version": r3.Version, "at": "18:00"})
+	if len(r4.Nudges) != 1 || r4.Nudges[0].At != "08:00" {
+		t.Fatalf("remove: %+v", r4)
+	}
+	errorCode(t, s, "nudges_remove", map[string]any{"idempotency_key": key(), "id": r.ID, "expected_version": r4.Version, "at": "18:00"}, "not_found")
+	if n := execute[engine.Page[engine.Reminder]](t, s, "reminders_list", map[string]any{"status": "all"}); len(n.Items) != 0 && n.Items[0].Title == "Stretch" {
+		t.Fatalf("a nudge is not a reminder: %+v", n)
 	}
 }

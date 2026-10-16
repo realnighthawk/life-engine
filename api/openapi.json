@@ -8078,16 +8078,6 @@
                         "created_at": {
                           "type": "string"
                         },
-                        "cues": {
-                          "description": "HH:MM local times the person is nudged; each nudge checks the day's count first",
-                          "items": {
-                            "type": "string"
-                          },
-                          "type": [
-                            "null",
-                            "array"
-                          ]
-                        },
                         "deleted_at": {
                           "type": [
                             "null",
@@ -8099,6 +8089,30 @@
                         },
                         "minutes": {
                           "type": "integer"
+                        },
+                        "nudges": {
+                          "description": "times the person may be nudged about this routine, ordered by time; each nudge checks the day's count first",
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "at": {
+                                "description": "HH:MM local time, unique within the routine",
+                                "type": "string"
+                              },
+                              "message": {
+                                "description": "optional hint for the agent's wording, at most 200 characters, for example 'after lunch'",
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "at"
+                            ],
+                            "type": "object"
+                          },
+                          "type": [
+                            "null",
+                            "array"
+                          ]
                         },
                         "short_minutes": {
                           "type": "integer"
@@ -8142,7 +8156,7 @@
                         "short_minutes",
                         "weekdays",
                         "target_per_day",
-                        "cues",
+                        "nudges",
                         "time_zone",
                         "version",
                         "deleted_at",
@@ -10153,6 +10167,252 @@
           "tags",
           "pinned",
           "attachments",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "nudges_remove_input": {
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "description": "HH:MM of the nudge to remove",
+            "type": "string"
+          },
+          "expected_version": {
+            "description": "the version you last read; a stale version is rejected",
+            "type": "integer"
+          },
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "expected_version",
+          "at"
+        ],
+        "type": "object"
+      },
+      "nudges_remove_output": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "minutes": {
+            "type": "integer"
+          },
+          "nudges": {
+            "description": "times the person may be nudged about this routine, ordered by time; each nudge checks the day's count first",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "at": {
+                  "description": "HH:MM local time, unique within the routine",
+                  "type": "string"
+                },
+                "message": {
+                  "description": "optional hint for the agent's wording, at most 200 characters, for example 'after lunch'",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "short_minutes": {
+            "type": "integer"
+          },
+          "short_title": {
+            "description": "the smaller version for a busy day",
+            "type": "string"
+          },
+          "target_per_day": {
+            "description": "times to do it on each day it applies; the day is done when the count reaches this",
+            "type": "integer"
+          },
+          "time_zone": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "weekdays": {
+            "description": "days it applies, 0 = Sunday to 6; empty means every day",
+            "items": {
+              "type": "integer"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "minutes",
+          "short_title",
+          "short_minutes",
+          "weekdays",
+          "target_per_day",
+          "nudges",
+          "time_zone",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "nudges_set_input": {
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "description": "HH:MM local time, unique within the routine",
+            "type": "string"
+          },
+          "expected_version": {
+            "description": "the version you last read; a stale version is rejected",
+            "type": "integer"
+          },
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          },
+          "message": {
+            "description": "optional hint for the agent's wording, at most 200 characters, for example 'after lunch'",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "expected_version",
+          "at"
+        ],
+        "type": "object"
+      },
+      "nudges_set_output": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "minutes": {
+            "type": "integer"
+          },
+          "nudges": {
+            "description": "times the person may be nudged about this routine, ordered by time; each nudge checks the day's count first",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "at": {
+                  "description": "HH:MM local time, unique within the routine",
+                  "type": "string"
+                },
+                "message": {
+                  "description": "optional hint for the agent's wording, at most 200 characters, for example 'after lunch'",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "short_minutes": {
+            "type": "integer"
+          },
+          "short_title": {
+            "description": "the smaller version for a busy day",
+            "type": "string"
+          },
+          "target_per_day": {
+            "description": "times to do it on each day it applies; the day is done when the count reaches this",
+            "type": "integer"
+          },
+          "time_zone": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "weekdays": {
+            "description": "days it applies, 0 = Sunday to 6; empty means every day",
+            "items": {
+              "type": "integer"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "minutes",
+          "short_title",
+          "short_minutes",
+          "weekdays",
+          "target_per_day",
+          "nudges",
+          "time_zone",
           "version",
           "deleted_at",
           "created_at",
@@ -13664,16 +13924,6 @@
               "created_at": {
                 "type": "string"
               },
-              "cues": {
-                "description": "HH:MM local times the person is nudged; each nudge checks the day's count first",
-                "items": {
-                  "type": "string"
-                },
-                "type": [
-                  "null",
-                  "array"
-                ]
-              },
               "deleted_at": {
                 "type": [
                   "null",
@@ -13685,6 +13935,30 @@
               },
               "minutes": {
                 "type": "integer"
+              },
+              "nudges": {
+                "description": "times the person may be nudged about this routine, ordered by time; each nudge checks the day's count first",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "at": {
+                      "description": "HH:MM local time, unique within the routine",
+                      "type": "string"
+                    },
+                    "message": {
+                      "description": "optional hint for the agent's wording, at most 200 characters, for example 'after lunch'",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "at"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
               },
               "short_minutes": {
                 "type": "integer"
@@ -13728,7 +14002,7 @@
               "short_minutes",
               "weekdays",
               "target_per_day",
-              "cues",
+              "nudges",
               "time_zone",
               "version",
               "deleted_at",
@@ -13769,16 +14043,6 @@
       "routines_create_input": {
         "additionalProperties": false,
         "properties": {
-          "cues": {
-            "description": "HH:MM local times to be nudged, up to 8, for example [\"09:00\",\"13:00\",\"17:00\"]; a nudge only speaks if the day is not yet done",
-            "items": {
-              "type": "string"
-            },
-            "type": [
-              "null",
-              "array"
-            ]
-          },
           "id": {
             "type": "string"
           },
@@ -13789,6 +14053,30 @@
           "minutes": {
             "description": "1-240, default 15",
             "type": "integer"
+          },
+          "nudges": {
+            "description": "up to 8 nudges, each a local HH:MM time and an optional hint for the wording, for example three for drink water; a nudge only speaks if the day is not yet done. On update this replaces all of them",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "at": {
+                  "description": "HH:MM local time, unique within the routine",
+                  "type": "string"
+                },
+                "message": {
+                  "description": "optional hint for the agent's wording, at most 200 characters, for example 'after lunch'",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
           },
           "short_minutes": {
             "description": "1-240, default 5",
@@ -13836,16 +14124,6 @@
           "created_at": {
             "type": "string"
           },
-          "cues": {
-            "description": "HH:MM local times the person is nudged; each nudge checks the day's count first",
-            "items": {
-              "type": "string"
-            },
-            "type": [
-              "null",
-              "array"
-            ]
-          },
           "deleted_at": {
             "type": [
               "null",
@@ -13857,6 +14135,30 @@
           },
           "minutes": {
             "type": "integer"
+          },
+          "nudges": {
+            "description": "times the person may be nudged about this routine, ordered by time; each nudge checks the day's count first",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "at": {
+                  "description": "HH:MM local time, unique within the routine",
+                  "type": "string"
+                },
+                "message": {
+                  "description": "optional hint for the agent's wording, at most 200 characters, for example 'after lunch'",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
           },
           "short_minutes": {
             "type": "integer"
@@ -13900,7 +14202,7 @@
           "short_minutes",
           "weekdays",
           "target_per_day",
-          "cues",
+          "nudges",
           "time_zone",
           "version",
           "deleted_at",
@@ -13938,16 +14240,6 @@
           "created_at": {
             "type": "string"
           },
-          "cues": {
-            "description": "HH:MM local times the person is nudged; each nudge checks the day's count first",
-            "items": {
-              "type": "string"
-            },
-            "type": [
-              "null",
-              "array"
-            ]
-          },
           "deleted_at": {
             "type": [
               "null",
@@ -13959,6 +14251,30 @@
           },
           "minutes": {
             "type": "integer"
+          },
+          "nudges": {
+            "description": "times the person may be nudged about this routine, ordered by time; each nudge checks the day's count first",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "at": {
+                  "description": "HH:MM local time, unique within the routine",
+                  "type": "string"
+                },
+                "message": {
+                  "description": "optional hint for the agent's wording, at most 200 characters, for example 'after lunch'",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
           },
           "short_minutes": {
             "type": "integer"
@@ -14002,7 +14318,7 @@
           "short_minutes",
           "weekdays",
           "target_per_day",
-          "cues",
+          "nudges",
           "time_zone",
           "version",
           "deleted_at",
@@ -14030,16 +14346,6 @@
           "created_at": {
             "type": "string"
           },
-          "cues": {
-            "description": "HH:MM local times the person is nudged; each nudge checks the day's count first",
-            "items": {
-              "type": "string"
-            },
-            "type": [
-              "null",
-              "array"
-            ]
-          },
           "deleted_at": {
             "type": [
               "null",
@@ -14051,6 +14357,30 @@
           },
           "minutes": {
             "type": "integer"
+          },
+          "nudges": {
+            "description": "times the person may be nudged about this routine, ordered by time; each nudge checks the day's count first",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "at": {
+                  "description": "HH:MM local time, unique within the routine",
+                  "type": "string"
+                },
+                "message": {
+                  "description": "optional hint for the agent's wording, at most 200 characters, for example 'after lunch'",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
           },
           "short_minutes": {
             "type": "integer"
@@ -14094,7 +14424,7 @@
           "short_minutes",
           "weekdays",
           "target_per_day",
-          "cues",
+          "nudges",
           "time_zone",
           "version",
           "deleted_at",
@@ -14203,16 +14533,6 @@
               "created_at": {
                 "type": "string"
               },
-              "cues": {
-                "description": "HH:MM local times the person is nudged; each nudge checks the day's count first",
-                "items": {
-                  "type": "string"
-                },
-                "type": [
-                  "null",
-                  "array"
-                ]
-              },
               "deleted_at": {
                 "type": [
                   "null",
@@ -14224,6 +14544,30 @@
               },
               "minutes": {
                 "type": "integer"
+              },
+              "nudges": {
+                "description": "times the person may be nudged about this routine, ordered by time; each nudge checks the day's count first",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "at": {
+                      "description": "HH:MM local time, unique within the routine",
+                      "type": "string"
+                    },
+                    "message": {
+                      "description": "optional hint for the agent's wording, at most 200 characters, for example 'after lunch'",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "at"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
               },
               "short_minutes": {
                 "type": "integer"
@@ -14267,7 +14611,7 @@
               "short_minutes",
               "weekdays",
               "target_per_day",
-              "cues",
+              "nudges",
               "time_zone",
               "version",
               "deleted_at",
@@ -14322,16 +14666,6 @@
                 "created_at": {
                   "type": "string"
                 },
-                "cues": {
-                  "description": "HH:MM local times the person is nudged; each nudge checks the day's count first",
-                  "items": {
-                    "type": "string"
-                  },
-                  "type": [
-                    "null",
-                    "array"
-                  ]
-                },
                 "deleted_at": {
                   "type": [
                     "null",
@@ -14343,6 +14677,30 @@
                 },
                 "minutes": {
                   "type": "integer"
+                },
+                "nudges": {
+                  "description": "times the person may be nudged about this routine, ordered by time; each nudge checks the day's count first",
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "at": {
+                        "description": "HH:MM local time, unique within the routine",
+                        "type": "string"
+                      },
+                      "message": {
+                        "description": "optional hint for the agent's wording, at most 200 characters, for example 'after lunch'",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "at"
+                    ],
+                    "type": "object"
+                  },
+                  "type": [
+                    "null",
+                    "array"
+                  ]
                 },
                 "short_minutes": {
                   "type": "integer"
@@ -14386,7 +14744,7 @@
                 "short_minutes",
                 "weekdays",
                 "target_per_day",
-                "cues",
+                "nudges",
                 "time_zone",
                 "version",
                 "deleted_at",
@@ -14481,16 +14839,6 @@
               "created_at": {
                 "type": "string"
               },
-              "cues": {
-                "description": "HH:MM local times the person is nudged; each nudge checks the day's count first",
-                "items": {
-                  "type": "string"
-                },
-                "type": [
-                  "null",
-                  "array"
-                ]
-              },
               "deleted_at": {
                 "type": [
                   "null",
@@ -14502,6 +14850,30 @@
               },
               "minutes": {
                 "type": "integer"
+              },
+              "nudges": {
+                "description": "times the person may be nudged about this routine, ordered by time; each nudge checks the day's count first",
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "at": {
+                      "description": "HH:MM local time, unique within the routine",
+                      "type": "string"
+                    },
+                    "message": {
+                      "description": "optional hint for the agent's wording, at most 200 characters, for example 'after lunch'",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "at"
+                  ],
+                  "type": "object"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
               },
               "short_minutes": {
                 "type": "integer"
@@ -14545,7 +14917,7 @@
               "short_minutes",
               "weekdays",
               "target_per_day",
-              "cues",
+              "nudges",
               "time_zone",
               "version",
               "deleted_at",
@@ -14612,16 +14984,6 @@
           "created_at": {
             "type": "string"
           },
-          "cues": {
-            "description": "HH:MM local times the person is nudged; each nudge checks the day's count first",
-            "items": {
-              "type": "string"
-            },
-            "type": [
-              "null",
-              "array"
-            ]
-          },
           "deleted_at": {
             "type": [
               "null",
@@ -14633,6 +14995,30 @@
           },
           "minutes": {
             "type": "integer"
+          },
+          "nudges": {
+            "description": "times the person may be nudged about this routine, ordered by time; each nudge checks the day's count first",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "at": {
+                  "description": "HH:MM local time, unique within the routine",
+                  "type": "string"
+                },
+                "message": {
+                  "description": "optional hint for the agent's wording, at most 200 characters, for example 'after lunch'",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
           },
           "short_minutes": {
             "type": "integer"
@@ -14676,7 +15062,7 @@
           "short_minutes",
           "weekdays",
           "target_per_day",
-          "cues",
+          "nudges",
           "time_zone",
           "version",
           "deleted_at",
@@ -14733,16 +15119,6 @@
                     "created_at": {
                       "type": "string"
                     },
-                    "cues": {
-                      "description": "HH:MM local times the person is nudged; each nudge checks the day's count first",
-                      "items": {
-                        "type": "string"
-                      },
-                      "type": [
-                        "null",
-                        "array"
-                      ]
-                    },
                     "deleted_at": {
                       "type": [
                         "null",
@@ -14754,6 +15130,30 @@
                     },
                     "minutes": {
                       "type": "integer"
+                    },
+                    "nudges": {
+                      "description": "times the person may be nudged about this routine, ordered by time; each nudge checks the day's count first",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "at": {
+                            "description": "HH:MM local time, unique within the routine",
+                            "type": "string"
+                          },
+                          "message": {
+                            "description": "optional hint for the agent's wording, at most 200 characters, for example 'after lunch'",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "at"
+                        ],
+                        "type": "object"
+                      },
+                      "type": [
+                        "null",
+                        "array"
+                      ]
                     },
                     "short_minutes": {
                       "type": "integer"
@@ -14797,7 +15197,7 @@
                     "short_minutes",
                     "weekdays",
                     "target_per_day",
-                    "cues",
+                    "nudges",
                     "time_zone",
                     "version",
                     "deleted_at",
@@ -14850,16 +15250,6 @@
       "routines_update_input": {
         "additionalProperties": false,
         "properties": {
-          "cues": {
-            "description": "HH:MM local times to be nudged, up to 8, for example [\"09:00\",\"13:00\",\"17:00\"]; a nudge only speaks if the day is not yet done",
-            "items": {
-              "type": "string"
-            },
-            "type": [
-              "null",
-              "array"
-            ]
-          },
           "expected_version": {
             "description": "the version you last read; a stale version is rejected",
             "type": "integer"
@@ -14875,6 +15265,30 @@
           "minutes": {
             "description": "1-240, default 15",
             "type": "integer"
+          },
+          "nudges": {
+            "description": "up to 8 nudges, each a local HH:MM time and an optional hint for the wording, for example three for drink water; a nudge only speaks if the day is not yet done. On update this replaces all of them",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "at": {
+                  "description": "HH:MM local time, unique within the routine",
+                  "type": "string"
+                },
+                "message": {
+                  "description": "optional hint for the agent's wording, at most 200 characters, for example 'after lunch'",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
           },
           "short_minutes": {
             "description": "1-240, default 5",
@@ -14924,16 +15338,6 @@
           "created_at": {
             "type": "string"
           },
-          "cues": {
-            "description": "HH:MM local times the person is nudged; each nudge checks the day's count first",
-            "items": {
-              "type": "string"
-            },
-            "type": [
-              "null",
-              "array"
-            ]
-          },
           "deleted_at": {
             "type": [
               "null",
@@ -14945,6 +15349,30 @@
           },
           "minutes": {
             "type": "integer"
+          },
+          "nudges": {
+            "description": "times the person may be nudged about this routine, ordered by time; each nudge checks the day's count first",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "at": {
+                  "description": "HH:MM local time, unique within the routine",
+                  "type": "string"
+                },
+                "message": {
+                  "description": "optional hint for the agent's wording, at most 200 characters, for example 'after lunch'",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
           },
           "short_minutes": {
             "type": "integer"
@@ -14988,7 +15416,7 @@
           "short_minutes",
           "weekdays",
           "target_per_day",
-          "cues",
+          "nudges",
           "time_zone",
           "version",
           "deleted_at",
@@ -22552,6 +22980,216 @@
         "x-read-only": false
       }
     },
+    "/api/v1/operations/nudges_remove": {
+      "post": {
+        "description": "Remove the nudge at a time from a routine, using the routine's version.",
+        "operationId": "nudges_remove",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/nudges_remove_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/nudges_remove_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "nudges_remove",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/nudges_set": {
+      "post": {
+        "description": "Add a nudge to a routine, or change the wording hint of the one at that time. A nudge is when the person may be prompted about the routine; it checks the day's count first and speaks only if the day is not done. It lives on the routine and never appears as a reminder. Uses the routine's version.",
+        "operationId": "nudges_set",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/nudges_set_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/nudges_set_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "nudges_set",
+        "x-read-only": false
+      }
+    },
     "/api/v1/operations/plan_get": {
       "post": {
         "description": "Read a day's plan: items in order, any pending proposed revisions, and a summary. Defaults to today in the person's time zone.",
@@ -24129,7 +24767,7 @@
     },
     "/api/v1/operations/reminders_create": {
       "post": {
-        "description": "Create a reminder for the person: something to be reminded of, optionally at a time and optionally repeating (daily, weekly on chosen weekdays, or monthly). Use this for a one-off cue or an event (call Sam at 5, pay rent on the 1st), never for a behaviour the person wants to repeat and track, which is a routine (routines_create). It appears in their app. When it is due you are woken to check it is still wanted and tell the person with notify_user.",
+        "description": "Create a reminder for the person: something to be reminded of, optionally at a time and optionally repeating (daily, weekly on chosen weekdays, or monthly). Use this for a one-off cue or an event (call Sam at 5, pay rent on the 1st), never for a behaviour the person wants to repeat and track, which is a routine (routines_create). Only for something the person asked to be reminded of: it appears on their Today screen. Never create one to schedule a prompt for a routine or goal; a routine's prompts are its nudges (nudges_set) and a goal is followed through its routines and check-ins. When it is due you are woken to check it is still wanted and tell the person with notify_user.",
         "operationId": "reminders_create",
         "requestBody": {
           "content": {
@@ -24969,7 +25607,7 @@
     },
     "/api/v1/operations/routines_create": {
       "post": {
-        "description": "Create a routine: something the person wants to DO repeatedly, such as drinking water 3 times a day, stretching each morning or running Monday, Wednesday and Friday. Use this, not reminders, for any repeating behaviour; if it serves a goal, link it with goals_link_routine; a reminder is only a one-off cue or an event. Give it a target_per_day (default 1), cues (the times to be nudged, for example three for three times a day), a short busy-day version and optional weekdays. It appears in their app with a tracker. Missed days are information, not failure.",
+        "description": "Create a routine: something the person wants to DO repeatedly, such as drinking water 3 times a day, stretching each morning or running Monday, Wednesday and Friday. Use this, not reminders, for any repeating behaviour; if it serves a goal, link it with goals_link_routine; a reminder is only a one-off cue or an event. Give it a target_per_day (default 1), nudges (the times the person may be nudged, each an HH:MM and an optional wording hint; for example three for three times a day; a nudge belongs to its routine and is not a reminder), a short busy-day version and optional weekdays. It appears in their app with a tracker. Missed days are information, not failure.",
         "operationId": "routines_create",
         "requestBody": {
           "content": {
@@ -25809,7 +26447,7 @@
     },
     "/api/v1/operations/routines_update": {
       "post": {
-        "description": "Replace a routine's fields using the version you last read.",
+        "description": "Replace a routine's fields, including all of its nudges, using the version you last read. To change one nudge use nudges_set or nudges_remove instead.",
         "operationId": "routines_update",
         "requestBody": {
           "content": {

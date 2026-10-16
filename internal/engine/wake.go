@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"slices"
 	"time"
 )
 
@@ -12,7 +13,7 @@ import (
 // the harness's arm_wake does, so a reminder and an agent-armed wake are the same mechanism (ADR 0003).
 type Wake struct {
 	Name      string // stable per record, e.g. reminder-<uuid>; the waker prefixes it with the user scope
-	Kind      string // reminder | instruction | routine
+	Kind      string // reminder | instruction | nudge | goal_checkin | monitor
 	Subject   string // <entity>:<id>, the record the wake is about
 	Objective string
 	Why       string
@@ -270,11 +271,11 @@ func (s *Service) scheduleWakes(ctx context.Context, now time.Time) ([]wakeItem,
 	return items, rows.Err()
 }
 
-// --- routines (the nudge at the person's chosen time) ---
+// --- routine nudges: the agent's cue to consider prompting the person (ADR 0007). Not reminders; nothing reaches the person unless the agent notifies. ---
 
 type routineRow struct {
 	id, title, short, tz  string
-	cues                  []string
+	cues, messages        []string // a routine's nudge times and, in the same order, their wording hints
 	weekdays              []int16
 	armed                 *time.Time
 	session, armedSession string
@@ -325,8 +326,11 @@ func hasDay(days []int16, d int) bool {
 }
 
 func (s *Service) routineWakes(ctx context.Context, now time.Time) ([]wakeItem, error) {
-	rows, err := s.pool.Query(ctx, `SELECT id::text,title,short_title,time_zone,cues,weekdays,armed_for,deleted_at IS NOT NULL,coalesce(session_id,''),coalesce(armed_session,'')
-		FROM life.routines WHERE armed_for IS NOT NULL OR (cardinality(cues) > 0 AND deleted_at IS NULL)`)
+	rows, err := s.pool.Query(ctx, `SELECT id::text,title,short_title,time_zone,
+		ARRAY(SELECT at FROM life.routine_nudges WHERE routine_id=routines.id ORDER BY at),
+		ARRAY(SELECT message FROM life.routine_nudges WHERE routine_id=routines.id ORDER BY at),
+		weekdays,armed_for,deleted_at IS NOT NULL,coalesce(session_id,''),coalesce(armed_session,'')
+		FROM life.routines WHERE armed_for IS NOT NULL OR (deleted_at IS NULL AND EXISTS (SELECT 1 FROM life.routine_nudges WHERE routine_id=routines.id))`)
 	if err != nil {
 		return nil, err
 	}
@@ -334,15 +338,19 @@ func (s *Service) routineWakes(ctx context.Context, now time.Time) ([]wakeItem, 
 	var items []wakeItem
 	for rows.Next() {
 		var r routineRow
-		if err = rows.Scan(&r.id, &r.title, &r.short, &r.tz, &r.cues, &r.weekdays, &r.armed, &r.deleted, &r.session, &r.armedSession); err != nil {
+		if err = rows.Scan(&r.id, &r.title, &r.short, &r.tz, &r.cues, &r.messages, &r.weekdays, &r.armed, &r.deleted, &r.session, &r.armedSession); err != nil {
 			return nil, err
 		}
 		items = append(items, wakeItem{table: "routines", id: r.id, want: desiredRoutineWake(r, now), armed: r.armed, session: sessionScope(r.session), armedSession: r.armedSession, wake: func(at time.Time) Wake {
-			return Wake{Name: wakeName("routine", r.id), Kind: "routine", Subject: "routine:" + r.id,
-				Objective: fmt.Sprintf("It is the %s nudge time the user chose for their routine %q (Life routine %s). Check today with the Life "+
+			label, hint := cueLabel(at, r.tz), ""
+			if i := slices.Index(r.cues, label); i >= 0 && r.messages[i] != "" {
+				hint = fmt.Sprintf(" The nudge was set up with this note on the wording: %q.", r.messages[i])
+			}
+			return Wake{Name: wakeName("routine", r.id), Kind: "nudge", Subject: "routine:" + r.id,
+				Objective: fmt.Sprintf("It is the %s nudge time the user chose for their routine %q (Life routine %s).%s Check today with the Life "+
 					"routines_status tool. If it applies today and today's count has not reached the target, call notify_user with entity \"routine\" and id %q, "+
 					"a kind one-line nudge that says how far along they are (for example 1 of 3) and offers the short version (%s) as an easy option. "+
-					"If the day is already done or it does not apply today, do nothing and say nothing.", cueLabel(at, r.tz), r.title, r.id, r.id, r.short),
+					"If the day is already done or it does not apply today, do nothing and say nothing.", label, r.title, r.id, hint, r.id, r.short),
 				Why: "The user asked to be nudged about a routine at this time.", At: at}
 		}})
 	}

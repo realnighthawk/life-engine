@@ -122,10 +122,10 @@ func TestScheduleWakeFollowsTheRowAndMovesOn(t *testing.T) {
 func TestRoutineWakeIsTheNextReminderTime(t *testing.T) {
 	s, f, sync := newSynced(t)
 	at := time.Now().UTC().Add(3 * time.Hour).Format("15:04")
-	r := execute[engine.Routine](t, s, "routines_create", map[string]any{"idempotency_key": "r1", "title": "Stretch", "cues": []string{at}, "time_zone": "UTC"})
+	r := execute[engine.Routine](t, s, "routines_create", map[string]any{"idempotency_key": "r1", "title": "Stretch", "nudges": []map[string]any{{"at": at}}, "time_zone": "UTC"})
 	sync()
 	w, ok := f.armed["routine-"+r.ID]
-	if !ok || w.At.UTC().Format("15:04") != at || !w.At.After(time.Now()) || w.Kind != "routine" {
+	if !ok || w.At.UTC().Format("15:04") != at || !w.At.After(time.Now()) || w.Kind != "nudge" {
 		t.Fatalf("routine wake: %+v", f.armed)
 	}
 	execute[engine.Routine](t, s, "routines_delete", map[string]any{"idempotency_key": "r2", "id": r.ID, "expected_version": r.Version})
@@ -169,7 +169,7 @@ func TestAWakeLandsOnTheSessionItWasCreatedFrom(t *testing.T) {
 
 	r := executeIn[engine.Reminder](t, s, web, "reminders_create", map[string]any{"idempotency_key": "ss1", "title": "From the web chat", "due_at": due})
 	sc := executeIn[engine.Schedule](t, s, web, "schedules_create", map[string]any{"idempotency_key": "ss2", "name": "Review", "instruction": "Review", "time_of_day": "09:00", "recurrence": map[string]any{"freq": "daily"}})
-	ro := executeIn[engine.Routine](t, s, web, "routines_create", map[string]any{"idempotency_key": "ss3", "title": "Stretch", "cues": []string{time.Now().UTC().Add(3 * time.Hour).Format("15:04")}})
+	ro := executeIn[engine.Routine](t, s, web, "routines_create", map[string]any{"idempotency_key": "ss3", "title": "Stretch", "nudges": []map[string]any{{"at": time.Now().UTC().Add(3 * time.Hour).Format("15:04")}}})
 	app := execute[engine.Reminder](t, s, "reminders_create", map[string]any{"idempotency_key": "ss4", "title": "From the app", "due_at": due})
 	sync()
 

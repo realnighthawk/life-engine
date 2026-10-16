@@ -237,7 +237,7 @@ func TestRoutines(t *testing.T) {
 // The nudge at the chosen time is a wake (wake_integration_test.go), not a feed event.
 func TestRoutineNudgeIsNotAFeedEvent(t *testing.T) {
 	s := integrationService(t)
-	execute[engine.Routine](t, s, "routines_create", map[string]any{"idempotency_key": key(), "title": "Stretch", "cues": []string{"00:00"}})
+	execute[engine.Routine](t, s, "routines_create", map[string]any{"idempotency_key": key(), "title": "Stretch", "nudges": []map[string]any{{"at": "00:00"}}})
 	if n := len(execute[engine.EventsResult](t, s, "events_pending", map[string]any{}).Items); n != 0 {
 		t.Fatalf("a routine nudge must not be a feed event: %d", n)
 	}
