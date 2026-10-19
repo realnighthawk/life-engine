@@ -1,0 +1,438 @@
+{
+ "_comment": "Shared by every client's evaluator (Swift ViewKitChecks, TypeScript viewkit.test.ts). now is 2026-10-19 15:00 UTC, in UTC, weeks start on Monday. expect: a number, a date as YYYY-MM-DD, or \"unknown\".",
+ "now": "2026-10-19T15:00:00Z",
+ "datasets": {
+  "dining": {
+   "spend": [
+    [
+     "2026-09-20",
+     40
+    ],
+    [
+     "2026-10-02",
+     12
+    ],
+    [
+     "2026-10-05",
+     31
+    ],
+    [
+     "2026-10-07",
+     8
+    ],
+    [
+     "2026-10-11",
+     24
+    ],
+    [
+     "2026-10-13",
+     6
+    ],
+    [
+     "2026-10-16",
+     17
+    ]
+   ]
+  },
+  "weight": {
+   "weight": [
+    [
+     "2026-10-05",
+     83.0
+    ],
+    [
+     "2026-10-12",
+     82.4
+    ],
+    [
+     "2026-10-19",
+     81.8
+    ]
+   ]
+  },
+  "habit": {
+   "stretch": [
+    [
+     "2026-10-13",
+     1
+    ],
+    [
+     "2026-10-14",
+     1
+    ],
+    [
+     "2026-10-15",
+     1
+    ],
+    [
+     "2026-10-17",
+     1
+    ],
+    [
+     "2026-10-18",
+     1
+    ]
+   ]
+  },
+  "none": {},
+  "empty": {
+   "spend": []
+  }
+ },
+ "cases": [
+  {
+   "name": "spend so far this month",
+   "data": "dining",
+   "calc": {
+    "fn": "sum",
+    "metric": "spend",
+    "window": {
+     "period": "month"
+    }
+   },
+   "expect": 98,
+   "eps": 0.01
+  },
+  {
+   "name": "what is left of a 200 limit",
+   "data": "dining",
+   "calc": {
+    "fn": "sub",
+    "args": [
+     {
+      "fn": "const",
+      "value": 200
+     },
+     {
+      "fn": "sum",
+      "metric": "spend",
+      "window": {
+       "period": "month"
+      }
+     }
+    ]
+   },
+   "expect": 102,
+   "eps": 0.01
+  },
+  {
+   "name": "days left in the month",
+   "data": "dining",
+   "calc": {
+    "fn": "days_left",
+    "period": "month"
+   },
+   "expect": 12,
+   "eps": 0.01
+  },
+  {
+   "name": "share of the month gone",
+   "data": "dining",
+   "calc": {
+    "fn": "elapsed",
+    "period": "month"
+   },
+   "expect": 0.6129032258064516,
+   "eps": 0.0001
+  },
+  {
+   "name": "an even pace against 200",
+   "data": "dining",
+   "calc": {
+    "fn": "mul",
+    "args": [
+     {
+      "fn": "const",
+      "value": 200
+     },
+     {
+      "fn": "elapsed",
+      "period": "month"
+     }
+    ]
+   },
+   "expect": 122.58,
+   "eps": 0.01
+  },
+  {
+   "name": "where the month is heading",
+   "data": "dining",
+   "calc": {
+    "fn": "project",
+    "metric": "spend",
+    "period": "month"
+   },
+   "expect": 159.89,
+   "eps": 0.01
+  },
+  {
+   "name": "days to a date",
+   "data": "dining",
+   "calc": {
+    "fn": "days_left",
+    "date": "2026-12-31"
+   },
+   "expect": 73,
+   "eps": 0
+  },
+  {
+   "name": "down since the first weigh-in",
+   "data": "weight",
+   "calc": {
+    "fn": "sub",
+    "args": [
+     {
+      "fn": "first",
+      "metric": "weight"
+     },
+     {
+      "fn": "latest",
+      "metric": "weight"
+     }
+    ]
+   },
+   "expect": 1.2,
+   "eps": 0.01
+  },
+  {
+   "name": "change per week",
+   "data": "weight",
+   "calc": {
+    "fn": "rate",
+    "metric": "weight",
+    "per": "week"
+   },
+   "expect": -0.6,
+   "eps": 0.01
+  },
+  {
+   "name": "the date it reaches 78",
+   "data": "weight",
+   "calc": {
+    "fn": "eta",
+    "metric": "weight",
+    "args": [
+     {
+      "fn": "const",
+      "value": 78
+     }
+    ]
+   },
+   "expect": "2026-12-03",
+   "eps": 0.01
+  },
+  {
+   "name": "heading away from the target",
+   "data": "weight",
+   "calc": {
+    "fn": "eta",
+    "metric": "weight",
+    "args": [
+     {
+      "fn": "const",
+      "value": 90
+     }
+    ]
+   },
+   "expect": "unknown",
+   "eps": 0.01
+  },
+  {
+   "name": "mornings done in the last six days",
+   "data": "habit",
+   "calc": {
+    "fn": "count",
+    "metric": "stretch",
+    "window": {
+     "days": 6
+    }
+   },
+   "expect": 4,
+   "eps": 0
+  },
+  {
+   "name": "the run counts from yesterday when today is empty",
+   "data": "habit",
+   "calc": {
+    "fn": "streak",
+    "metric": "stretch"
+   },
+   "expect": 2,
+   "eps": 0
+  },
+  {
+   "name": "data that has not arrived is unknown",
+   "data": "none",
+   "calc": {
+    "fn": "sum",
+    "metric": "spend",
+    "window": {
+     "period": "month"
+    }
+   },
+   "expect": "unknown",
+   "eps": 0.01
+  },
+  {
+   "name": "data with no records sums to zero",
+   "data": "empty",
+   "calc": {
+    "fn": "sum",
+    "metric": "spend",
+    "window": {
+     "period": "month"
+    }
+   },
+   "expect": 0,
+   "eps": 0.01
+  },
+  {
+   "name": "data with no records has no mean",
+   "data": "empty",
+   "calc": {
+    "fn": "mean",
+    "metric": "spend"
+   },
+   "expect": "unknown",
+   "eps": 0.01
+  },
+  {
+   "name": "division by zero is unknown",
+   "data": "dining",
+   "calc": {
+    "fn": "div",
+    "args": [
+     {
+      "fn": "const",
+      "value": 1
+     },
+     {
+      "fn": "const",
+      "value": 0
+     }
+    ]
+   },
+   "expect": "unknown",
+   "eps": 0.01
+  },
+  {
+   "name": "a function nobody defined is unknown",
+   "data": "dining",
+   "calc": {
+    "fn": "mystery"
+   },
+   "expect": "unknown",
+   "eps": 0.01
+  }
+ ],
+ "sentences": [
+  {
+   "name": "a limit's headline",
+   "data": "dining",
+   "locale": "en-US",
+   "text": "{left} left, {days} days to go",
+   "slots": {
+    "left": {
+     "calc": {
+      "fn": "sub",
+      "args": [
+       {
+        "fn": "const",
+        "value": 200
+       },
+       {
+        "fn": "sum",
+        "metric": "spend",
+        "window": {
+         "period": "month"
+        }
+       }
+      ]
+     },
+     "format": "money",
+     "unit": "USD"
+    },
+    "days": {
+     "calc": {
+      "fn": "days_left",
+      "period": "month"
+     },
+     "format": "number"
+    }
+   },
+   "expect": "$102 left, 12 days to go"
+  },
+  {
+   "name": "no sentence while a figure is unknown",
+   "data": "none",
+   "locale": "en-US",
+   "text": "{left} left",
+   "slots": {
+    "left": {
+     "calc": {
+      "fn": "sub",
+      "args": [
+       {
+        "fn": "const",
+        "value": 200
+       },
+       {
+        "fn": "sum",
+        "metric": "spend",
+        "window": {
+         "period": "month"
+        }
+       }
+      ]
+     },
+     "format": "money",
+     "unit": "USD"
+    }
+   },
+   "expect": null
+  },
+  {
+   "name": "a number with a unit and one decimal",
+   "data": "weight",
+   "locale": "en-US",
+   "text": "{down} down",
+   "slots": {
+    "down": {
+     "calc": {
+      "fn": "sub",
+      "args": [
+       {
+        "fn": "first",
+        "metric": "weight"
+       },
+       {
+        "fn": "latest",
+        "metric": "weight"
+       }
+      ]
+     },
+     "format": "number",
+     "unit": "kg",
+     "decimals": 1
+    }
+   },
+   "expect": "1.2 kg down"
+  }
+ ],
+ "buckets": [
+  {
+   "name": "spend by month",
+   "data": "dining",
+   "metric": "spend",
+   "window": {
+    "days": 120
+   },
+   "bucket": "month",
+   "aggregate": "sum",
+   "expect": [
+    40,
+    98
+   ]
+  }
+ ]
+}
