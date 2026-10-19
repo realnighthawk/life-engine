@@ -10837,6 +10837,14 @@
             "description": "1-200, default 50",
             "type": "integer"
           },
+          "link_entity": {
+            "description": "only reminders linked to this kind of record, with link_id",
+            "type": "string"
+          },
+          "link_id": {
+            "description": "only reminders linked to this record, with link_entity",
+            "type": "string"
+          },
           "offset": {
             "description": "0-1000000, default 0",
             "type": "integer"
@@ -14882,6 +14890,12 @@
                     "array"
                   ]
                 },
+                "example_view": {
+                  "type": [
+                    "object",
+                    "null"
+                  ]
+                },
                 "formats": {
                   "items": {
                     "type": "string"
@@ -14935,7 +14949,8 @@
                 "blocks",
                 "functions",
                 "formats",
-                "limits"
+                "limits",
+                "example_view"
               ],
               "type": "object"
             },
@@ -15230,7 +15245,7 @@
                               "type": "string"
                             },
                             "kind": {
-                              "description": "sentence, bar, series, grid, steps, timeline, routines, log, text or link",
+                              "description": "sentence, bar, series, grid, steps, timeline, routines, reminders, log, text or link",
                               "type": "string"
                             },
                             "layout": {
@@ -16120,7 +16135,7 @@
                               "type": "string"
                             },
                             "kind": {
-                              "description": "sentence, bar, series, grid, steps, timeline, routines, log, text or link",
+                              "description": "sentence, bar, series, grid, steps, timeline, routines, reminders, log, text or link",
                               "type": "string"
                             },
                             "layout": {
@@ -17042,7 +17057,7 @@
                               "type": "string"
                             },
                             "kind": {
-                              "description": "sentence, bar, series, grid, steps, timeline, routines, log, text or link",
+                              "description": "sentence, bar, series, grid, steps, timeline, routines, reminders, log, text or link",
                               "type": "string"
                             },
                             "layout": {
@@ -17954,7 +17969,7 @@
                               "type": "string"
                             },
                             "kind": {
-                              "description": "sentence, bar, series, grid, steps, timeline, routines, log, text or link",
+                              "description": "sentence, bar, series, grid, steps, timeline, routines, reminders, log, text or link",
                               "type": "string"
                             },
                             "layout": {
@@ -18878,7 +18893,7 @@
                                     "type": "string"
                                   },
                                   "kind": {
-                                    "description": "sentence, bar, series, grid, steps, timeline, routines, log, text or link",
+                                    "description": "sentence, bar, series, grid, steps, timeline, routines, reminders, log, text or link",
                                     "type": "string"
                                   },
                                   "layout": {
@@ -19877,7 +19892,7 @@
                                   "type": "string"
                                 },
                                 "kind": {
-                                  "description": "sentence, bar, series, grid, steps, timeline, routines, log, text or link",
+                                  "description": "sentence, bar, series, grid, steps, timeline, routines, reminders, log, text or link",
                                   "type": "string"
                                 },
                                 "layout": {
@@ -20790,7 +20805,7 @@
                               "type": "string"
                             },
                             "kind": {
-                              "description": "sentence, bar, series, grid, steps, timeline, routines, log, text or link",
+                              "description": "sentence, bar, series, grid, steps, timeline, routines, reminders, log, text or link",
                               "type": "string"
                             },
                             "layout": {
@@ -21671,7 +21686,7 @@
                               "type": "string"
                             },
                             "kind": {
-                              "description": "sentence, bar, series, grid, steps, timeline, routines, log, text or link",
+                              "description": "sentence, bar, series, grid, steps, timeline, routines, reminders, log, text or link",
                               "type": "string"
                             },
                             "layout": {
@@ -32923,7 +32938,7 @@
     },
     "/api/v1/operations/views_create": {
       "post": {
-        "description": "Create a view of a goal, composed from the client's view kit: metrics (data sources: a provider series, a routine's logs, or numbers the person logs) and pages of titled sections of blocks (sentence, bar, series, grid, steps, timeline, routines, log, text, link) that draw them and calculate over them. Give each section one purpose and a short intro; use several pages only when the goal has genuinely separate concerns. Read tracker_catalog_get first and use the requesting client's exact catalog_id. A view holds no data and no markup, and you never write a figure: bind to a metric and use a function. Create it as the last step of a batch_apply plan, after the goal it is a view of.",
+        "description": "Create a view of a goal, composed from the client's view kit: metrics (data sources: a provider series, a routine's logs, or numbers the person logs) and pages of titled sections of blocks (sentence, bar, series, grid, steps, timeline, routines, reminders, log, text, link) that draw them and calculate over them. Give each section one purpose and a short intro; use several pages only when the goal has genuinely separate concerns. Read tracker_catalog_get first and use the requesting client's exact catalog_id. A view holds no data and no markup, and you never write a figure: bind to a metric and use a function. Create it as the last step of a batch_apply plan, after the goal it is a view of.",
         "operationId": "views_create",
         "requestBody": {
           "content": {

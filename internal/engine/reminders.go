@@ -58,6 +58,9 @@ type ListRemindersInput struct {
 	Status    string `json:"status,omitempty" jsonschema:"pending (default), done or all"`
 	DueAfter  string `json:"due_after,omitempty" jsonschema:"RFC 3339; only reminders due at or after this"`
 	DueBefore string `json:"due_before,omitempty" jsonschema:"RFC 3339; only reminders due before this"`
+	// ponytail: exact match on the one link a reminder carries; a goal's reminders linked through its steps or routines are not included.
+	LinkEntity string `json:"link_entity,omitempty" jsonschema:"only reminders linked to this kind of record, with link_id"`
+	LinkID     string `json:"link_id,omitempty" jsonschema:"only reminders linked to this record, with link_entity"`
 }
 
 const reminderCols = `id::text,title,notes,due_at,snoozed_until,time_zone,recurrence,source,coalesce(session_id,''),turn_seq,link,state,completed_at,last_completed_at,version,deleted_at,created_at,updated_at`
@@ -386,6 +389,15 @@ func listReminders(ctx context.Context, u *unit, in ListRemindersInput) (Page[Re
 	if in.Search != "" {
 		p := arg(like(in.Search))
 		where = append(where, "(title ILIKE "+p+" OR notes ILIKE "+p+")")
+	}
+	if (in.LinkEntity == "") != (in.LinkID == "") {
+		return result, invalid("link_entity and link_id go together")
+	}
+	if in.LinkEntity != "" {
+		if !oneOf(in.LinkEntity, linkEntities...) {
+			return result, invalid("link_entity must name a record kind")
+		}
+		where = append(where, "link->>'entity'="+arg(in.LinkEntity)+" AND link->>'id'="+arg(in.LinkID))
 	}
 	for _, bound := range []struct{ value, op string }{{in.DueAfter, ">="}, {in.DueBefore, "<"}} {
 		if bound.value == "" {

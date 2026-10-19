@@ -40,6 +40,8 @@ type TrackerCatalog struct {
 	Functions []KitFunction `json:"functions"`
 	Formats   []string      `json:"formats"`
 	Limits    string        `json:"limits"`
+	// ExampleView is a whole composed view, valid as it stands, to copy the shape from.
+	ExampleView json.RawMessage `json:"example_view"`
 }
 type TrackerCatalogInput struct {
 	CatalogID string `json:"catalog_id,omitempty" jsonschema:"omit to list all supported client catalogs; otherwise request an exact id"`
@@ -51,6 +53,10 @@ type TrackerCatalogResult struct {
 
 // The kit is finite and describes ways to draw and calculate, never kinds of goal. Each block's purpose says what it
 // shows; which goal needs which blocks is the composer's judgement.
+// exampleView composes the kit for a weight goal: two pages, sections with intros, the calculations pointing the right
+// way (progress toward a lower value is first minus latest). It is held valid by a test.
+const exampleView = `{"metrics":[{"id":"weight","label":"Weight","unit":"kg","target":70}],"pages":[{"id":"progress","title":"Progress","sections":[{"id":"standing","title":"Where you stand","intro":"Your weigh-ins against the 5 kg you set out to lose.","blocks":[{"id":"head","kind":"sentence","emphasis":"hero","text":"{lost} lost, {left} to go","slots":{"lost":{"calc":{"fn":"sub","args":[{"fn":"first","metric":"weight"},{"fn":"latest","metric":"weight"}]},"format":"number","unit":"kg","decimals":1},"left":{"calc":{"fn":"sub","args":[{"fn":"latest","metric":"weight"},{"fn":"const","value":70}]},"format":"number","unit":"kg","decimals":1}}},{"id":"trend","kind":"series","title":"Weight","metric":"weight","style":"line","window":{"days":60},"trend_to":{"fn":"const","value":70},"unit":"kg"},{"id":"log","kind":"log","title":"Log a weigh-in","metric":"weight"}]}]},{"id":"support","title":"What helps","sections":[{"id":"plan","title":"The plan","blocks":[{"id":"why","kind":"text","body":"Small, steady changes.","points":["Walk after lunch","Weigh in on Mondays"]},{"id":"steps","kind":"steps","source":"goal_steps"}]},{"id":"keeping","title":"Keeping on track","intro":"The routines and reminders set up for this goal.","blocks":[{"id":"habits","kind":"routines"},{"id":"nudges","kind":"reminders"}]}]}]}`
+
 var kitBlocks = []KitBlock{
 	{"sentence", "One or two lines of plain words with numbers filled in from live data. The headline of a goal is usually a sentence.", []string{"text", "slots"},
 		`{"id":"head","kind":"sentence","emphasis":"hero","text":"{left} left, {days} days to go","slots":{"left":{"calc":{"fn":"sub","args":[{"fn":"const","value":200},{"fn":"sum","metric":"spend","window":{"period":"month"}}]},"format":"money","unit":"USD"},"days":{"calc":{"fn":"days_left","period":"month"},"format":"number"}}}`},
@@ -66,6 +72,8 @@ var kitBlocks = []KitBlock{
 		`{"id":"when","kind":"timeline","markers":[{"at":{"fn":"date","date":"2026-12-31"},"label":"deadline"},{"at":{"fn":"eta","metric":"saved","args":[{"fn":"const","value":5000}]},"label":"at this pace"}]}`},
 	{"routines", "The goal's own routines, each with a one-tap log for today, its streak, and a way into its detail. Use it when the person does something repeatedly for the goal.", []string{},
 		`{"id":"habits","kind":"routines","title":"Your routines"}`},
+	{"reminders", "The goal's own reminders, soonest first, each with a way to mark it done. Use it when reminders were set for the goal.", []string{},
+		`{"id":"nudges","kind":"reminders","title":"Reminders"}`},
 	{"log", "A quick way for the person to record one number for a metric they log by hand.", []string{"metric"},
 		`{"id":"log","kind":"log","metric":"weight"}`},
 	{"text", "A few plain words that no data can supply, with up to five short points. Words only, never a figure: numbers belong in a sentence block.", []string{"body", "points"}, `{"id":"why","kind":"text","body":"Ten minutes before coffee.","points":["Same time every day","Stop at the timer"]}`},
@@ -91,15 +99,16 @@ func trackerCatalog(id string) (TrackerCatalog, error) {
 	}
 	sort.Slice(fns, func(i, j int) bool { return fns[i].Fn < fns[j].Fn })
 	return TrackerCatalog{ID: id, Blocks: kitBlocks, Functions: fns,
-		Formats: []string{"number", "money", "percent", "date", "days"},
-		Limits:  "1-4 pages, each 1-6 sections, each 1-8 blocks (16 in all); 0-6 metrics; a calculation nests five levels; a sentence has at most six slots."}, nil
+		Formats:     []string{"number", "money", "percent", "date", "days"},
+		ExampleView: json.RawMessage(exampleView),
+		Limits:      "1-4 pages, each 1-6 sections, each 1-8 blocks (16 in all); 0-6 metrics; a calculation nests five levels; a sentence has at most six slots."}, nil
 }
 func getTrackerCatalog(_ context.Context, _ *unit, in TrackerCatalogInput) (TrackerCatalogResult, error) {
 	ids := []string{TrackerCatalogKit}
 	if in.CatalogID != "" {
 		ids = []string{in.CatalogID}
 	}
-	result := TrackerCatalogResult{Catalogs: []TrackerCatalog{}, Guidance: "Compose this goal's view from the kit, as a designer would for this one goal: lead with what the person most wants to know, in a sentence with live numbers; draw it the way its shape suggests; leave out whatever does not help. A metric is a data source: a provider series (source), a routine's logs (routine_id), or numbers the person logs (neither). The app does all arithmetic from live data, so never write a figure yourself: bind to a metric and use a function. If nothing in the kit fits, use text."}
+	result := TrackerCatalogResult{Catalogs: []TrackerCatalog{}, Guidance: "Compose this goal's view from the kit, as a designer would for this one goal: lead with what the person most wants to know, in a sentence with live numbers; draw it the way its shape suggests; leave out whatever does not help. A metric is a data source: a provider series (source), a routine's logs (routine_id), or numbers the person logs (neither). The app does all arithmetic from live data, so never write a figure yourself: bind to a metric and use a function. Organise the view as sections that each answer one question, and copy the shape of example_view. If nothing in the kit fits, use text."}
 	for _, id := range ids {
 		c, e := trackerCatalog(id)
 		if e != nil {

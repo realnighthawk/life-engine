@@ -128,3 +128,29 @@ func TestARoutinesBlockTakesNothingButItsHeading(t *testing.T) {
 		t.Fatalf("a routines block with a metric: %v", e)
 	}
 }
+
+// The catalog's example view is what a composer copies, so it must be one the engine accepts, and it must show the
+// features a composer is told about: several pages, section intros, text points, and the linked routines and reminders.
+func TestTheCatalogExampleViewIsAcceptedAndShowsTheStructure(t *testing.T) {
+	d := ViewData{SubjectKind: "goal", SubjectID: kitSubject, CatalogID: TrackerCatalogKit}
+	if e := json.Unmarshal([]byte(exampleView), &d); e != nil {
+		t.Fatal(e)
+	}
+	if e := validateView(d); e != nil {
+		t.Fatalf("the example view is refused: %v", e)
+	}
+	kinds := map[string]bool{}
+	for _, p := range d.Pages {
+		for _, s := range p.Sections {
+			if s.Intro == "" && p.ID == "progress" && s.ID == "standing" {
+				t.Error("the example should show a section intro")
+			}
+			for _, b := range s.Blocks {
+				kinds[b.Kind] = true
+			}
+		}
+	}
+	if len(d.Pages) < 2 || !kinds["routines"] || !kinds["reminders"] || !kinds["text"] {
+		t.Errorf("the example misses part of the structure: %d pages, %v", len(d.Pages), kinds)
+	}
+}

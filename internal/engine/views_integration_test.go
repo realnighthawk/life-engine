@@ -149,3 +149,22 @@ func TestExampleViewsAreCreatedThroughTheService(t *testing.T) {
 		}
 	}
 }
+
+// A view's reminders block shows the reminders linked to its goal, so the list can be filtered by that link.
+func TestRemindersAreListedByTheRecordTheyAreLinkedTo(t *testing.T) {
+	s := integrationService(t)
+	g := execute[engine.Goal](t, s, "goals_create", map[string]any{"idempotency_key": key(), "title": "Run a 5K"})
+	other := execute[engine.Goal](t, s, "goals_create", map[string]any{"idempotency_key": key(), "title": "Read more"})
+	for _, c := range []struct{ title, goal string }{{"Stretch", g.ID}, {"Library card", other.ID}, {"Loose", ""}} {
+		in := map[string]any{"idempotency_key": key(), "title": c.title}
+		if c.goal != "" {
+			in["link"] = map[string]any{"entity": "goal", "id": c.goal}
+		}
+		execute[engine.Reminder](t, s, "reminders_create", in)
+	}
+	got := execute[engine.Page[engine.Reminder]](t, s, "reminders_list", map[string]any{"link_entity": "goal", "link_id": g.ID})
+	if len(got.Items) != 1 || got.Items[0].Title != "Stretch" {
+		t.Fatalf("wanted only the goal's reminder: %+v", got.Items)
+	}
+	errorCode(t, s, "reminders_list", map[string]any{"link_entity": "goal"}, "invalid_input")
+}

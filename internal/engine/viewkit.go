@@ -67,16 +67,17 @@ var (
 	kitLayouts     = map[string]bool{"week_row": true, "month_grid": true}
 	kitEmphasis    = map[string]bool{"hero": true, "normal": true, "compact": true}
 	kitBlockFields = map[string][]string{
-		"sentence": {"text", "slots"},
-		"bar":      {"value", "of", "markers", "projection", "format", "unit", "decimals"},
-		"series":   {"metric", "style", "window", "bucket", "aggregate", "lines", "band", "trend_to", "format", "unit", "decimals"},
-		"grid":     {"metric", "layout", "weeks"},
-		"steps":    {"source", "thresholds", "value", "format", "unit"},
-		"timeline": {"markers"},
-		"routines": {},
-		"log":      {"metric"},
-		"text":     {"body", "points"},
-		"link":     {"url"},
+		"sentence":  {"text", "slots"},
+		"bar":       {"value", "of", "markers", "projection", "format", "unit", "decimals"},
+		"series":    {"metric", "style", "window", "bucket", "aggregate", "lines", "band", "trend_to", "format", "unit", "decimals"},
+		"grid":      {"metric", "layout", "weeks"},
+		"steps":     {"source", "thresholds", "value", "format", "unit"},
+		"timeline":  {"markers"},
+		"routines":  {},
+		"reminders": {},
+		"log":       {"metric"},
+		"text":      {"body", "points"},
+		"link":      {"url"},
 	}
 )
 
@@ -375,8 +376,8 @@ func validateBlock(b ViewBlock, metrics map[string]ViewMetric, nodes *int) error
 		if m := metrics[b.Metric]; m.Source != nil || m.RoutineID != "" {
 			return invalid("A log block records numbers by hand; the metric has a data source")
 		}
-	case "routines":
-		// The goal's own routines: nothing to configure, so nothing to validate.
+	case "routines", "reminders":
+		// The goal's own routines or reminders: nothing to configure, so nothing to validate.
 	case "text":
 		if strings.TrimSpace(b.Body) == "" || len(b.Body) > 280 {
 			return invalid("Text is 1-280 characters")
