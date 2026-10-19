@@ -360,7 +360,25 @@
      "format": "number"
     }
    },
-   "expect": "$102 left, 12 days to go"
+   "expect": "$102 left, 12 days to go",
+   "expect_parts": [
+    [
+     "$102",
+     true
+    ],
+    [
+     " left, ",
+     false
+    ],
+    [
+     "12",
+     true
+    ],
+    [
+     " days to go",
+     false
+    ]
+   ]
   },
   {
    "name": "no sentence while a figure is unknown",
@@ -389,7 +407,8 @@
      "unit": "USD"
     }
    },
-   "expect": null
+   "expect": null,
+   "expect_parts": null
   },
   {
    "name": "a number with a unit and one decimal",
@@ -416,7 +435,17 @@
      "decimals": 1
     }
    },
-   "expect": "1.2 kg down"
+   "expect": "1.2 kg down",
+   "expect_parts": [
+    [
+     "1.2 kg",
+     true
+    ],
+    [
+     " down",
+     false
+    ]
+   ]
   }
  ],
  "buckets": [
