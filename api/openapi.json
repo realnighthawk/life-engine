@@ -15125,7 +15125,7 @@
                   "type": "string"
                 },
                 "kind": {
-                  "description": "sentence, bar, series, grid, steps, timeline, log, text or link",
+                  "description": "sentence, bar, series, grid, steps, timeline, routines, log, text or link",
                   "type": "string"
                 },
                 "layout": {
@@ -15952,7 +15952,7 @@
                   "type": "string"
                 },
                 "kind": {
-                  "description": "sentence, bar, series, grid, steps, timeline, log, text or link",
+                  "description": "sentence, bar, series, grid, steps, timeline, routines, log, text or link",
                   "type": "string"
                 },
                 "layout": {
@@ -16809,7 +16809,7 @@
                   "type": "string"
                 },
                 "kind": {
-                  "description": "sentence, bar, series, grid, steps, timeline, log, text or link",
+                  "description": "sentence, bar, series, grid, steps, timeline, routines, log, text or link",
                   "type": "string"
                 },
                 "layout": {
@@ -17656,7 +17656,7 @@
                   "type": "string"
                 },
                 "kind": {
-                  "description": "sentence, bar, series, grid, steps, timeline, log, text or link",
+                  "description": "sentence, bar, series, grid, steps, timeline, routines, log, text or link",
                   "type": "string"
                 },
                 "layout": {
@@ -18515,7 +18515,7 @@
                         "type": "string"
                       },
                       "kind": {
-                        "description": "sentence, bar, series, grid, steps, timeline, log, text or link",
+                        "description": "sentence, bar, series, grid, steps, timeline, routines, log, text or link",
                         "type": "string"
                       },
                       "layout": {
@@ -19449,7 +19449,7 @@
                       "type": "string"
                     },
                     "kind": {
-                      "description": "sentence, bar, series, grid, steps, timeline, log, text or link",
+                      "description": "sentence, bar, series, grid, steps, timeline, routines, log, text or link",
                       "type": "string"
                     },
                     "layout": {
@@ -20295,7 +20295,7 @@
                   "type": "string"
                 },
                 "kind": {
-                  "description": "sentence, bar, series, grid, steps, timeline, log, text or link",
+                  "description": "sentence, bar, series, grid, steps, timeline, routines, log, text or link",
                   "type": "string"
                 },
                 "layout": {
@@ -21113,7 +21113,7 @@
                   "type": "string"
                 },
                 "kind": {
-                  "description": "sentence, bar, series, grid, steps, timeline, log, text or link",
+                  "description": "sentence, bar, series, grid, steps, timeline, routines, log, text or link",
                   "type": "string"
                 },
                 "layout": {
@@ -32403,7 +32403,7 @@
     },
     "/api/v1/operations/views_create": {
       "post": {
-        "description": "Create a view of a goal, composed from the client's view kit: metrics (data sources: a provider series, a routine's logs, or numbers the person logs) and 1-8 blocks (sentence, bar, series, grid, steps, timeline, log, text, link) that draw them and calculate over them. Read tracker_catalog_get first and use the requesting client's exact catalog_id. A view holds no data and no markup, and you never write a figure: bind to a metric and use a function. Create it as the last step of a batch_apply plan, after the goal it is a view of.",
+        "description": "Create a view of a goal, composed from the client's view kit: metrics (data sources: a provider series, a routine's logs, or numbers the person logs) and 1-8 blocks (sentence, bar, series, grid, steps, timeline, routines, log, text, link) that draw them and calculate over them. Read tracker_catalog_get first and use the requesting client's exact catalog_id. A view holds no data and no markup, and you never write a figure: bind to a metric and use a function. Create it as the last step of a batch_apply plan, after the goal it is a view of.",
         "operationId": "views_create",
         "requestBody": {
           "content": {

@@ -73,6 +73,7 @@ var (
 		"grid":     {"metric", "layout", "weeks"},
 		"steps":    {"source", "thresholds", "value", "format", "unit"},
 		"timeline": {"markers"},
+		"routines": {},
 		"log":      {"metric"},
 		"text":     {"body"},
 		"link":     {"url"},
@@ -374,6 +375,8 @@ func validateBlock(b ViewBlock, metrics map[string]ViewMetric, nodes *int) error
 		if m := metrics[b.Metric]; m.Source != nil || m.RoutineID != "" {
 			return invalid("A log block records numbers by hand; the metric has a data source")
 		}
+	case "routines":
+		// The goal's own routines: nothing to configure, so nothing to validate.
 	case "text":
 		if strings.TrimSpace(b.Body) == "" || len(b.Body) > 280 {
 			return invalid("Text is 1-280 characters")

@@ -99,3 +99,15 @@ func TestStepsAndLogsAreHeldToTheirOwnRules(t *testing.T) {
 		t.Fatalf("a log on a sourced metric: %v", e)
 	}
 }
+
+func TestARoutinesBlockTakesNothingButItsHeading(t *testing.T) {
+	d := loadKit(t, "dining_limit")
+	d.Blocks = append(d.Blocks, ViewBlock{ID: "habits", Kind: "routines", Title: "Your routines"})
+	if e := validateView(d); e != nil {
+		t.Fatalf("a routines block: %v", e)
+	}
+	d.Blocks[len(d.Blocks)-1].Metric = "spend"
+	if e := validateView(d); e == nil || !strings.Contains(e.Error(), "does not take metric") {
+		t.Fatalf("a routines block with a metric: %v", e)
+	}
+}

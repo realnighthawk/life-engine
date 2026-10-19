@@ -64,6 +64,8 @@ var kitBlocks = []KitBlock{
 		`{"id":"ladder","kind":"steps","thresholds":[1000,2000,3000,4000,5000],"value":{"fn":"latest","metric":"saved"},"format":"money","unit":"USD"}`},
 	{"timeline", "Dated marks on a line from today: a deadline, a projected finish.", []string{"markers"},
 		`{"id":"when","kind":"timeline","markers":[{"at":{"fn":"date","date":"2026-12-31"},"label":"deadline"},{"at":{"fn":"eta","metric":"saved","args":[{"fn":"const","value":5000}]},"label":"at this pace"}]}`},
+	{"routines", "The goal's own routines, each with a one-tap log for today, its streak, and a way into its detail. Use it when the person does something repeatedly for the goal.", []string{},
+		`{"id":"habits","kind":"routines","title":"Your routines"}`},
 	{"log", "A quick way for the person to record one number for a metric they log by hand.", []string{"metric"},
 		`{"id":"log","kind":"log","metric":"weight"}`},
 	{"text", "A few plain words that no data can supply.", []string{"body"}, `{"id":"why","kind":"text","body":"Ten minutes before coffee."}`},

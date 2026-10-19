@@ -25,7 +25,7 @@ type ViewMetric struct {
 // is refused. The fields are flat so the schema stays one shape, not a list of goal kinds.
 type ViewBlock struct {
 	ID       string `json:"id" jsonschema:"stable lowercase identifier, unique within the view"`
-	Kind     string `json:"kind" jsonschema:"sentence, bar, series, grid, steps, timeline, log, text or link"`
+	Kind     string `json:"kind" jsonschema:"sentence, bar, series, grid, steps, timeline, routines, log, text or link"`
 	Title    string `json:"title,omitempty" jsonschema:"optional short heading, up to 80 characters"`
 	Emphasis string `json:"emphasis,omitempty" jsonschema:"hero, normal or compact: how much room the client gives it"`
 	// sentence
