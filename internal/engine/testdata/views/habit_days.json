@@ -1,0 +1,9 @@
+{"metrics":[{"id":"stretch","label":"Stretched","unit":"times","routine_id":"6d3f2a1e-8c4b-4f6a-9e21-3b7a5c9d1f02"}],
+ "blocks":[
+  {"id":"head","kind":"sentence","emphasis":"hero","text":"{done} of the last {days} mornings","slots":{
+    "done":{"calc":{"fn":"count","metric":"stretch","window":{"days":6}},"format":"number"},
+    "days":{"calc":{"fn":"const","value":6},"format":"number"}}},
+  {"id":"week","kind":"grid","metric":"stretch","layout":"week_row"},
+  {"id":"month","kind":"grid","title":"Last five weeks","metric":"stretch","layout":"month_grid","weeks":5},
+  {"id":"why","kind":"text","body":"One miss is fine; two in a row is where it fades."}
+ ]}

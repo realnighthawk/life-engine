@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"math"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 )
 
-const TrackerCatalogIOS = "mission-control.ios.goal-tracker.v1"
-const TrackerCatalogIPad = "mission-control.ipados.goal-tracker.v1"
+const TrackerCatalogIOS = "mission-control.ios.view-kit.v1"
+const TrackerCatalogIPad = "mission-control.ipados.view-kit.v1"
 
 // Data definitions are shared; each catalog describes a shipped native renderer.
 type TrackerMetric struct {
@@ -21,19 +22,26 @@ type TrackerMetric struct {
 	Minimum *float64 `json:"minimum,omitempty"`
 	Maximum *float64 `json:"maximum,omitempty"`
 }
-type TrackerModule struct {
-	Type               string   `json:"type"`
-	Purpose            string   `json:"purpose"`
-	RequiredProperties []string `json:"required_properties"`
-	DataSource         string   `json:"data_source"`
-	Actions            []string `json:"actions"`
+type KitBlock struct {
+	Kind    string   `json:"kind"`
+	Purpose string   `json:"purpose"`
+	Fields  []string `json:"fields"`
+	Example string   `json:"example"`
+}
+type KitFunction struct {
+	Fn     string   `json:"fn"`
+	Takes  []string `json:"takes"`
+	Result string   `json:"result"`
 }
 type TrackerCatalog struct {
-	ID       string          `json:"id"`
-	App      string          `json:"app"`
-	Platform string          `json:"platform"`
-	Layout   string          `json:"layout"`
-	Modules  []TrackerModule `json:"modules"`
+	ID        string        `json:"id"`
+	App       string        `json:"app"`
+	Platform  string        `json:"platform"`
+	Layout    string        `json:"layout"`
+	Blocks    []KitBlock    `json:"blocks"`
+	Functions []KitFunction `json:"functions"`
+	Formats   []string      `json:"formats"`
+	Limits    string        `json:"limits"`
 }
 type TrackerCatalogInput struct {
 	CatalogID string `json:"catalog_id,omitempty" jsonschema:"omit to list all supported client catalogs; otherwise request an exact id"`
@@ -41,6 +49,27 @@ type TrackerCatalogInput struct {
 type TrackerCatalogResult struct {
 	Catalogs []TrackerCatalog `json:"catalogs"`
 	Guidance string           `json:"guidance"`
+}
+
+// The kit is finite and describes ways to draw and calculate, never kinds of goal. Each block's purpose says what it
+// shows; which goal needs which blocks is the composer's judgement.
+var kitBlocks = []KitBlock{
+	{"sentence", "One or two lines of plain words with numbers filled in from live data. The headline of a goal is usually a sentence.", []string{"text", "slots"},
+		`{"id":"head","kind":"sentence","emphasis":"hero","text":"{left} left, {days} days to go","slots":{"left":{"calc":{"fn":"sub","args":[{"fn":"const","value":200},{"fn":"sum","metric":"spend","window":{"period":"month"}}]},"format":"money","unit":"USD"},"days":{"calc":{"fn":"days_left","period":"month"},"format":"number"}}}`},
+	{"bar", "How far a value has got along a scale, with marks on the scale and a lighter extension for where it is heading.", []string{"value", "of", "markers", "projection", "format", "unit", "decimals"},
+		`{"id":"pace","kind":"bar","value":{"fn":"sum","metric":"spend","window":{"period":"month"}},"of":{"fn":"const","value":200},"markers":[{"at":{"fn":"mul","args":[{"fn":"const","value":200},{"fn":"elapsed","period":"month"}]},"label":"even pace"}],"projection":{"fn":"project","metric":"spend","period":"month"},"format":"money","unit":"USD"}`},
+	{"series", "One metric over time as a line, bars or dots, with optional reference lines, a shaded band, and a dashed line showing where the current rate leads.", []string{"metric", "style", "window", "bucket", "aggregate", "lines", "band", "trend_to", "format", "unit", "decimals"},
+		`{"id":"trend","kind":"series","metric":"weight","style":"line","window":{"days":60},"band":{"from":{"fn":"const","value":77.5},"to":{"fn":"const","value":78.5},"label":"target"},"trend_to":{"fn":"const","value":78},"unit":"kg"}`},
+	{"grid", "Which days something happened: one ring per day for a week, or a calendar of cells for several weeks.", []string{"metric", "layout", "weeks"},
+		`{"id":"days","kind":"grid","metric":"stretch","layout":"month_grid","weeks":5}`},
+	{"steps", "Either the goal's own one-off steps, or a ladder of thresholds a value climbs.", []string{"source", "thresholds", "value", "format", "unit"},
+		`{"id":"ladder","kind":"steps","thresholds":[1000,2000,3000,4000,5000],"value":{"fn":"latest","metric":"saved"},"format":"money","unit":"USD"}`},
+	{"timeline", "Dated marks on a line from today: a deadline, a projected finish.", []string{"markers"},
+		`{"id":"when","kind":"timeline","markers":[{"at":{"fn":"date","date":"2026-12-31"},"label":"deadline"},{"at":{"fn":"eta","metric":"saved","args":[{"fn":"const","value":5000}]},"label":"at this pace"}]}`},
+	{"log", "A quick way for the person to record one number for a metric they log by hand.", []string{"metric"},
+		`{"id":"log","kind":"log","metric":"weight"}`},
+	{"text", "A few plain words that no data can supply.", []string{"body"}, `{"id":"why","kind":"text","body":"Ten minutes before coffee."}`},
+	{"link", "A web page the person can open, for data the engine cannot chart.", []string{"url"}, `{"id":"src","kind":"link","url":"https://example.com"}`},
 }
 
 func trackerCatalog(id string) (TrackerCatalog, error) {
@@ -52,20 +81,30 @@ func trackerCatalog(id string) (TrackerCatalog, error) {
 	default:
 		return TrackerCatalog{}, invalid("Unsupported tracker catalog; read tracker_catalog_get and use a catalog supported by the requesting app")
 	}
-	return TrackerCatalog{ID: id, App: "mission-control", Platform: platform, Layout: layout, Modules: []TrackerModule{
-		{"metric_trend", "An outcome over time, with an optional target: recorded observations, or a provider series when the metric has a source. Do not infer measurements from routine completion.", []string{"metric_id"}, "goal_measurements or the metric's provider series", []string{}},
-		{"milestones", "One-off steps toward an outcome, in the goal's stored order.", []string{}, "goal.steps", []string{"steps_complete"}},
-		{"routine_consistency", "How consistently the linked supporting behaviours are kept; not outcome progress.", []string{}, "goal.routines", []string{"routines_log", "open_routine"}},
-		{"check_in", "Record or correct one numeric observation of a defined metric.", []string{"metric_id"}, "goal_measurements", []string{"goal_measurements_record", "goal_measurements_update", "goal_measurements_delete"}},
-		{"link", "A web page the person can open for data or detail the engine cannot chart.", []string{"url"}, "none", []string{"open_url"}},
-	}}, nil
+	fns := make([]KitFunction, 0, len(calcFns))
+	for name, s := range calcFns {
+		takes := []string{}
+		for _, p := range []struct {
+			on   bool
+			name string
+		}{{s.metric, "metric"}, {s.window, "window"}, {s.period, "period"}, {s.per, "per"}, {s.value, "value"}, {s.date, "date"}, {s.maxArgs > 0, "args"}} {
+			if p.on {
+				takes = append(takes, p.name)
+			}
+		}
+		fns = append(fns, KitFunction{name, takes, s.doc})
+	}
+	sort.Slice(fns, func(i, j int) bool { return fns[i].Fn < fns[j].Fn })
+	return TrackerCatalog{ID: id, App: "mission-control", Platform: platform, Layout: layout, Blocks: kitBlocks, Functions: fns,
+		Formats: []string{"number", "money", "percent", "date", "days"},
+		Limits:  "1-8 blocks; 0-6 metrics; a calculation nests five levels; a sentence has at most six slots."}, nil
 }
 func getTrackerCatalog(_ context.Context, _ *unit, in TrackerCatalogInput) (TrackerCatalogResult, error) {
 	ids := []string{TrackerCatalogIOS, TrackerCatalogIPad}
 	if in.CatalogID != "" {
 		ids = []string{in.CatalogID}
 	}
-	result := TrackerCatalogResult{Catalogs: []TrackerCatalog{}, Guidance: "Choose what demonstrates this particular goal's outcome, not a generic dashboard. Reuse linked routines; distinguish consistency from outcomes. Compose only catalog modules (blocks) with stable ids. Use the client's exact advertised catalog, or one view per catalog when none is advertised, with identical metrics. Save it as a view with views_create, as the last step of the batch_apply that creates the goal, and change it later with views_update. Keep a metric that has recorded observations, in its unit. A metric may name a provider series as its source; otherwise the person records it. The client owns fonts, colour, accessibility and responsive layout. No arbitrary code, queries or generated observations."}
+	result := TrackerCatalogResult{Catalogs: []TrackerCatalog{}, Guidance: "Compose this goal's view from the kit, as a designer would for this one goal: lead with what the person most wants to know, in a sentence with live numbers; draw it the way its shape suggests; leave out whatever does not help. A metric is a data source: a provider series (source), a routine's logs (routine_id), or numbers the person logs (neither). The app does all arithmetic from live data, so never write a figure yourself: bind to a metric and use a function. If nothing in the kit fits, use text."}
 	for _, id := range ids {
 		c, e := trackerCatalog(id)
 		if e != nil {

@@ -17,10 +17,10 @@ func runView(goal string) map[string]any {
 		"idempotency_key": key(), "subject_kind": "goal", "subject_id": goal, "catalog_id": engine.TrackerCatalogIOS,
 		"metrics": []map[string]any{{"id": "distance", "label": "Distance", "unit": "km", "minimum": 0, "target": 5}},
 		"blocks": []map[string]any{
-			{"id": "distance", "type": "metric_trend", "title": "Distance", "metric_id": "distance"},
-			{"id": "milestones", "type": "milestones", "title": "Next milestones"},
-			{"id": "training", "type": "routine_consistency", "title": "Supporting routines"},
-			{"id": "log_distance", "type": "check_in", "title": "Record a run", "metric_id": "distance"},
+			{"id": "distance", "kind": "series", "title": "Distance", "metric": "distance"},
+			{"id": "milestones", "kind": "steps", "title": "Next milestones", "source": "goal_steps"},
+			{"id": "training", "kind": "text", "title": "Supporting routines", "body": "Short runs on weekdays."},
+			{"id": "log_distance", "kind": "log", "title": "Record a run", "metric": "distance"},
 		},
 	}
 }
@@ -28,10 +28,10 @@ func runView(goal string) map[string]any {
 func TestViewStateOpensATracker(t *testing.T) {
 	s := integrationService(t)
 	catalog := execute[engine.TrackerCatalogResult](t, s, "tracker_catalog_get", map[string]any{})
-	if len(catalog.Catalogs) != 2 || len(catalog.Catalogs[0].Modules) != 5 {
+	if len(catalog.Catalogs) != 2 || len(catalog.Catalogs[0].Blocks) != 9 || len(catalog.Catalogs[0].Functions) < 15 {
 		t.Fatalf("catalog: %+v", catalog)
 	}
-	errorCode(t, s, "tracker_catalog_get", map[string]any{"catalog_id": "other-app.ios.goal-tracker.v1"}, "invalid_input")
+	errorCode(t, s, "tracker_catalog_get", map[string]any{"catalog_id": "other-app.ios.view-kit.v1"}, "invalid_input")
 	g := execute[engine.Goal](t, s, "goals_create", map[string]any{"idempotency_key": key(), "title": "Run a 5K", "steps": []map[string]any{{"title": "Run 1 km"}}})
 	none := execute[engine.ViewState](t, s, "views_state", map[string]any{"goal_id": g.ID, "catalog_id": engine.TrackerCatalogIOS})
 	if none.View != nil || none.Measurements == nil {
@@ -109,7 +109,7 @@ func TestWriteTrackerFixtures(t *testing.T) {
 	gid := g["id"].(string)
 	view := runView(gid)
 	view["metrics"] = append(view["metrics"].([]map[string]any), map[string]any{"id": "weight", "label": "Weight", "unit": "kg", "source": map[string]any{"provider": "health", "series": "body_weight"}})
-	view["blocks"] = append(view["blocks"].([]map[string]any), map[string]any{"id": "weight", "type": "metric_trend", "title": "Weight", "metric_id": "weight"}, map[string]any{"id": "plan", "type": "link", "title": "The plan", "url": "https://example.com/plan"})
+	view["blocks"] = append(view["blocks"].([]map[string]any), map[string]any{"id": "weight", "kind": "series", "title": "Weight", "metric": "weight"}, map[string]any{"id": "plan", "kind": "link", "title": "The plan", "url": "https://example.com/plan"})
 	save("view", "views_create", view)
 	save("goal_measurement", "goal_measurements_record", map[string]any{"idempotency_key": key(), "goal_id": gid, "metric_id": "distance", "value": 2.5})
 	save("view_state", "views_state", map[string]any{"goal_id": gid, "catalog_id": engine.TrackerCatalogIOS})

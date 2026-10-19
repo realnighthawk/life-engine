@@ -1,0 +1,8 @@
+{"metrics":[{"id":"weight","label":"Weight","unit":"kg","target":78}],
+ "blocks":[
+  {"id":"head","kind":"sentence","emphasis":"hero","text":"{down} down, {togo} to go","slots":{
+    "down":{"calc":{"fn":"sub","args":[{"fn":"first","metric":"weight"},{"fn":"latest","metric":"weight"}]},"format":"number","unit":"kg","decimals":1},
+    "togo":{"calc":{"fn":"sub","args":[{"fn":"latest","metric":"weight"},{"fn":"const","value":78}]},"format":"number","unit":"kg","decimals":1}}},
+  {"id":"trend","kind":"series","metric":"weight","style":"line","window":{"days":60},"band":{"from":{"fn":"const","value":77.5},"to":{"fn":"const","value":78.5},"label":"target"},"trend_to":{"fn":"const","value":78},"unit":"kg"},
+  {"id":"log","kind":"log","metric":"weight"}
+ ]}

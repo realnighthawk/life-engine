@@ -7,7 +7,7 @@ import (
 	"github.com/realnighthawk/life-engine/internal/engine"
 )
 
-const ipadCatalog = "mission-control.ipados.goal-tracker.v1"
+const ipadCatalog = "mission-control.ipados.view-kit.v1"
 
 func goalWithView(t *testing.T, s *engine.Service) (engine.Goal, engine.View) {
 	t.Helper()
@@ -20,7 +20,7 @@ func goalWithView(t *testing.T, s *engine.Service) (engine.Goal, engine.View) {
 func TestViewUpdateAndDelete(t *testing.T) {
 	s := integrationService(t)
 	_, v := goalWithView(t, s)
-	blocks := []map[string]any{{"id": "steps", "type": "milestones", "title": "Steps"}}
+	blocks := []map[string]any{{"id": "steps", "kind": "steps", "title": "Steps", "source": "goal_steps"}}
 	up := execute[engine.View](t, s, "views_update", map[string]any{"idempotency_key": key(), "id": v.ID, "expected_version": v.Version,
 		"metrics": []map[string]any{}, "blocks": blocks})
 	if up.Version != 2 || len(up.Blocks) != 1 || len(up.Metrics) != 0 || up.CatalogID != v.CatalogID || up.SubjectID != v.SubjectID {
@@ -53,7 +53,7 @@ func TestMeasurementsAgainstAViewsMetrics(t *testing.T) {
 	execute[engine.GoalMeasurement](t, s, "goal_measurements_delete", map[string]any{"idempotency_key": key(), "id": m.ID, "expected_version": up.Version})
 
 	// History protection: the recorded metric stays, in its unit.
-	blocks := []map[string]any{{"id": "steps", "type": "milestones", "title": "Steps"}}
+	blocks := []map[string]any{{"id": "steps", "kind": "steps", "title": "Steps", "source": "goal_steps"}}
 	errorCode(t, s, "views_update", map[string]any{"idempotency_key": key(), "id": v.ID, "expected_version": v.Version, "metrics": []map[string]any{}, "blocks": blocks}, "conflict")
 	errorCode(t, s, "views_update", map[string]any{"idempotency_key": key(), "id": v.ID, "expected_version": v.Version, "blocks": blocks,
 		"metrics": []map[string]any{{"id": "waist", "label": "Waist", "unit": "in"}}}, "conflict")
@@ -66,7 +66,7 @@ func TestMetricUnitsAgreeAcrossViews(t *testing.T) {
 	other["catalog_id"] = ipadCatalog
 	other["idempotency_key"] = key()
 	other["metrics"] = []map[string]any{{"id": "waist", "label": "Waist", "unit": "in"}}
-	other["blocks"] = []map[string]any{{"id": "log", "type": "check_in", "title": "Waist", "metric_id": "waist"}}
+	other["blocks"] = []map[string]any{{"id": "log", "kind": "log", "title": "Waist", "metric": "waist"}}
 	errorCode(t, s, "views_create", other, "conflict") // waist is cm in the other catalog's view
 	other["metrics"] = []map[string]any{{"id": "waist", "label": "Waist", "unit": "cm"}}
 	other["idempotency_key"] = key()

@@ -8,7 +8,7 @@ import (
 	"github.com/realnighthawk/life-engine/internal/engine"
 )
 
-const iosCatalog = "mission-control.ios.goal-tracker.v1"
+const iosCatalog = "mission-control.ios.view-kit.v1"
 
 func weightView(goal string) map[string]any {
 	return map[string]any{
@@ -18,11 +18,11 @@ func weightView(goal string) map[string]any {
 			{"id": "waist", "label": "Waist", "unit": "cm"},
 		},
 		"blocks": []map[string]any{
-			{"id": "trend", "type": "metric_trend", "title": "Weight", "metric_id": "weight"},
-			{"id": "log", "type": "check_in", "title": "Waist", "metric_id": "waist"},
-			{"id": "steps", "type": "milestones", "title": "Steps"},
-			{"id": "habits", "type": "routine_consistency", "title": "Habits"},
-			{"id": "guide", "type": "link", "title": "Plan", "url": "https://example.com/plan"},
+			{"id": "trend", "kind": "series", "title": "Weight", "metric": "weight"},
+			{"id": "log", "kind": "log", "title": "Waist", "metric": "waist"},
+			{"id": "steps", "kind": "steps", "title": "Steps", "source": "goal_steps"},
+			{"id": "habits", "kind": "text", "title": "Habits", "body": "Walk after lunch."},
+			{"id": "guide", "kind": "link", "title": "Plan", "url": "https://example.com/plan"},
 		},
 	}
 }
@@ -46,7 +46,7 @@ func TestViewRoundTrip(t *testing.T) {
 	if len(list.Items) != 1 || list.Items[0].ID != v.ID {
 		t.Fatalf("list: %+v", list)
 	}
-	if none := execute[engine.ViewList](t, s, "views_list", map[string]any{"subject_kind": "goal", "subject_id": g.ID, "catalog_id": "mission-control.ipados.goal-tracker.v1"}); len(none.Items) != 0 {
+	if none := execute[engine.ViewList](t, s, "views_list", map[string]any{"subject_kind": "goal", "subject_id": g.ID, "catalog_id": "mission-control.ipados.view-kit.v1"}); len(none.Items) != 0 {
 		t.Fatalf("a different catalog has no view: %+v", none)
 	}
 	in["idempotency_key"] = key()
@@ -82,12 +82,12 @@ func TestViewValidation(t *testing.T) {
 	s := integrationService(t)
 	g := execute[engine.Goal](t, s, "goals_create", map[string]any{"idempotency_key": key(), "title": "Read more"})
 	bad := map[string]func(map[string]any){
-		"unknown block type":                           func(v map[string]any) { v["blocks"].([]map[string]any)[0]["type"] = "html" },
-		"measurement block without a metric":           func(v map[string]any) { delete(v["blocks"].([]map[string]any)[0], "metric_id") },
-		"measurement block naming an undefined metric": func(v map[string]any) { v["blocks"].([]map[string]any)[0]["metric_id"] = "ghost" },
+		"unknown block kind":                           func(v map[string]any) { v["blocks"].([]map[string]any)[0]["kind"] = "html" },
+		"measurement block without a metric":           func(v map[string]any) { delete(v["blocks"].([]map[string]any)[0], "metric") },
+		"measurement block naming an undefined metric": func(v map[string]any) { v["blocks"].([]map[string]any)[0]["metric"] = "ghost" },
 		"link without a url":                           func(v map[string]any) { delete(v["blocks"].([]map[string]any)[4], "url") },
 		"link that is not http(s)":                     func(v map[string]any) { v["blocks"].([]map[string]any)[4]["url"] = "javascript:alert(1)" },
-		"milestones carrying a url":                    func(v map[string]any) { v["blocks"].([]map[string]any)[2]["url"] = "https://example.com" },
+		"steps carrying a url":                         func(v map[string]any) { v["blocks"].([]map[string]any)[2]["url"] = "https://example.com" },
 		"duplicate block id":                           func(v map[string]any) { v["blocks"].([]map[string]any)[1]["id"] = "trend" },
 		"no blocks":                                    func(v map[string]any) { v["blocks"] = []map[string]any{} },
 		"unknown catalog":                              func(v map[string]any) { v["catalog_id"] = "nope" },

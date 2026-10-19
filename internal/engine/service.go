@@ -62,12 +62,16 @@ func registerKeyless[I, O any](s *Service, name, description string, run func(co
 }
 
 func add[I, O any](s *Service, name, description string, write, keyless bool, run func(context.Context, *unit, I) (O, error)) {
-	input, err := jsonschema.For[I](&jsonschema.ForOptions{TypeSchemas: map[reflect.Type]*jsonschema.Schema{reflect.TypeFor[json.RawMessage](): {}}})
+	input, err := jsonschema.For[I](&jsonschema.ForOptions{TypeSchemas: map[reflect.Type]*jsonschema.Schema{
+		reflect.TypeFor[json.RawMessage](): {},
+		reflect.TypeFor[Calc]():            calcSchema(),
+	}})
 	if err != nil {
 		panic(err)
 	}
 	output, err := jsonschema.For[O](&jsonschema.ForOptions{TypeSchemas: map[reflect.Type]*jsonschema.Schema{
 		reflect.TypeFor[json.RawMessage](): {Types: []string{"object", "null"}},
+		reflect.TypeFor[Calc]():            calcSchema(),
 	}})
 	if err != nil {
 		panic(err)

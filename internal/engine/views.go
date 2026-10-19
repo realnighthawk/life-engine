@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/url"
-	"strings"
 	"time"
 )
 
@@ -12,19 +11,52 @@ import (
 // show. Native clients render the catalog's block types; anything else is refused here, so no markup or code is stored.
 
 type MetricSource struct {
-	Provider string `json:"provider" jsonschema:"the data engine that holds the series, a lowercase identifier such as health"`
-	Series   string `json:"series" jsonschema:"a series that provider lists in its catalog, a lowercase identifier such as body_weight"`
+	Provider    string `json:"provider" jsonschema:"the data engine that holds the series, a lowercase identifier such as health"`
+	Series      string `json:"series" jsonschema:"a series that provider lists in its catalog, a lowercase identifier such as body_weight"`
+	Granularity string `json:"granularity,omitempty" jsonschema:"day, week or month: the resolution the client asks the provider for; omitted means day"`
 }
 type ViewMetric struct {
 	TrackerMetric
-	Source *MetricSource `json:"source,omitempty" jsonschema:"where the values come from. Leave it out when the person logs them by hand"`
+	Source    *MetricSource `json:"source,omitempty" jsonschema:"a data provider's series the values come from, read live. Leave both source and routine_id out when the person logs the values by hand"`
+	RoutineID string        `json:"routine_id,omitempty" jsonschema:"a routine of this person whose daily logs are the values (one per day logged); instead of source"`
 }
+
+// ViewBlock is one block of the kit. Which fields a kind takes is in tracker_catalog_get; a field a kind does not take
+// is refused. The fields are flat so the schema stays one shape, not a list of goal kinds.
 type ViewBlock struct {
 	ID       string `json:"id" jsonschema:"stable lowercase identifier, unique within the view"`
-	Type     string `json:"type" jsonschema:"metric_trend, check_in, milestones, routine_consistency or link"`
-	Title    string `json:"title" jsonschema:"short visible heading, 1-80 characters"`
-	MetricID string `json:"metric_id,omitempty" jsonschema:"required for metric_trend and check_in; must name a metric in this view; absent otherwise"`
-	URL      string `json:"url,omitempty" jsonschema:"required for link: an http or https address to open; absent otherwise"`
+	Kind     string `json:"kind" jsonschema:"sentence, bar, series, grid, steps, timeline, log, text or link"`
+	Title    string `json:"title,omitempty" jsonschema:"optional short heading, up to 80 characters"`
+	Emphasis string `json:"emphasis,omitempty" jsonschema:"hero, normal or compact: how much room the client gives it"`
+	// sentence
+	Text  string          `json:"text,omitempty" jsonschema:"sentence: the words, with {name} where a number goes, up to 160 characters"`
+	Slots map[string]Slot `json:"slots,omitempty" jsonschema:"sentence: for each {name}, the calculation that fills it and how to print it"`
+	// bar
+	Value      *Calc    `json:"value,omitempty" jsonschema:"bar: how far along; steps with thresholds: the number compared with them"`
+	Of         *Calc    `json:"of,omitempty" jsonschema:"bar: the full scale (a limit or a target)"`
+	Markers    []Marker `json:"markers,omitempty" jsonschema:"bar: up to three marks on the scale; timeline: 1-4 dated marks"`
+	Projection *Calc    `json:"projection,omitempty" jsonschema:"bar: where the value is heading, drawn as a lighter extension"`
+	// series, grid, log
+	Metric    string   `json:"metric,omitempty" jsonschema:"series, grid, log: the metric the block draws or records"`
+	Style     string   `json:"style,omitempty" jsonschema:"series: line, bars or dots"`
+	Window    *Window  `json:"window,omitempty" jsonschema:"series: the part of the data to show"`
+	Bucket    string   `json:"bucket,omitempty" jsonschema:"series: group values by day, week or month"`
+	Aggregate string   `json:"aggregate,omitempty" jsonschema:"series: how a group becomes one value: sum, mean or last"`
+	Lines     []Marker `json:"lines,omitempty" jsonschema:"series: up to three horizontal reference lines (a limit, a target)"`
+	Band      *Band    `json:"band,omitempty" jsonschema:"series: a shaded range (a target zone)"`
+	TrendTo   *Calc    `json:"trend_to,omitempty" jsonschema:"series: draw the current rate as a dashed line until it reaches this value"`
+	Layout    string   `json:"layout,omitempty" jsonschema:"grid: week_row or month_grid"`
+	Weeks     int      `json:"weeks,omitempty" jsonschema:"grid: how many weeks, 1-12"`
+	// steps
+	Source     string    `json:"source,omitempty" jsonschema:"steps: goal_steps to list this goal's own steps"`
+	Thresholds []float64 `json:"thresholds,omitempty" jsonschema:"steps: 2-8 numbers, smallest first, drawn as a ladder the value climbs"`
+	// formatting for bar, series, steps
+	Format   string `json:"format,omitempty" jsonschema:"number, money, percent, date or days"`
+	Unit     string `json:"unit,omitempty" jsonschema:"a unit or currency to print, up to 24 characters"`
+	Decimals *int   `json:"decimals,omitempty" jsonschema:"0-3"`
+	// text, link
+	Body string `json:"body,omitempty" jsonschema:"text: plain words, up to 280 characters"`
+	URL  string `json:"url,omitempty" jsonschema:"link: an http or https address to open"`
 }
 type ViewData struct {
 	SubjectKind string       `json:"subject_kind" jsonschema:"what the view is of: goal"`
@@ -59,6 +91,13 @@ type ViewList struct {
 	Items []View `json:"items"`
 }
 
+func validateLink(raw string) error {
+	if u, e := url.Parse(raw); e != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" || len(raw) > 2048 {
+		return invalid("A link block needs an http or https url")
+	}
+	return nil
+}
+
 func validateView(d ViewData) error {
 	if d.SubjectKind != "goal" {
 		return invalid("subject_kind must be goal")
@@ -73,37 +112,37 @@ func validateView(d ViewData) error {
 		return invalid("A view needs 0-6 metrics and 1-8 blocks")
 	}
 	plain := make([]TrackerMetric, len(d.Metrics))
+	byID := map[string]ViewMetric{}
 	for i, m := range d.Metrics {
-		plain[i] = m.TrackerMetric
-		if m.Source != nil && (!trackerIdentifier.MatchString(m.Source.Provider) || !trackerIdentifier.MatchString(m.Source.Series)) {
-			return invalid("A metric source needs a lowercase provider and series identifier")
+		plain[i], byID[m.ID] = m.TrackerMetric, m
+		if m.Source != nil {
+			if m.RoutineID != "" {
+				return invalid("A metric reads a provider series or a routine, not both")
+			}
+			if !trackerIdentifier.MatchString(m.Source.Provider) || !trackerIdentifier.MatchString(m.Source.Series) {
+				return invalid("A metric source needs a lowercase provider and series identifier")
+			}
+			if g := m.Source.Granularity; g != "" && !kitBuckets[g] {
+				return invalid("A source granularity is day, week or month")
+			}
+		}
+		if m.RoutineID != "" {
+			if _, e := id(m.RoutineID); e != nil {
+				return invalid("routine_id must be a UUID")
+			}
 		}
 	}
-	metrics, e := validateMetrics(plain)
-	if e != nil {
+	if _, e := validateMetrics(plain); e != nil {
 		return e
 	}
-	blocks := map[string]bool{}
+	blocks, nodes := map[string]bool{}, 0
 	for _, b := range d.Blocks {
-		if !trackerIdentifier.MatchString(b.ID) || blocks[b.ID] || strings.TrimSpace(b.Title) == "" || len(b.Title) > 80 {
-			return invalid("Block ids must be unique identifiers and headings must contain 1-80 characters")
+		if !trackerIdentifier.MatchString(b.ID) || blocks[b.ID] || len(b.Title) > 80 {
+			return invalid("Block ids must be unique identifiers and a heading is at most 80 characters")
 		}
 		blocks[b.ID] = true
-		switch b.Type {
-		case "metric_trend", "check_in":
-			if !metrics[b.MetricID] || b.URL != "" {
-				return invalid("A measurement block must reference a defined metric and take no url")
-			}
-		case "milestones", "routine_consistency":
-			if b.MetricID != "" || b.URL != "" {
-				return invalid("Milestones and routine consistency take neither a metric nor a url")
-			}
-		case "link":
-			if u, e := url.Parse(b.URL); e != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" || len(b.URL) > 2048 || b.MetricID != "" {
-				return invalid("A link block needs an http or https url and no metric")
-			}
-		default:
-			return invalid("Unknown block type; read the client's catalog")
+		if e := validateBlock(b, byID, &nodes); e != nil {
+			return e
 		}
 	}
 	return nil
