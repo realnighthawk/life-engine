@@ -1,6 +1,8 @@
 package engine_test
 
 import (
+	"encoding/json"
+	"os"
 	"strings"
 	"testing"
 
@@ -104,6 +106,28 @@ func TestViewValidation(t *testing.T) {
 		raw := mustJSON(t, in)
 		if _, e := s.Execute(t.Context(), "views_create", raw); e == nil || engine.PublicError(e).Code != "invalid_input" {
 			t.Errorf("%s: wanted invalid_input, got %v", name, e)
+		}
+	}
+}
+
+// The kit's examples go through the real operation: decoded, validated, stored and read back whole.
+func TestExampleViewsAreCreatedThroughTheService(t *testing.T) {
+	s := integrationService(t)
+	for _, name := range []string{"dining_limit", "weight_target", "habit_days", "savings_deadline"} {
+		raw, e := os.ReadFile("testdata/views/" + name + ".json")
+		if e != nil {
+			t.Fatal(e)
+		}
+		g := execute[engine.Goal](t, s, "goals_create", map[string]any{"idempotency_key": key(), "title": name})
+		in := map[string]any{}
+		if e = json.Unmarshal(raw, &in); e != nil {
+			t.Fatal(e)
+		}
+		in["subject_kind"], in["subject_id"], in["catalog_id"], in["idempotency_key"] = "goal", g.ID, iosCatalog, key()
+		v := execute[engine.View](t, s, "views_create", in)
+		got := execute[engine.View](t, s, "views_get", map[string]any{"id": v.ID})
+		if len(got.Blocks) != len(in["blocks"].([]any)) || got.Blocks[0].Kind == "" {
+			t.Errorf("%s: stored %+v", name, got.Blocks)
 		}
 	}
 }
