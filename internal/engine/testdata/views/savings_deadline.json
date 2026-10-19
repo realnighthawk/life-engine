@@ -1,7 +1,100 @@
-{"metrics":[{"id":"saved","label":"Saved","unit":"USD","target":5000}],
- "blocks":[
-  {"id":"head","kind":"sentence","emphasis":"hero","text":"{saved} saved","slots":{"saved":{"calc":{"fn":"latest","metric":"saved"},"format":"money","unit":"USD"}}},
-  {"id":"ladder","kind":"steps","thresholds":[1000,2000,3000,4000,5000],"value":{"fn":"latest","metric":"saved"},"format":"money","unit":"USD"},
-  {"id":"when","kind":"timeline","title":"Time left","markers":[{"at":{"fn":"date","date":"2026-12-31"},"label":"deadline"},{"at":{"fn":"eta","metric":"saved","args":[{"fn":"const","value":5000}]},"label":"at this pace"}]},
-  {"id":"log","kind":"log","metric":"saved"}
- ]}
+{
+ "metrics": [
+  {
+   "id": "saved",
+   "label": "Saved",
+   "unit": "USD",
+   "target": 5000
+  }
+ ],
+ "pages": [
+  {
+   "id": "overview",
+   "sections": [
+    {
+     "id": "where",
+     "title": "Where you are",
+     "blocks": [
+      {
+       "id": "head",
+       "kind": "sentence",
+       "emphasis": "hero",
+       "text": "{saved} saved",
+       "slots": {
+        "saved": {
+         "calc": {
+          "fn": "latest",
+          "metric": "saved"
+         },
+         "format": "money",
+         "unit": "USD"
+        }
+       }
+      },
+      {
+       "id": "ladder",
+       "kind": "steps",
+       "thresholds": [
+        1000,
+        2000,
+        3000,
+        4000,
+        5000
+       ],
+       "value": {
+        "fn": "latest",
+        "metric": "saved"
+       },
+       "format": "money",
+       "unit": "USD"
+      }
+     ]
+    },
+    {
+     "id": "when",
+     "title": "When",
+     "blocks": [
+      {
+       "id": "when",
+       "kind": "timeline",
+       "title": "Time left",
+       "markers": [
+        {
+         "at": {
+          "fn": "date",
+          "date": "2026-12-31"
+         },
+         "label": "deadline"
+        },
+        {
+         "at": {
+          "fn": "eta",
+          "metric": "saved",
+          "args": [
+           {
+            "fn": "const",
+            "value": 5000
+           }
+          ]
+         },
+         "label": "at this pace"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "add",
+     "title": "Add to it",
+     "blocks": [
+      {
+       "id": "log",
+       "kind": "log",
+       "metric": "saved"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

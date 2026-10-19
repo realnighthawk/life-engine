@@ -1,11 +1,142 @@
-{"metrics":[{"id":"spend","label":"Dining spending","unit":"USD","source":{"provider":"finance","series":"spend_cat_f762c802_usd","granularity":"day"}}],
- "blocks":[
-  {"id":"head","kind":"sentence","emphasis":"hero","text":"{left} left, {days} days to go","slots":{
-    "left":{"calc":{"fn":"sub","args":[{"fn":"const","value":200},{"fn":"sum","metric":"spend","window":{"period":"month"}}]},"format":"money","unit":"USD"},
-    "days":{"calc":{"fn":"days_left","period":"month"},"format":"number"}}},
-  {"id":"pace","kind":"bar","value":{"fn":"sum","metric":"spend","window":{"period":"month"}},"of":{"fn":"const","value":200},
-   "markers":[{"at":{"fn":"mul","args":[{"fn":"const","value":200},{"fn":"elapsed","period":"month"}]},"label":"even pace"}],
-   "projection":{"fn":"project","metric":"spend","period":"month"},"format":"money","unit":"USD"},
-  {"id":"daily","kind":"series","title":"Day by day","metric":"spend","style":"bars","window":{"period":"month"},"bucket":"day","aggregate":"sum"},
-  {"id":"months","kind":"series","title":"Against the last months","metric":"spend","style":"bars","window":{"days":120},"bucket":"month","aggregate":"sum","lines":[{"at":{"fn":"const","value":200},"label":"limit"}]}
- ]}
+{
+ "metrics": [
+  {
+   "id": "spend",
+   "label": "Dining spending",
+   "unit": "USD",
+   "source": {
+    "provider": "finance",
+    "series": "spend_cat_f762c802_usd",
+    "granularity": "day"
+   }
+  }
+ ],
+ "pages": [
+  {
+   "id": "overview",
+   "sections": [
+    {
+     "id": "now",
+     "title": "This month",
+     "intro": "How the month is going against your limit.",
+     "blocks": [
+      {
+       "id": "head",
+       "kind": "sentence",
+       "emphasis": "hero",
+       "text": "{left} left, {days} days to go",
+       "slots": {
+        "left": {
+         "calc": {
+          "fn": "sub",
+          "args": [
+           {
+            "fn": "const",
+            "value": 200
+           },
+           {
+            "fn": "sum",
+            "metric": "spend",
+            "window": {
+             "period": "month"
+            }
+           }
+          ]
+         },
+         "format": "money",
+         "unit": "USD"
+        },
+        "days": {
+         "calc": {
+          "fn": "days_left",
+          "period": "month"
+         },
+         "format": "number"
+        }
+       }
+      },
+      {
+       "id": "pace",
+       "kind": "bar",
+       "value": {
+        "fn": "sum",
+        "metric": "spend",
+        "window": {
+         "period": "month"
+        }
+       },
+       "of": {
+        "fn": "const",
+        "value": 200
+       },
+       "markers": [
+        {
+         "at": {
+          "fn": "mul",
+          "args": [
+           {
+            "fn": "const",
+            "value": 200
+           },
+           {
+            "fn": "elapsed",
+            "period": "month"
+           }
+          ]
+         },
+         "label": "even pace"
+        }
+       ],
+       "projection": {
+        "fn": "project",
+        "metric": "spend",
+        "period": "month"
+       },
+       "format": "money",
+       "unit": "USD"
+      },
+      {
+       "id": "daily",
+       "kind": "series",
+       "title": "Day by day",
+       "metric": "spend",
+       "style": "bars",
+       "window": {
+        "period": "month"
+       },
+       "bucket": "day",
+       "aggregate": "sum"
+      }
+     ]
+    },
+    {
+     "id": "history",
+     "title": "Month by month",
+     "blocks": [
+      {
+       "id": "months",
+       "kind": "series",
+       "title": "Against the last months",
+       "metric": "spend",
+       "style": "bars",
+       "window": {
+        "days": 120
+       },
+       "bucket": "month",
+       "aggregate": "sum",
+       "lines": [
+        {
+         "at": {
+          "fn": "const",
+          "value": 200
+         },
+         "label": "limit"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

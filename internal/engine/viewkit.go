@@ -75,7 +75,7 @@ var (
 		"timeline": {"markers"},
 		"routines": {},
 		"log":      {"metric"},
-		"text":     {"body"},
+		"text":     {"body", "points"},
 		"link":     {"url"},
 	}
 )
@@ -380,6 +380,14 @@ func validateBlock(b ViewBlock, metrics map[string]ViewMetric, nodes *int) error
 	case "text":
 		if strings.TrimSpace(b.Body) == "" || len(b.Body) > 280 {
 			return invalid("Text is 1-280 characters")
+		}
+		if len(b.Points) > 5 {
+			return invalid("A text block has at most five points")
+		}
+		for _, pt := range b.Points {
+			if strings.TrimSpace(pt) == "" || len(pt) > 120 {
+				return invalid("A point is 1-120 characters")
+			}
 		}
 	case "link":
 		return validateLink(b.URL)

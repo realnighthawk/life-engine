@@ -68,7 +68,7 @@ var kitBlocks = []KitBlock{
 		`{"id":"habits","kind":"routines","title":"Your routines"}`},
 	{"log", "A quick way for the person to record one number for a metric they log by hand.", []string{"metric"},
 		`{"id":"log","kind":"log","metric":"weight"}`},
-	{"text", "A few plain words that no data can supply.", []string{"body"}, `{"id":"why","kind":"text","body":"Ten minutes before coffee."}`},
+	{"text", "A few plain words that no data can supply, with up to five short points. Words only, never a figure: numbers belong in a sentence block.", []string{"body", "points"}, `{"id":"why","kind":"text","body":"Ten minutes before coffee.","points":["Same time every day","Stop at the timer"]}`},
 	{"link", "A web page the person can open, for data the engine cannot chart.", []string{"url"}, `{"id":"src","kind":"link","url":"https://example.com"}`},
 }
 
@@ -92,7 +92,7 @@ func trackerCatalog(id string) (TrackerCatalog, error) {
 	sort.Slice(fns, func(i, j int) bool { return fns[i].Fn < fns[j].Fn })
 	return TrackerCatalog{ID: id, Blocks: kitBlocks, Functions: fns,
 		Formats: []string{"number", "money", "percent", "date", "days"},
-		Limits:  "1-8 blocks; 0-6 metrics; a calculation nests five levels; a sentence has at most six slots."}, nil
+		Limits:  "1-4 pages, each 1-6 sections, each 1-8 blocks (16 in all); 0-6 metrics; a calculation nests five levels; a sentence has at most six slots."}, nil
 }
 func getTrackerCatalog(_ context.Context, _ *unit, in TrackerCatalogInput) (TrackerCatalogResult, error) {
 	ids := []string{TrackerCatalogKit}

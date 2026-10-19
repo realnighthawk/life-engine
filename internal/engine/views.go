@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -55,15 +56,29 @@ type ViewBlock struct {
 	Unit     string `json:"unit,omitempty" jsonschema:"a unit or currency to print, up to 24 characters"`
 	Decimals *int   `json:"decimals,omitempty" jsonschema:"0-3"`
 	// text, link
-	Body string `json:"body,omitempty" jsonschema:"text: plain words, up to 280 characters"`
-	URL  string `json:"url,omitempty" jsonschema:"link: an http or https address to open"`
+	Body   string   `json:"body,omitempty" jsonschema:"text: plain words, up to 280 characters"`
+	Points []string `json:"points,omitempty" jsonschema:"text: up to five short points, each up to 120 characters"`
+	URL    string   `json:"url,omitempty" jsonschema:"link: an http or https address to open"`
+}
+
+// A view is organised as pages of sections of blocks. The structure is mandatory; what goes in it is the composer's call.
+type ViewSection struct {
+	ID     string      `json:"id" jsonschema:"stable lowercase identifier, unique within the view"`
+	Title  string      `json:"title" jsonschema:"what this part of the goal is about, 1-60 characters"`
+	Intro  string      `json:"intro,omitempty" jsonschema:"optional one or two plain sentences that say why it matters or how to read it, up to 240 characters; never a figure"`
+	Blocks []ViewBlock `json:"blocks" jsonschema:"1-8 blocks in display order"`
+}
+type ViewPage struct {
+	ID       string        `json:"id" jsonschema:"stable lowercase identifier, unique within the view"`
+	Title    string        `json:"title,omitempty" jsonschema:"tab name, 1-24 characters; required when the view has more than one page"`
+	Sections []ViewSection `json:"sections" jsonschema:"1-6 sections in display order"`
 }
 type ViewData struct {
 	SubjectKind string       `json:"subject_kind" jsonschema:"what the view is of: goal"`
 	SubjectID   string       `json:"subject_id" jsonschema:"UUID of that record; in a batch it may be a record an earlier step creates"`
 	CatalogID   string       `json:"catalog_id" jsonschema:"exact versioned catalog id from tracker_catalog_get; names the app and platform that renders it"`
 	Metrics     []ViewMetric `json:"metrics" jsonschema:"0-6 measurements the blocks refer to; observations are recorded separately, never generated here"`
-	Blocks      []ViewBlock  `json:"blocks" jsonschema:"1-8 blocks in display order"`
+	Pages       []ViewPage   `json:"pages" jsonschema:"1-4 pages; one page shows no tabs"`
 }
 type CreateViewInput struct {
 	Meta
@@ -80,7 +95,7 @@ type View struct {
 type UpdateViewInput struct {
 	EditInput
 	Metrics []ViewMetric `json:"metrics" jsonschema:"the whole list, replacing the current one"`
-	Blocks  []ViewBlock  `json:"blocks" jsonschema:"the whole list, replacing the current one"`
+	Pages   []ViewPage   `json:"pages" jsonschema:"the whole structure, replacing the current one"`
 }
 type ViewsListInput struct {
 	SubjectKind string `json:"subject_kind" jsonschema:"goal"`
@@ -108,8 +123,8 @@ func validateView(d ViewData) error {
 	if _, e := trackerCatalog(d.CatalogID); e != nil {
 		return e
 	}
-	if len(d.Metrics) > 6 || len(d.Blocks) < 1 || len(d.Blocks) > 8 {
-		return invalid("A view needs 0-6 metrics and 1-8 blocks")
+	if len(d.Metrics) > 6 {
+		return invalid("A view needs 0-6 metrics")
 	}
 	plain := make([]TrackerMetric, len(d.Metrics))
 	byID := map[string]ViewMetric{}
@@ -135,32 +150,64 @@ func validateView(d ViewData) error {
 	if _, e := validateMetrics(plain); e != nil {
 		return e
 	}
-	blocks, nodes := map[string]bool{}, 0
-	for _, b := range d.Blocks {
-		if !trackerIdentifier.MatchString(b.ID) || blocks[b.ID] || len(b.Title) > 80 {
-			return invalid("Block ids must be unique identifiers and a heading is at most 80 characters")
+	return validatePages(d.Pages, byID)
+}
+
+func validatePages(pages []ViewPage, metrics map[string]ViewMetric) error {
+	if len(pages) < 1 || len(pages) > 4 {
+		return invalid("A view has 1-4 pages")
+	}
+	ids, nodes, total := map[string]bool{}, 0, 0
+	unique := func(kind, id string) bool {
+		if !trackerIdentifier.MatchString(id) || ids[kind+id] {
+			return false
 		}
-		blocks[b.ID] = true
-		if e := validateBlock(b, byID, &nodes); e != nil {
-			return e
+		ids[kind+id] = true
+		return true
+	}
+	for _, pg := range pages {
+		if !unique("page", pg.ID) || len(pg.Title) > 24 || len(pages) > 1 && strings.TrimSpace(pg.Title) == "" {
+			return invalid("Page ids must be unique identifiers; a page title is at most 24 characters and required when there are several pages")
+		}
+		if len(pg.Sections) < 1 || len(pg.Sections) > 6 {
+			return invalid("A page has 1-6 sections")
+		}
+		for _, sec := range pg.Sections {
+			if !unique("section", sec.ID) || strings.TrimSpace(sec.Title) == "" || len(sec.Title) > 60 || len(sec.Intro) > 240 {
+				return invalid("Section ids must be unique identifiers, a section title is 1-60 characters and its intro at most 240")
+			}
+			if len(sec.Blocks) < 1 || len(sec.Blocks) > 8 {
+				return invalid("A section has 1-8 blocks")
+			}
+			for _, b := range sec.Blocks {
+				if total++; total > 16 {
+					return invalid("A view has at most 16 blocks in all")
+				}
+				if !unique("block", b.ID) || len(b.Title) > 80 {
+					return invalid("Block ids must be unique identifiers and a heading is at most 80 characters")
+				}
+				if e := validateBlock(b, metrics, &nodes); e != nil {
+					return e
+				}
+			}
 		}
 	}
 	return nil
 }
 
-const viewCols = `id::text,subject_kind,subject_id::text,catalog_id,metrics,blocks,version,created_at,updated_at`
+const viewCols = `id::text,subject_kind,subject_id::text,catalog_id,metrics,pages,version,created_at,updated_at`
 
 func scanView(row scanner) (View, error) {
 	var v View
-	var metrics, blocks []byte
-	if e := row.Scan(&v.ID, &v.SubjectKind, &v.SubjectID, &v.CatalogID, &metrics, &blocks, &v.Version, &v.CreatedAt, &v.UpdatedAt); e != nil {
+	var metrics, pages []byte
+	if e := row.Scan(&v.ID, &v.SubjectKind, &v.SubjectID, &v.CatalogID, &metrics, &pages, &v.Version, &v.CreatedAt, &v.UpdatedAt); e != nil {
 		return v, e
 	}
-	v.Metrics, v.Blocks = []ViewMetric{}, []ViewBlock{}
+	v.Metrics, v.Pages = []ViewMetric{}, []ViewPage{}
 	if e := json.Unmarshal(metrics, &v.Metrics); e != nil {
 		return v, e
 	}
-	return v, json.Unmarshal(blocks, &v.Blocks)
+	return v, json.Unmarshal(pages, &v.Pages)
 }
 
 func (u *unit) getView(ctx context.Context, key string) (View, error) {
@@ -195,9 +242,9 @@ func createView(ctx context.Context, u *unit, in CreateViewInput) (View, error) 
 		return View{}, conflict("This subject already has a view for that catalog")
 	}
 	metrics, _ := json.Marshal(in.Metrics)
-	blocks, _ := json.Marshal(in.Blocks)
-	if _, e = u.tx.Exec(ctx, `INSERT INTO life.views(id,subject_kind,subject_id,catalog_id,metrics,blocks) VALUES($1,$2,$3,$4,$5,$6)`,
-		key, in.SubjectKind, in.SubjectID, in.CatalogID, metrics, blocks); e != nil {
+	pages, _ := json.Marshal(in.Pages)
+	if _, e = u.tx.Exec(ctx, `INSERT INTO life.views(id,subject_kind,subject_id,catalog_id,metrics,pages) VALUES($1,$2,$3,$4,$5,$6)`,
+		key, in.SubjectKind, in.SubjectID, in.CatalogID, metrics, pages); e != nil {
 		return View{}, e
 	}
 	v, e := u.getView(ctx, key)
@@ -256,7 +303,7 @@ func updateView(ctx context.Context, u *unit, in UpdateViewInput) (View, error) 
 		return old, e
 	}
 	next := old.ViewData
-	next.Metrics, next.Blocks = in.Metrics, in.Blocks
+	next.Metrics, next.Pages = in.Metrics, in.Pages
 	if e = validateView(next); e != nil {
 		return old, e
 	}
@@ -264,8 +311,8 @@ func updateView(ctx context.Context, u *unit, in UpdateViewInput) (View, error) 
 		return old, e
 	}
 	metrics, _ := json.Marshal(in.Metrics)
-	blocks, _ := json.Marshal(in.Blocks)
-	if _, e = u.tx.Exec(ctx, `UPDATE life.views SET metrics=$2,blocks=$3,version=version+1,updated_at=now() WHERE id=$1`, old.ID, metrics, blocks); e != nil {
+	pages, _ := json.Marshal(in.Pages)
+	if _, e = u.tx.Exec(ctx, `UPDATE life.views SET metrics=$2,pages=$3,version=version+1,updated_at=now() WHERE id=$1`, old.ID, metrics, pages); e != nil {
 		return old, e
 	}
 	after, e := u.getView(ctx, old.ID)

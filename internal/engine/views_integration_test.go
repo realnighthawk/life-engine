@@ -12,6 +12,16 @@ import (
 
 const kitCatalog = engine.TrackerCatalogKit
 
+// pagesOf puts blocks on one page in one section, the plainest valid structure.
+func pagesOf(blocks []map[string]any) []map[string]any {
+	return []map[string]any{{"id": "main", "sections": []map[string]any{{"id": "all", "title": "Overview", "blocks": blocks}}}}
+}
+
+// blocksOf is the blocks of a view made with pagesOf.
+func blocksOf(v map[string]any) []map[string]any {
+	return v["pages"].([]map[string]any)[0]["sections"].([]map[string]any)[0]["blocks"].([]map[string]any)
+}
+
 func weightView(goal string) map[string]any {
 	return map[string]any{
 		"subject_kind": "goal", "subject_id": goal, "catalog_id": kitCatalog,
@@ -19,13 +29,13 @@ func weightView(goal string) map[string]any {
 			{"id": "weight", "label": "Weight", "unit": "kg", "target": 77, "source": map[string]any{"provider": "health", "series": "body_weight"}},
 			{"id": "waist", "label": "Waist", "unit": "cm"},
 		},
-		"blocks": []map[string]any{
+		"pages": pagesOf([]map[string]any{
 			{"id": "trend", "kind": "series", "title": "Weight", "metric": "weight"},
 			{"id": "log", "kind": "log", "title": "Waist", "metric": "waist"},
 			{"id": "steps", "kind": "steps", "title": "Steps", "source": "goal_steps"},
 			{"id": "habits", "kind": "text", "title": "Habits", "body": "Walk after lunch."},
 			{"id": "guide", "kind": "link", "title": "Plan", "url": "https://example.com/plan"},
-		},
+		}),
 	}
 }
 
@@ -35,13 +45,13 @@ func TestViewRoundTrip(t *testing.T) {
 	in := weightView(g.ID)
 	in["idempotency_key"] = key()
 	v := execute[engine.View](t, s, "views_create", in)
-	if v.SubjectID != g.ID || len(v.Blocks) != 5 || v.Version != 1 {
+	if v.SubjectID != g.ID || len(v.Pages[0].Sections[0].Blocks) != 5 || v.Version != 1 {
 		t.Fatalf("created: %+v", v)
 	}
 	if v.Metrics[0].Source == nil || v.Metrics[0].Source.Provider != "health" || v.Metrics[1].Source != nil {
 		t.Fatalf("a bound metric keeps its source and a manual one has none: %+v", v.Metrics)
 	}
-	if got := execute[engine.View](t, s, "views_get", map[string]any{"id": v.ID}); got.ID != v.ID || got.Blocks[4].URL != "https://example.com/plan" {
+	if got := execute[engine.View](t, s, "views_get", map[string]any{"id": v.ID}); got.ID != v.ID || got.Pages[0].Sections[0].Blocks[4].URL != "https://example.com/plan" {
 		t.Fatalf("get: %+v", got)
 	}
 	list := execute[engine.ViewList](t, s, "views_list", map[string]any{"subject_kind": "goal", "subject_id": g.ID})
@@ -84,15 +94,23 @@ func TestViewValidation(t *testing.T) {
 	s := integrationService(t)
 	g := execute[engine.Goal](t, s, "goals_create", map[string]any{"idempotency_key": key(), "title": "Read more"})
 	bad := map[string]func(map[string]any){
-		"unknown block kind":                           func(v map[string]any) { v["blocks"].([]map[string]any)[0]["kind"] = "html" },
-		"measurement block without a metric":           func(v map[string]any) { delete(v["blocks"].([]map[string]any)[0], "metric") },
-		"measurement block naming an undefined metric": func(v map[string]any) { v["blocks"].([]map[string]any)[0]["metric"] = "ghost" },
-		"link without a url":                           func(v map[string]any) { delete(v["blocks"].([]map[string]any)[4], "url") },
-		"link that is not http(s)":                     func(v map[string]any) { v["blocks"].([]map[string]any)[4]["url"] = "javascript:alert(1)" },
-		"steps carrying a url":                         func(v map[string]any) { v["blocks"].([]map[string]any)[2]["url"] = "https://example.com" },
-		"duplicate block id":                           func(v map[string]any) { v["blocks"].([]map[string]any)[1]["id"] = "trend" },
-		"no blocks":                                    func(v map[string]any) { v["blocks"] = []map[string]any{} },
-		"unknown catalog":                              func(v map[string]any) { v["catalog_id"] = "nope" },
+		"unknown block kind":                           func(v map[string]any) { blocksOf(v)[0]["kind"] = "html" },
+		"measurement block without a metric":           func(v map[string]any) { delete(blocksOf(v)[0], "metric") },
+		"measurement block naming an undefined metric": func(v map[string]any) { blocksOf(v)[0]["metric"] = "ghost" },
+		"link without a url":                           func(v map[string]any) { delete(blocksOf(v)[4], "url") },
+		"link that is not http(s)":                     func(v map[string]any) { blocksOf(v)[4]["url"] = "javascript:alert(1)" },
+		"steps carrying a url":                         func(v map[string]any) { blocksOf(v)[2]["url"] = "https://example.com" },
+		"duplicate block id":                           func(v map[string]any) { blocksOf(v)[1]["id"] = "trend" },
+		"no blocks":                                    func(v map[string]any) { v["pages"] = pagesOf([]map[string]any{}) },
+		"no pages":                                     func(v map[string]any) { v["pages"] = []map[string]any{} },
+		"two pages need titles": func(v map[string]any) {
+			v["pages"] = append(v["pages"].([]map[string]any), map[string]any{"id": "second", "sections": []map[string]any{{"id": "more", "title": "More", "blocks": []map[string]any{{"id": "note", "kind": "text", "body": "x"}}}}})
+		},
+		"a section without a title": func(v map[string]any) {
+			v["pages"].([]map[string]any)[0]["sections"].([]map[string]any)[0]["title"] = ""
+		},
+		"too many points": func(v map[string]any) { blocksOf(v)[3]["points"] = []string{"a", "b", "c", "d", "e", "f"} },
+		"unknown catalog": func(v map[string]any) { v["catalog_id"] = "nope" },
 		"bad source identifier": func(v map[string]any) {
 			v["metrics"].([]map[string]any)[0]["source"] = map[string]any{"provider": "Health!", "series": "w"}
 		},
@@ -126,8 +144,8 @@ func TestExampleViewsAreCreatedThroughTheService(t *testing.T) {
 		in["subject_kind"], in["subject_id"], in["catalog_id"], in["idempotency_key"] = "goal", g.ID, kitCatalog, key()
 		v := execute[engine.View](t, s, "views_create", in)
 		got := execute[engine.View](t, s, "views_get", map[string]any{"id": v.ID})
-		if len(got.Blocks) != len(in["blocks"].([]any)) || got.Blocks[0].Kind == "" {
-			t.Errorf("%s: stored %+v", name, got.Blocks)
+		if len(got.Pages) != len(in["pages"].([]any)) || got.Pages[0].Sections[0].Blocks[0].Kind == "" {
+			t.Errorf("%s: stored %+v", name, got.Pages)
 		}
 	}
 }

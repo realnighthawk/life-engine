@@ -20,16 +20,16 @@ func TestViewUpdateAndDelete(t *testing.T) {
 	_, v := goalWithView(t, s)
 	blocks := []map[string]any{{"id": "steps", "kind": "steps", "title": "Steps", "source": "goal_steps"}}
 	up := execute[engine.View](t, s, "views_update", map[string]any{"idempotency_key": key(), "id": v.ID, "expected_version": v.Version,
-		"metrics": []map[string]any{}, "blocks": blocks})
-	if up.Version != 2 || len(up.Blocks) != 1 || len(up.Metrics) != 0 || up.CatalogID != v.CatalogID || up.SubjectID != v.SubjectID {
+		"metrics": []map[string]any{}, "pages": pagesOf(blocks)})
+	if up.Version != 2 || len(up.Pages[0].Sections[0].Blocks) != 1 || len(up.Metrics) != 0 || up.CatalogID != v.CatalogID || up.SubjectID != v.SubjectID {
 		t.Fatalf("updated: %+v", up)
 	}
-	errorCode(t, s, "views_update", map[string]any{"idempotency_key": key(), "id": v.ID, "expected_version": v.Version, "metrics": []map[string]any{}, "blocks": blocks}, "conflict")
+	errorCode(t, s, "views_update", map[string]any{"idempotency_key": key(), "id": v.ID, "expected_version": v.Version, "metrics": []map[string]any{}, "pages": pagesOf(blocks)}, "conflict")
 	errorCode(t, s, "views_update", map[string]any{"idempotency_key": key(), "id": v.ID, "expected_version": up.Version, "metrics": []map[string]any{},
-		"blocks": []map[string]any{{"id": "x", "type": "html", "title": "x"}}}, "invalid_input")
+		"pages": pagesOf([]map[string]any{{"id": "x", "type": "html", "title": "x"}})}, "invalid_input")
 	execute[engine.View](t, s, "views_delete", map[string]any{"idempotency_key": key(), "id": v.ID, "expected_version": up.Version})
 	errorCode(t, s, "views_get", map[string]any{"id": v.ID}, "not_found")
-	errorCode(t, s, "views_update", map[string]any{"idempotency_key": key(), "id": v.ID, "expected_version": up.Version + 1, "metrics": []map[string]any{}, "blocks": blocks}, "conflict")
+	errorCode(t, s, "views_update", map[string]any{"idempotency_key": key(), "id": v.ID, "expected_version": up.Version + 1, "metrics": []map[string]any{}, "pages": pagesOf(blocks)}, "conflict")
 	if list := execute[engine.ViewList](t, s, "views_list", map[string]any{"subject_kind": "goal", "subject_id": v.SubjectID}); len(list.Items) != 0 {
 		t.Fatalf("a removed view is not listed: %+v", list)
 	}
@@ -52,8 +52,8 @@ func TestMeasurementsAgainstAViewsMetrics(t *testing.T) {
 
 	// History protection: the recorded metric stays, in its unit.
 	blocks := []map[string]any{{"id": "steps", "kind": "steps", "title": "Steps", "source": "goal_steps"}}
-	errorCode(t, s, "views_update", map[string]any{"idempotency_key": key(), "id": v.ID, "expected_version": v.Version, "metrics": []map[string]any{}, "blocks": blocks}, "conflict")
-	errorCode(t, s, "views_update", map[string]any{"idempotency_key": key(), "id": v.ID, "expected_version": v.Version, "blocks": blocks,
+	errorCode(t, s, "views_update", map[string]any{"idempotency_key": key(), "id": v.ID, "expected_version": v.Version, "metrics": []map[string]any{}, "pages": pagesOf(blocks)}, "conflict")
+	errorCode(t, s, "views_update", map[string]any{"idempotency_key": key(), "id": v.ID, "expected_version": v.Version, "pages": pagesOf(blocks),
 		"metrics": []map[string]any{{"id": "waist", "label": "Waist", "unit": "in"}}}, "conflict")
 }
 

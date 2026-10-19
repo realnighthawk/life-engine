@@ -53,16 +53,16 @@ func TestAManifestThatIsWrongIsRefusedWithAReason(t *testing.T) {
 		edit func(*ViewData)
 		want string
 	}{
-		"an unknown function":                    {func(d *ViewData) { d.Blocks[0].Slots["left"] = Slot{Calc: Calc{Fn: "magic"}, Format: "number"} }, "Unknown function"},
-		"a metric that is not defined":           {func(d *ViewData) { d.Blocks[1].Value = &Calc{Fn: "latest", Metric: "nope"} }, "metric defined in this view"},
-		"a field the kind does not take":         {func(d *ViewData) { d.Blocks[2].Layout = "month_grid" }, "does not take layout"},
-		"a sentence slot nobody fills":           {func(d *ViewData) { d.Blocks[0].Text = "{left} left, {days} days, {extra}" }, "no slot"},
-		"a slot the sentence never uses":         {func(d *ViewData) { d.Blocks[0].Text = "{left} left" }, "not used"},
-		"a function with the wrong operands":     {func(d *ViewData) { d.Blocks[1].Of = &Calc{Fn: "sub", Args: []Calc{{Fn: "const", Value: ptr(1)}}} }, "takes 2-2 args"},
-		"a parameter the function does not take": {func(d *ViewData) { d.Blocks[1].Of = &Calc{Fn: "const", Value: ptr(1), Period: "month"} }, "does not take period"},
-		"days_left with both period and date":    {func(d *ViewData) { d.Blocks[1].Of = &Calc{Fn: "days_left", Period: "month", Date: "2026-12-31"} }, "either period or date"},
-		"a made-up kind":                         {func(d *ViewData) { d.Blocks[0].Kind = "spending_limit" }, "Unknown block kind"},
-		"a window with both period and days":     {func(d *ViewData) { d.Blocks[2].Window = &Window{Period: "month", Days: 7} }, "either period or days"},
+		"an unknown function":                    {func(d *ViewData) { d.block(0).Slots["left"] = Slot{Calc: Calc{Fn: "magic"}, Format: "number"} }, "Unknown function"},
+		"a metric that is not defined":           {func(d *ViewData) { d.block(1).Value = &Calc{Fn: "latest", Metric: "nope"} }, "metric defined in this view"},
+		"a field the kind does not take":         {func(d *ViewData) { d.block(2).Layout = "month_grid" }, "does not take layout"},
+		"a sentence slot nobody fills":           {func(d *ViewData) { d.block(0).Text = "{left} left, {days} days, {extra}" }, "no slot"},
+		"a slot the sentence never uses":         {func(d *ViewData) { d.block(0).Text = "{left} left" }, "not used"},
+		"a function with the wrong operands":     {func(d *ViewData) { d.block(1).Of = &Calc{Fn: "sub", Args: []Calc{{Fn: "const", Value: ptr(1)}}} }, "takes 2-2 args"},
+		"a parameter the function does not take": {func(d *ViewData) { d.block(1).Of = &Calc{Fn: "const", Value: ptr(1), Period: "month"} }, "does not take period"},
+		"days_left with both period and date":    {func(d *ViewData) { d.block(1).Of = &Calc{Fn: "days_left", Period: "month", Date: "2026-12-31"} }, "either period or date"},
+		"a made-up kind":                         {func(d *ViewData) { d.block(0).Kind = "spending_limit" }, "Unknown block kind"},
+		"a window with both period and days":     {func(d *ViewData) { d.block(2).Window = &Window{Period: "month", Days: 7} }, "either period or days"},
 	}
 	for name, c := range bad {
 		d := loadKit(t, "dining_limit")
@@ -73,6 +73,22 @@ func TestAManifestThatIsWrongIsRefusedWithAReason(t *testing.T) {
 	}
 }
 
+// block is the nth block in display order across all pages and sections; -1 is the last.
+func (d *ViewData) block(n int) *ViewBlock {
+	var all []*ViewBlock
+	for p := range d.Pages {
+		for s := range d.Pages[p].Sections {
+			for b := range d.Pages[p].Sections[s].Blocks {
+				all = append(all, &d.Pages[p].Sections[s].Blocks[b])
+			}
+		}
+	}
+	if n < 0 {
+		n += len(all)
+	}
+	return all[n]
+}
+
 func ptr(f float64) *float64 { return &f }
 
 func TestAnOverlyDeepOrLargeCalculationIsRefused(t *testing.T) {
@@ -81,7 +97,7 @@ func TestAnOverlyDeepOrLargeCalculationIsRefused(t *testing.T) {
 		deep = Calc{Fn: "add", Args: []Calc{deep, {Fn: "const", Value: ptr(1)}}}
 	}
 	d := loadKit(t, "dining_limit")
-	d.Blocks[1].Of = &deep
+	d.block(1).Of = &deep
 	if e := validateView(d); e == nil || !strings.Contains(e.Error(), "five levels") {
 		t.Fatalf("got %v", e)
 	}
@@ -89,12 +105,12 @@ func TestAnOverlyDeepOrLargeCalculationIsRefused(t *testing.T) {
 
 func TestStepsAndLogsAreHeldToTheirOwnRules(t *testing.T) {
 	d := loadKit(t, "savings_deadline")
-	d.Blocks[1].Thresholds = []float64{3000, 1000}
+	d.block(1).Thresholds = []float64{3000, 1000}
 	if e := validateView(d); e == nil || !strings.Contains(e.Error(), "smallest first") {
 		t.Fatalf("unsorted thresholds: %v", e)
 	}
 	d = loadKit(t, "dining_limit")
-	d.Blocks = append(d.Blocks, ViewBlock{ID: "log", Kind: "log", Metric: "spend"})
+	d.Pages[0].Sections[0].Blocks = append(d.Pages[0].Sections[0].Blocks, ViewBlock{ID: "log", Kind: "log", Metric: "spend"})
 	if e := validateView(d); e == nil || !strings.Contains(e.Error(), "data source") {
 		t.Fatalf("a log on a sourced metric: %v", e)
 	}
@@ -102,11 +118,12 @@ func TestStepsAndLogsAreHeldToTheirOwnRules(t *testing.T) {
 
 func TestARoutinesBlockTakesNothingButItsHeading(t *testing.T) {
 	d := loadKit(t, "dining_limit")
-	d.Blocks = append(d.Blocks, ViewBlock{ID: "habits", Kind: "routines", Title: "Your routines"})
+	d.Pages[0].Sections[0].Blocks = append(d.Pages[0].Sections[0].Blocks, ViewBlock{ID: "habits", Kind: "routines", Title: "Your routines"})
 	if e := validateView(d); e != nil {
 		t.Fatalf("a routines block: %v", e)
 	}
-	d.Blocks[len(d.Blocks)-1].Metric = "spend"
+	first := d.Pages[0].Sections[0].Blocks
+	first[len(first)-1].Metric = "spend"
 	if e := validateView(d); e == nil || !strings.Contains(e.Error(), "does not take metric") {
 		t.Fatalf("a routines block with a metric: %v", e)
 	}

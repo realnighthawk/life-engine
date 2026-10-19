@@ -16,12 +16,12 @@ func runView(goal string) map[string]any {
 	return map[string]any{
 		"idempotency_key": key(), "subject_kind": "goal", "subject_id": goal, "catalog_id": engine.TrackerCatalogKit,
 		"metrics": []map[string]any{{"id": "distance", "label": "Distance", "unit": "km", "minimum": 0, "target": 5}},
-		"blocks": []map[string]any{
+		"pages": pagesOf([]map[string]any{
 			{"id": "distance", "kind": "series", "title": "Distance", "metric": "distance"},
 			{"id": "milestones", "kind": "steps", "title": "Next milestones", "source": "goal_steps"},
 			{"id": "training", "kind": "text", "title": "Supporting routines", "body": "Short runs on weekdays."},
 			{"id": "log_distance", "kind": "log", "title": "Record a run", "metric": "distance"},
-		},
+		}),
 	}
 }
 
@@ -106,7 +106,8 @@ func TestWriteTrackerFixtures(t *testing.T) {
 	gid := g["id"].(string)
 	view := runView(gid)
 	view["metrics"] = append(view["metrics"].([]map[string]any), map[string]any{"id": "weight", "label": "Weight", "unit": "kg", "source": map[string]any{"provider": "health", "series": "body_weight"}})
-	view["blocks"] = append(view["blocks"].([]map[string]any), map[string]any{"id": "weight", "kind": "series", "title": "Weight", "metric": "weight"}, map[string]any{"id": "plan", "kind": "link", "title": "The plan", "url": "https://example.com/plan"})
+	sec := view["pages"].([]map[string]any)[0]["sections"].([]map[string]any)[0]
+	sec["blocks"] = append(sec["blocks"].([]map[string]any), map[string]any{"id": "weight", "kind": "series", "title": "Weight", "metric": "weight"}, map[string]any{"id": "plan", "kind": "link", "title": "The plan", "url": "https://example.com/plan"})
 	save("view", "views_create", view)
 	save("goal_measurement", "goal_measurements_record", map[string]any{"idempotency_key": key(), "goal_id": gid, "metric_id": "distance", "value": 2.5})
 	save("view_state", "views_state", map[string]any{"goal_id": gid, "catalog_id": engine.TrackerCatalogKit})
