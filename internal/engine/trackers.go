@@ -12,6 +12,7 @@ import (
 
 const TrackerCatalogIOS = "mission-control.ios.view-kit.v1"
 const TrackerCatalogIPad = "mission-control.ipados.view-kit.v1"
+const TrackerCatalogWeb = "agent-web.web.view-kit.v1"
 
 // Data definitions are shared; each catalog describes a shipped native renderer.
 type TrackerMetric struct {
@@ -73,11 +74,13 @@ var kitBlocks = []KitBlock{
 }
 
 func trackerCatalog(id string) (TrackerCatalog, error) {
-	platform, layout := "ios", "stacked"
+	app, platform, layout := "mission-control", "ios", "stacked"
 	switch id {
 	case TrackerCatalogIOS:
 	case TrackerCatalogIPad:
 		platform, layout = "ipados", "adaptive"
+	case TrackerCatalogWeb:
+		app, platform, layout = "agent-web", "web", "responsive"
 	default:
 		return TrackerCatalog{}, invalid("Unsupported tracker catalog; read tracker_catalog_get and use a catalog supported by the requesting app")
 	}
@@ -95,12 +98,12 @@ func trackerCatalog(id string) (TrackerCatalog, error) {
 		fns = append(fns, KitFunction{name, takes, s.doc})
 	}
 	sort.Slice(fns, func(i, j int) bool { return fns[i].Fn < fns[j].Fn })
-	return TrackerCatalog{ID: id, App: "mission-control", Platform: platform, Layout: layout, Blocks: kitBlocks, Functions: fns,
+	return TrackerCatalog{ID: id, App: app, Platform: platform, Layout: layout, Blocks: kitBlocks, Functions: fns,
 		Formats: []string{"number", "money", "percent", "date", "days"},
 		Limits:  "1-8 blocks; 0-6 metrics; a calculation nests five levels; a sentence has at most six slots."}, nil
 }
 func getTrackerCatalog(_ context.Context, _ *unit, in TrackerCatalogInput) (TrackerCatalogResult, error) {
-	ids := []string{TrackerCatalogIOS, TrackerCatalogIPad}
+	ids := []string{TrackerCatalogIOS, TrackerCatalogIPad, TrackerCatalogWeb}
 	if in.CatalogID != "" {
 		ids = []string{in.CatalogID}
 	}

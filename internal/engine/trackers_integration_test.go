@@ -28,7 +28,7 @@ func runView(goal string) map[string]any {
 func TestViewStateOpensATracker(t *testing.T) {
 	s := integrationService(t)
 	catalog := execute[engine.TrackerCatalogResult](t, s, "tracker_catalog_get", map[string]any{})
-	if len(catalog.Catalogs) != 2 || len(catalog.Catalogs[0].Blocks) != 9 || len(catalog.Catalogs[0].Functions) < 15 {
+	if len(catalog.Catalogs) != 3 || len(catalog.Catalogs[0].Blocks) != 9 || len(catalog.Catalogs[0].Functions) < 15 {
 		t.Fatalf("catalog: %+v", catalog)
 	}
 	errorCode(t, s, "tracker_catalog_get", map[string]any{"catalog_id": "other-app.ios.view-kit.v1"}, "invalid_input")
