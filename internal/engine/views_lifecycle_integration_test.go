@@ -7,8 +7,6 @@ import (
 	"github.com/realnighthawk/life-engine/internal/engine"
 )
 
-const ipadCatalog = "mission-control.ipados.view-kit.v1"
-
 func goalWithView(t *testing.T, s *engine.Service) (engine.Goal, engine.View) {
 	t.Helper()
 	g := execute[engine.Goal](t, s, "goals_create", map[string]any{"idempotency_key": key(), "title": "Lose 5 kg"})
@@ -57,20 +55,6 @@ func TestMeasurementsAgainstAViewsMetrics(t *testing.T) {
 	errorCode(t, s, "views_update", map[string]any{"idempotency_key": key(), "id": v.ID, "expected_version": v.Version, "metrics": []map[string]any{}, "blocks": blocks}, "conflict")
 	errorCode(t, s, "views_update", map[string]any{"idempotency_key": key(), "id": v.ID, "expected_version": v.Version, "blocks": blocks,
 		"metrics": []map[string]any{{"id": "waist", "label": "Waist", "unit": "in"}}}, "conflict")
-}
-
-func TestMetricUnitsAgreeAcrossViews(t *testing.T) {
-	s := integrationService(t)
-	g, _ := goalWithView(t, s)
-	other := weightView(g.ID)
-	other["catalog_id"] = ipadCatalog
-	other["idempotency_key"] = key()
-	other["metrics"] = []map[string]any{{"id": "waist", "label": "Waist", "unit": "in"}}
-	other["blocks"] = []map[string]any{{"id": "log", "kind": "log", "title": "Waist", "metric": "waist"}}
-	errorCode(t, s, "views_create", other, "conflict") // waist is cm in the other catalog's view
-	other["metrics"] = []map[string]any{{"id": "waist", "label": "Waist", "unit": "cm"}}
-	other["idempotency_key"] = key()
-	execute[engine.View](t, s, "views_create", other)
 }
 
 func TestBatchUndo(t *testing.T) {

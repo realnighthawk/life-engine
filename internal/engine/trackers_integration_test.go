@@ -14,7 +14,7 @@ import (
 // runView is a goal's view of a run toward 5 km, in the phone catalog.
 func runView(goal string) map[string]any {
 	return map[string]any{
-		"idempotency_key": key(), "subject_kind": "goal", "subject_id": goal, "catalog_id": engine.TrackerCatalogIOS,
+		"idempotency_key": key(), "subject_kind": "goal", "subject_id": goal, "catalog_id": engine.TrackerCatalogKit,
 		"metrics": []map[string]any{{"id": "distance", "label": "Distance", "unit": "km", "minimum": 0, "target": 5}},
 		"blocks": []map[string]any{
 			{"id": "distance", "kind": "series", "title": "Distance", "metric": "distance"},
@@ -28,25 +28,22 @@ func runView(goal string) map[string]any {
 func TestViewStateOpensATracker(t *testing.T) {
 	s := integrationService(t)
 	catalog := execute[engine.TrackerCatalogResult](t, s, "tracker_catalog_get", map[string]any{})
-	if len(catalog.Catalogs) != 3 || len(catalog.Catalogs[0].Blocks) != 9 || len(catalog.Catalogs[0].Functions) < 15 {
+	if len(catalog.Catalogs) != 1 || len(catalog.Catalogs[0].Blocks) != 9 || len(catalog.Catalogs[0].Functions) < 15 {
 		t.Fatalf("catalog: %+v", catalog)
 	}
 	errorCode(t, s, "tracker_catalog_get", map[string]any{"catalog_id": "other-app.ios.view-kit.v1"}, "invalid_input")
 	g := execute[engine.Goal](t, s, "goals_create", map[string]any{"idempotency_key": key(), "title": "Run a 5K", "steps": []map[string]any{{"title": "Run 1 km"}}})
-	none := execute[engine.ViewState](t, s, "views_state", map[string]any{"goal_id": g.ID, "catalog_id": engine.TrackerCatalogIOS})
+	none := execute[engine.ViewState](t, s, "views_state", map[string]any{"goal_id": g.ID, "catalog_id": engine.TrackerCatalogKit})
 	if none.View != nil || none.Measurements == nil {
 		t.Fatalf("a goal with no view says so, with a list rather than null: %+v", none)
 	}
 	v := execute[engine.View](t, s, "views_create", runView(g.ID))
-	state := execute[engine.ViewState](t, s, "views_state", map[string]any{"goal_id": g.ID, "catalog_id": engine.TrackerCatalogIOS})
+	state := execute[engine.ViewState](t, s, "views_state", map[string]any{"goal_id": g.ID, "catalog_id": engine.TrackerCatalogKit})
 	if state.View == nil || state.View.ID != v.ID || len(state.Measurements) != 0 || len(state.View.Metrics) != 1 {
 		t.Fatalf("state: %+v", state)
 	}
-	if other := execute[engine.ViewState](t, s, "views_state", map[string]any{"goal_id": g.ID, "catalog_id": engine.TrackerCatalogIPad}); other.View != nil {
-		t.Fatal("do not substitute a view for another platform")
-	}
 	errorCode(t, s, "views_state", map[string]any{"goal_id": g.ID, "catalog_id": "nope"}, "invalid_input")
-	errorCode(t, s, "views_state", map[string]any{"goal_id": "00000000-0000-4000-8000-000000000000", "catalog_id": engine.TrackerCatalogIOS}, "not_found")
+	errorCode(t, s, "views_state", map[string]any{"goal_id": "00000000-0000-4000-8000-000000000000", "catalog_id": engine.TrackerCatalogKit}, "not_found")
 }
 
 func TestMeasurementRules(t *testing.T) {
@@ -74,7 +71,7 @@ func TestMeasurementRules(t *testing.T) {
 	}
 	errorCode(t, s, "goal_measurements_update", map[string]any{"idempotency_key": key(), "id": m.ID, "expected_version": 1, "value": 4}, "conflict")
 	execute[engine.GoalMeasurement](t, s, "goal_measurements_delete", map[string]any{"idempotency_key": key(), "id": m.ID, "expected_version": 2})
-	state := execute[engine.ViewState](t, s, "views_state", map[string]any{"goal_id": g.ID, "catalog_id": engine.TrackerCatalogIPad})
+	state := execute[engine.ViewState](t, s, "views_state", map[string]any{"goal_id": g.ID, "catalog_id": engine.TrackerCatalogKit})
 	if len(state.Measurements) != 0 {
 		t.Fatal("removed measurement is still charted")
 	}
@@ -112,5 +109,5 @@ func TestWriteTrackerFixtures(t *testing.T) {
 	view["blocks"] = append(view["blocks"].([]map[string]any), map[string]any{"id": "weight", "kind": "series", "title": "Weight", "metric": "weight"}, map[string]any{"id": "plan", "kind": "link", "title": "The plan", "url": "https://example.com/plan"})
 	save("view", "views_create", view)
 	save("goal_measurement", "goal_measurements_record", map[string]any{"idempotency_key": key(), "goal_id": gid, "metric_id": "distance", "value": 2.5})
-	save("view_state", "views_state", map[string]any{"goal_id": gid, "catalog_id": engine.TrackerCatalogIOS})
+	save("view_state", "views_state", map[string]any{"goal_id": gid, "catalog_id": engine.TrackerCatalogKit})
 }

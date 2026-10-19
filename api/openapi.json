@@ -14846,9 +14846,6 @@
             "items": {
               "additionalProperties": false,
               "properties": {
-                "app": {
-                  "type": "string"
-                },
                 "blocks": {
                   "items": {
                     "additionalProperties": false,
@@ -14929,21 +14926,12 @@
                 "id": {
                   "type": "string"
                 },
-                "layout": {
-                  "type": "string"
-                },
                 "limits": {
-                  "type": "string"
-                },
-                "platform": {
                   "type": "string"
                 }
               },
               "required": [
                 "id",
-                "app",
-                "platform",
-                "layout",
                 "blocks",
                 "functions",
                 "formats",

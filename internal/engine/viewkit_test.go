@@ -15,7 +15,7 @@ func loadKit(t *testing.T, name string) ViewData {
 	if e != nil {
 		t.Fatal(e)
 	}
-	d := ViewData{SubjectKind: "goal", SubjectID: kitSubject, CatalogID: TrackerCatalogIOS}
+	d := ViewData{SubjectKind: "goal", SubjectID: kitSubject, CatalogID: TrackerCatalogKit}
 	if e = json.Unmarshal(raw, &d); e != nil {
 		t.Fatalf("%s: %v", name, e)
 	}

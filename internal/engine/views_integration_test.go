@@ -10,11 +10,11 @@ import (
 	"github.com/realnighthawk/life-engine/internal/engine"
 )
 
-const iosCatalog = "mission-control.ios.view-kit.v1"
+const kitCatalog = engine.TrackerCatalogKit
 
 func weightView(goal string) map[string]any {
 	return map[string]any{
-		"subject_kind": "goal", "subject_id": goal, "catalog_id": iosCatalog,
+		"subject_kind": "goal", "subject_id": goal, "catalog_id": kitCatalog,
 		"metrics": []map[string]any{
 			{"id": "weight", "label": "Weight", "unit": "kg", "target": 77, "source": map[string]any{"provider": "health", "series": "body_weight"}},
 			{"id": "waist", "label": "Waist", "unit": "cm"},
@@ -48,8 +48,8 @@ func TestViewRoundTrip(t *testing.T) {
 	if len(list.Items) != 1 || list.Items[0].ID != v.ID {
 		t.Fatalf("list: %+v", list)
 	}
-	if none := execute[engine.ViewList](t, s, "views_list", map[string]any{"subject_kind": "goal", "subject_id": g.ID, "catalog_id": "mission-control.ipados.view-kit.v1"}); len(none.Items) != 0 {
-		t.Fatalf("a different catalog has no view: %+v", none)
+	if none := execute[engine.ViewList](t, s, "views_list", map[string]any{"subject_kind": "goal", "subject_id": g.ID, "catalog_id": "another-kit.v1"}); len(none.Items) != 0 {
+		t.Fatalf("a different kit has no view: %+v", none)
 	}
 	in["idempotency_key"] = key()
 	errorCode(t, s, "views_create", in, "conflict") // one live view per subject and catalog
@@ -123,7 +123,7 @@ func TestExampleViewsAreCreatedThroughTheService(t *testing.T) {
 		if e = json.Unmarshal(raw, &in); e != nil {
 			t.Fatal(e)
 		}
-		in["subject_kind"], in["subject_id"], in["catalog_id"], in["idempotency_key"] = "goal", g.ID, iosCatalog, key()
+		in["subject_kind"], in["subject_id"], in["catalog_id"], in["idempotency_key"] = "goal", g.ID, kitCatalog, key()
 		v := execute[engine.View](t, s, "views_create", in)
 		got := execute[engine.View](t, s, "views_get", map[string]any{"id": v.ID})
 		if len(got.Blocks) != len(in["blocks"].([]any)) || got.Blocks[0].Kind == "" {

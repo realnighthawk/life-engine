@@ -10,9 +10,9 @@ import (
 	"time"
 )
 
-const TrackerCatalogIOS = "mission-control.ios.view-kit.v1"
-const TrackerCatalogIPad = "mission-control.ipados.view-kit.v1"
-const TrackerCatalogWeb = "agent-web.web.view-kit.v1"
+// TrackerCatalogKit names the view kit. One manifest per goal serves every client: the kit is the same vocabulary
+// everywhere and each client draws it with its own components, so a goal made on the web shows up on the phone.
+const TrackerCatalogKit = "view-kit.v1"
 
 // Data definitions are shared; each catalog describes a shipped native renderer.
 type TrackerMetric struct {
@@ -36,9 +36,6 @@ type KitFunction struct {
 }
 type TrackerCatalog struct {
 	ID        string        `json:"id"`
-	App       string        `json:"app"`
-	Platform  string        `json:"platform"`
-	Layout    string        `json:"layout"`
 	Blocks    []KitBlock    `json:"blocks"`
 	Functions []KitFunction `json:"functions"`
 	Formats   []string      `json:"formats"`
@@ -74,15 +71,8 @@ var kitBlocks = []KitBlock{
 }
 
 func trackerCatalog(id string) (TrackerCatalog, error) {
-	app, platform, layout := "mission-control", "ios", "stacked"
-	switch id {
-	case TrackerCatalogIOS:
-	case TrackerCatalogIPad:
-		platform, layout = "ipados", "adaptive"
-	case TrackerCatalogWeb:
-		app, platform, layout = "agent-web", "web", "responsive"
-	default:
-		return TrackerCatalog{}, invalid("Unsupported tracker catalog; read tracker_catalog_get and use a catalog supported by the requesting app")
+	if id != TrackerCatalogKit {
+		return TrackerCatalog{}, invalid("Unsupported view kit; read tracker_catalog_get and use its catalog id")
 	}
 	fns := make([]KitFunction, 0, len(calcFns))
 	for name, s := range calcFns {
@@ -98,12 +88,12 @@ func trackerCatalog(id string) (TrackerCatalog, error) {
 		fns = append(fns, KitFunction{name, takes, s.doc})
 	}
 	sort.Slice(fns, func(i, j int) bool { return fns[i].Fn < fns[j].Fn })
-	return TrackerCatalog{ID: id, App: app, Platform: platform, Layout: layout, Blocks: kitBlocks, Functions: fns,
+	return TrackerCatalog{ID: id, Blocks: kitBlocks, Functions: fns,
 		Formats: []string{"number", "money", "percent", "date", "days"},
 		Limits:  "1-8 blocks; 0-6 metrics; a calculation nests five levels; a sentence has at most six slots."}, nil
 }
 func getTrackerCatalog(_ context.Context, _ *unit, in TrackerCatalogInput) (TrackerCatalogResult, error) {
-	ids := []string{TrackerCatalogIOS, TrackerCatalogIPad, TrackerCatalogWeb}
+	ids := []string{TrackerCatalogKit}
 	if in.CatalogID != "" {
 		ids = []string{in.CatalogID}
 	}
@@ -208,7 +198,7 @@ func (u *unit) getMeasurement(ctx context.Context, key string, lock bool) (GoalM
 }
 
 // metricFor finds a metric a goal's observations may be recorded against: one defined by a live view of the goal.
-// Observations are kept per goal and metric id, and metricsAgree keeps every view's unit for an id the same.
+// Observations are kept per goal and metric id; a goal has one view, so a metric id has one unit.
 func (u *unit) metricFor(ctx context.Context, g Goal, id string) (m TrackerMetric, err error) {
 	if g.ArchivedAt != nil {
 		return m, conflict("Restore the goal before recording progress")

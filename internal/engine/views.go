@@ -186,9 +186,6 @@ func createView(ctx context.Context, u *unit, in CreateViewInput) (View, error) 
 	if !found {
 		return View{}, invalid("The view's subject is not a " + in.SubjectKind + " that exists")
 	}
-	if e = u.metricsAgree(ctx, in.SubjectKind, in.SubjectID, "", in.Metrics); e != nil {
-		return View{}, e
-	}
 	var taken bool
 	if e = u.tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM life.views WHERE subject_kind=$1 AND subject_id=$2 AND catalog_id=$3 AND deleted_at IS NULL)`,
 		in.SubjectKind, in.SubjectID, in.CatalogID).Scan(&taken); e != nil {
@@ -239,39 +236,6 @@ func listViews(ctx context.Context, u *unit, in ViewsListInput) (ViewList, error
 	return out, rows.Err()
 }
 
-// metricsAgree refuses a metric whose unit differs from the same metric id in the subject's other live views or in
-// the same goal: observations are kept per goal and metric id, so every definition of one id has to mean the same thing.
-func (u *unit) metricsAgree(ctx context.Context, kind, subject, except string, metrics []ViewMetric) error {
-	units := map[string]string{}
-	rows, e := u.tx.Query(ctx, `SELECT metrics FROM life.views WHERE subject_kind=$1 AND subject_id=$2 AND deleted_at IS NULL AND id::text<>$3`, kind, subject, except)
-	if e != nil {
-		return e
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var raw []byte
-		var others []ViewMetric
-		if e = rows.Scan(&raw); e != nil {
-			return e
-		}
-		if e = json.Unmarshal(raw, &others); e != nil {
-			return e
-		}
-		for _, m := range others {
-			units[m.ID] = m.Unit
-		}
-	}
-	if e = rows.Err(); e != nil {
-		return e
-	}
-	for _, m := range metrics {
-		if unit, ok := units[m.ID]; ok && unit != m.Unit {
-			return conflict("Metric " + m.ID + " is already defined in " + unit + " for this goal; keep the unit, or use a new metric id")
-		}
-	}
-	return nil
-}
-
 func updateView(ctx context.Context, u *unit, in UpdateViewInput) (View, error) {
 	k, e := id(in.ID)
 	if e != nil {
@@ -294,9 +258,6 @@ func updateView(ctx context.Context, u *unit, in UpdateViewInput) (View, error) 
 	next := old.ViewData
 	next.Metrics, next.Blocks = in.Metrics, in.Blocks
 	if e = validateView(next); e != nil {
-		return old, e
-	}
-	if e = u.metricsAgree(ctx, old.SubjectKind, old.SubjectID, old.ID, in.Metrics); e != nil {
 		return old, e
 	}
 	if e = u.viewKeepsRecordedMetrics(ctx, old, in.Metrics); e != nil {
