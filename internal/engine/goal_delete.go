@@ -58,7 +58,7 @@ func deleteGoal(ctx context.Context, u *unit, in EditInput) (GoalDeletion, error
 			func(r EditInput) error { _, e := deleteMeasurement(ctx, u, r); return e }},
 		{"commitments", `SELECT id::text, version FROM life.commitments WHERE goal_id=$1`,
 			func(r EditInput) error { _, e := deleteCommitment(ctx, u, r); return e }},
-		{"plan_items", `SELECT id::text, version FROM life.plan_items WHERE goal_id=$1 AND deleted_at IS NULL`,
+		{"plan_items", `SELECT id::text, version FROM life.plan_items WHERE (goal_id=$1 OR step_id IN (SELECT id FROM life.steps WHERE goal_id=$1)) AND deleted_at IS NULL`,
 			func(r EditInput) error { _, e := lifecyclePlanItem(ctx, u, r, false); return e }},
 		{"reminders", `SELECT id::text, version FROM life.reminders WHERE link->>'entity'='goal' AND link->>'id'=$1::text AND deleted_at IS NULL`,
 			func(r EditInput) error { _, e := lifecycleReminder(ctx, u, r, false); return e }},
