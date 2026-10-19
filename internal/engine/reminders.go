@@ -155,6 +155,39 @@ func (d ReminderData) values() (reminderValues, error) {
 	return v, nil
 }
 
+// linkTables maps each linkable record kind to its table.
+var linkTables = map[string]string{
+	"reminder": "reminders", "schedule": "schedules", "monitor": "monitors", "goal": "goals", "step": "steps",
+	"plan_item": "plan_items", "routine": "routines", "journal_entry": "journal_entries", "note": "notes", "capture": "captures",
+}
+
+// exists reports whether a record of that kind is there. Inside a batch an earlier step's record counts, because the
+// whole plan shares one transaction.
+func (u *unit) exists(ctx context.Context, entity, rawID string) (bool, error) {
+	key, e := id(rawID)
+	if e != nil {
+		return false, invalid("id must be a UUID")
+	}
+	var found bool
+	e = u.tx.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM life."+linkTables[entity]+" WHERE id=$1)", key).Scan(&found)
+	return found, e
+}
+
+// linkExists refuses a link to a record that is not there.
+func (u *unit) linkExists(ctx context.Context, l *Link) error {
+	if l == nil {
+		return nil
+	}
+	found, e := u.exists(ctx, l.Entity, l.ID)
+	if e != nil {
+		return e
+	}
+	if !found {
+		return invalid("link points at a " + l.Entity + " that does not exist")
+	}
+	return nil
+}
+
 // linkEntities are the record kinds a reminder or notice can point at.
 var linkEntities = []string{"reminder", "schedule", "monitor", "goal", "step", "plan_item", "routine", "journal_entry", "note", "capture"}
 
@@ -180,6 +213,9 @@ func createReminder(ctx context.Context, u *unit, in CreateReminderInput) (Remin
 	}
 	v, e := in.ReminderData.values()
 	if e != nil {
+		return Reminder{}, e
+	}
+	if e = u.linkExists(ctx, v.link); e != nil {
 		return Reminder{}, e
 	}
 	if v.session == "" {
@@ -211,6 +247,11 @@ func updateReminder(ctx context.Context, u *unit, in UpdateReminderInput) (Remin
 	v, e := in.ReminderData.values()
 	if e != nil {
 		return old, e
+	}
+	if v.link != nil && (old.Link == nil || *old.Link != *v.link) {
+		if e = u.linkExists(ctx, v.link); e != nil {
+			return old, e
+		}
 	}
 	// Editing the due time starts a fresh occurrence, so any snooze no longer applies.
 	_, e = u.tx.Exec(ctx, `UPDATE life.reminders SET title=$2,notes=$3,due_at=$4,snoozed_until=NULL,time_zone=$5,recurrence=$6,source=$7,session_id=COALESCE(NULLIF($8,''),session_id),turn_seq=$9,link=$10,

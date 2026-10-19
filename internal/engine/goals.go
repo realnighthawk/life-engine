@@ -2,7 +2,6 @@ package engine
 
 import (
 	"context"
-	"encoding/json"
 	"strconv"
 	"strings"
 	"time"
@@ -34,21 +33,19 @@ type GoalProgress struct {
 
 // Goal always carries its steps, so a screen needs one read.
 type Goal struct {
-	Tracker         *TrackerDefinition `json:"tracker,omitempty"`
-	TrackerRevision int64              `json:"tracker_revision"`
-	ID              string             `json:"id"`
-	Title           string             `json:"title"`
-	Why             string             `json:"why"`
-	WeeklyTarget    int                `json:"weekly_target" jsonschema:"steps the person aims to finish each week"`
-	ArchivedAt      *time.Time         `json:"archived_at"`
-	Version         int64              `json:"version"`
-	Steps           []Step             `json:"steps"`
-	RoutineIDs      []string           `json:"routine_ids" jsonschema:"routines that serve this goal; they are tracked as routines, not as steps"`
-	Consistency     GoalConsistency    `json:"consistency" jsonschema:"how well the routines that serve this goal were kept, summed over them. A measure of keeping up, not of how far the outcome has moved"`
-	Progress        GoalProgress       `json:"progress"`
-	NextStep        *Step              `json:"next_step" jsonschema:"the first step not yet done, or null"`
-	CreatedAt       time.Time          `json:"created_at"`
-	UpdatedAt       time.Time          `json:"updated_at"`
+	ID           string          `json:"id"`
+	Title        string          `json:"title"`
+	Why          string          `json:"why"`
+	WeeklyTarget int             `json:"weekly_target" jsonschema:"steps the person aims to finish each week"`
+	ArchivedAt   *time.Time      `json:"archived_at"`
+	Version      int64           `json:"version"`
+	Steps        []Step          `json:"steps"`
+	RoutineIDs   []string        `json:"routine_ids" jsonschema:"routines that serve this goal; they are tracked as routines, not as steps"`
+	Consistency  GoalConsistency `json:"consistency" jsonschema:"how well the routines that serve this goal were kept, summed over them. A measure of keeping up, not of how far the outcome has moved"`
+	Progress     GoalProgress    `json:"progress"`
+	NextStep     *Step           `json:"next_step" jsonschema:"the first step not yet done, or null"`
+	CreatedAt    time.Time       `json:"created_at"`
+	UpdatedAt    time.Time       `json:"updated_at"`
 }
 
 type StepData struct {
@@ -61,7 +58,6 @@ type GoalData struct {
 	WeeklyTarget *int   `json:"weekly_target,omitempty" jsonschema:"steps to finish each week, 0-21, default 3"`
 }
 type CreateGoalInput struct {
-	Tracker *TrackerDefinition `json:"tracker,omitempty" jsonschema:"agent-composed definition from tracker_catalog_get for the requesting app; validated and stored atomically with the goal"`
 	Meta
 	ID string `json:"id,omitempty"`
 	GoalData
@@ -96,7 +92,7 @@ type ReorderStepsInput struct {
 	StepIDs []string `json:"step_ids" jsonschema:"every step of the goal, in the new order"`
 }
 
-const goalCols = `id::text,title,why,weekly_target,archived_at,version,created_at,updated_at,tracker,tracker_revision`
+const goalCols = `id::text,title,why,weekly_target,archived_at,version,created_at,updated_at`
 const stepCols = `id::text,goal_id::text,title,minutes,position,done_at,version,created_at,updated_at`
 
 func scanStep(row scanner) (Step, error) {
@@ -139,16 +135,9 @@ func (u *unit) goals(ctx context.Context, where string, args ...any) ([]Goal, er
 	var ids []string
 	for rows.Next() {
 		var g Goal
-		var tracker []byte
-		if err := rows.Scan(&g.ID, &g.Title, &g.Why, &g.WeeklyTarget, &g.ArchivedAt, &g.Version, &g.CreatedAt, &g.UpdatedAt, &tracker, &g.TrackerRevision); err != nil {
+		if err := rows.Scan(&g.ID, &g.Title, &g.Why, &g.WeeklyTarget, &g.ArchivedAt, &g.Version, &g.CreatedAt, &g.UpdatedAt); err != nil {
 			rows.Close()
 			return nil, err
-		}
-		if len(tracker) > 0 {
-			if err := json.Unmarshal(tracker, &g.Tracker); err != nil {
-				rows.Close()
-				return nil, err
-			}
 		}
 		utcPtr(g.ArchivedAt)
 		g.CreatedAt, g.UpdatedAt = g.CreatedAt.UTC(), g.UpdatedAt.UTC()
@@ -302,15 +291,6 @@ func createGoal(ctx context.Context, u *unit, in CreateGoalInput) (Goal, error) 
 	}
 	for _, rid := range in.RoutineIDs {
 		if e = u.linkRoutine(ctx, key, rid); e != nil {
-			return Goal{}, e
-		}
-	}
-	if in.Tracker != nil {
-		if e = validateTracker(*in.Tracker); e != nil {
-			return Goal{}, e
-		}
-		raw, _ := json.Marshal(in.Tracker)
-		if _, e = u.tx.Exec(ctx, "UPDATE life.goals SET tracker=$2,tracker_revision=1 WHERE id=$1", key, raw); e != nil {
 			return Goal{}, e
 		}
 	}

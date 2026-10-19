@@ -70,8 +70,10 @@ func TestWriteClientFixtures(t *testing.T) {
 
 	call("settings", "settings_set", map[string]any{"idempotency_key": k(), "expected_version": 1, "time_zone": "Europe/London", "work_start": "09:00", "work_end": "17:30"})
 
+	// A reminder's link must point at a record that exists.
+	call("goal_link_target", "goals_create", map[string]any{"idempotency_key": k(), "id": "22222222-2222-4222-8222-222222222222", "title": "Keep the household on budget"})
 	rem := call("reminder", "reminders_create", map[string]any{"idempotency_key": k(), "id": "11111111-1111-4111-8111-111111111111", "title": "Pay rent", "notes": "Landlord prefers a bank transfer",
-		"due_at": "2030-01-15T09:00:00Z", "time_zone": "Europe/London", "source": "agent", "session_id": "agent:main:ios:user:u", "turn_seq": 7, "link": map[string]any{"entity": "goal", "id": "g1"}})
+		"due_at": "2030-01-15T09:00:00Z", "time_zone": "Europe/London", "source": "agent", "session_id": "agent:main:ios:user:u", "turn_seq": 7, "link": map[string]any{"entity": "goal", "id": "22222222-2222-4222-8222-222222222222"}})
 	call("reminder_repeating", "reminders_create", map[string]any{"idempotency_key": k(), "id": "11111111-1111-4111-8111-222222222222", "title": "Take vitamins", "due_at": "2030-01-15T08:00:00Z",
 		"time_zone": "Europe/London", "recurrence": map[string]any{"freq": "weekly", "weekdays": []int{1, 3, 5}}})
 	call("reminder_undated", "reminders_create", map[string]any{"idempotency_key": k(), "id": "11111111-1111-4111-8111-333333333333", "title": "Someday: book a trip"})

@@ -49,21 +49,10 @@ func TestTrackerToolsDiscoveredOverMCPAndHTTP(t *testing.T) {
 	for _, op := range capabilities.Operations {
 		httpTools[op.Name] = op.InputSchema
 	}
-	for _, name := range []string{"tracker_catalog_get", "goals_tracker_get", "goals_propose_tracker", "goals_tracker_apply", "goals_tracker_discard", "goal_measurements_record", "goal_measurements_update", "goal_measurements_delete"} {
+	for _, name := range []string{"tracker_catalog_get", "views_state", "goal_measurements_record", "goal_measurements_update", "goal_measurements_delete"} {
 		tool := tools[name]
 		if tool == nil || tool.InputSchema == nil || len(httpTools[name]) == 0 {
 			t.Fatalf("missing typed tool %s", name)
-		}
-		if name == "goals_propose_tracker" {
-			raw, _ := json.Marshal(tool.InputSchema)
-			var schema map[string]any
-			if err = json.Unmarshal(raw, &schema); err != nil {
-				t.Fatal(err)
-			}
-			properties := schema["properties"].(map[string]any)
-			if properties["definition"] == nil || properties["expected_version"] == nil {
-				t.Fatalf("untyped proposal tool: %s", raw)
-			}
 		}
 	}
 }
