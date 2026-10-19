@@ -66,7 +66,6 @@ func (s *Service) registerOperations() {
 	register(s, "goals_list", "List the person's goals with their steps, progress and next step. State deleted means archived.", false, listGoals)
 	register(s, "goals_update", "Replace a goal's title, reason and weekly target using the version you last read.", true, updateGoal)
 	register(s, "goals_archive", "Archive a goal (it can be restored).", true, func(c context.Context, u *unit, in EditInput) (Goal, error) { return lifecycleGoal(c, u, in, false) })
-	register(s, "goals_delete", "Delete a goal and what exists only because of it: its steps, view, measurements, commitments, plan items, reminders linked to it, notes and journal entries written about it alone, and the routines no other goal uses. A routine another goal also uses only loses its link. Everything but steps can be restored one record at a time. Prefer this to goals_archive when the person wants the goal gone, not just put away.", true, deleteGoal)
 	register(s, "goals_restore", "Restore an archived goal.", true, func(c context.Context, u *unit, in EditInput) (Goal, error) { return lifecycleGoal(c, u, in, true) })
 	register(s, "steps_add", "Add a small, concrete step to a goal, at the end or at a position. Use this when the person is stuck: a smaller first step (2-5 minutes) is better than a bigger plan.", true, addStep)
 	register(s, "steps_update", "Change a step's title or minutes using the version you last read.", true, updateStep)
