@@ -15,7 +15,7 @@ func (s *Service) registerOperations() {
 	register(s, "tasks_get", "Read one task.", false, func(c context.Context, u *unit, in GetInput) (Item, error) { return u.getItem(c, "task", in.ID, false) })
 	register(s, "tasks_list", "List tasks: open by default, or done or all; optionally for one goal, within a time range or matching text. Soonest first, untimed last. Your own tasks are subject agent.", false, listItems("task"))
 	register(s, "tasks_update", "Replace a task's fields using the version you last read. Changing its time clears any snooze.", true, updateItem("task"))
-	register(s, "tasks_complete", "Mark a task done. A repeating task carries on: only that occurrence is done (name it with at, else the one now due). For your own tasks, pass result: one line on what you found or did.", true, completeTask)
+	register(s, "tasks_complete", "Mark a task done. A repeating task carries on: only that occurrence is done (name it with at, else the one now due). For your own tasks, pass result: one line on what you found or did. Pass done false to reopen a task that was marked done.", true, completeTask)
 	register(s, "tasks_snooze", "Defer a task's alert to a later time without changing the task.", true, snoozeItem("task"))
 	register(s, "tasks_delete", "Delete a task (it can be restored).", true, lifecycleItem("task", false))
 	register(s, "tasks_restore", "Restore a deleted task.", true, lifecycleItem("task", true))

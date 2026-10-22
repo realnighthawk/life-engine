@@ -3664,6 +3664,13 @@
               "string"
             ]
           },
+          "done": {
+            "description": "default true; false reopens a task that was marked done (the named occurrence, for a repeating one)",
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
           "expected_version": {
             "description": "the version you last read; a stale version is rejected",
             "type": "integer"
@@ -7598,7 +7605,7 @@
     },
     "/api/v1/operations/tasks_complete": {
       "post": {
-        "description": "Mark a task done. A repeating task carries on: only that occurrence is done (name it with at, else the one now due). For your own tasks, pass result: one line on what you found or did.",
+        "description": "Mark a task done. A repeating task carries on: only that occurrence is done (name it with at, else the one now due). For your own tasks, pass result: one line on what you found or did. Pass done false to reopen a task that was marked done.",
         "operationId": "tasks_complete",
         "requestBody": {
           "content": {

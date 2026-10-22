@@ -71,6 +71,13 @@ func TestARepeatingTaskIsDoneOneOccurrenceAtATime(t *testing.T) {
 	if d.Entries[0].State != "open" {
 		t.Fatalf("the day before is untouched: %+v", d.Entries[0])
 	}
+	// An occurrence can be reopened.
+	execute[engine.Item](t, s, "tasks_complete", map[string]any{"idempotency_key": key(), "id": task.ID, "expected_version": 1, "at": yesterday.Format(time.RFC3339), "done": false})
+	d = execute[engine.Day](t, s, "day_get", map[string]any{"day": yesterday.Format("2006-01-02")})
+	if d.Entries[0].State != "open" {
+		t.Fatalf("reopened occurrence: %+v", d.Entries[0])
+	}
+	execute[engine.Item](t, s, "tasks_complete", map[string]any{"idempotency_key": key(), "id": task.ID, "expected_version": 1, "at": yesterday.Format(time.RFC3339)})
 	// Completing with no time clears the occurrence now due, and the task itself carries on.
 	again := execute[engine.Item](t, s, "tasks_complete", map[string]any{"idempotency_key": key(), "id": task.ID, "expected_version": 1})
 	if again.DoneAt != nil || again.Version != 1 {

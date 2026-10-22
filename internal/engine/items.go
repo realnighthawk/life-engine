@@ -61,6 +61,7 @@ type CompleteItemInput struct {
 	EditInput
 	At     *string `json:"at,omitempty" jsonschema:"RFC 3339 occurrence being done, for a repeating task; default the one now due, else the next"`
 	Result string  `json:"result,omitempty" jsonschema:"for your own tasks: one line on what you found or did, up to 2000 characters"`
+	Done   *bool   `json:"done,omitempty" jsonschema:"default true; false reopens a task that was marked done (the named occurrence, for a repeating one)"`
 }
 type SnoozeItemInput struct {
 	EditInput
@@ -322,6 +323,9 @@ func completeTask(ctx context.Context, u *unit, in CompleteItemInput) (Item, err
 	if e != nil {
 		return old, e
 	}
+	if in.Done != nil && !*in.Done {
+		return reopenTask(ctx, u, old, in, now)
+	}
 	if old.Recurrence == nil {
 		if old.DoneAt != nil {
 			return old, conflict("Task is already done")
@@ -351,6 +355,38 @@ func completeTask(ctx context.Context, u *unit, in CompleteItemInput) (Item, err
 		return old, e
 	}
 	return old, u.audit(ctx, "item", old.ID, nil, map[string]any{"occurrence": at.UTC(), "state": "done", "result": in.Result})
+}
+
+// reopenTask undoes a completion: a one-off is open again, a repeating task's named occurrence (default the one now due) is
+// no longer done.
+func reopenTask(ctx context.Context, u *unit, old Item, in CompleteItemInput, now time.Time) (Item, error) {
+	if old.Recurrence == nil {
+		if old.DoneAt == nil {
+			return old, conflict("Task is not done")
+		}
+		if _, e := u.tx.Exec(ctx, `UPDATE life.items SET done_at=NULL,version=version+1,updated_at=now() WHERE id=$1`, old.ID); e != nil {
+			return old, e
+		}
+		return u.itemChanged(ctx, "task", old)
+	}
+	var at time.Time
+	if in.At != nil {
+		var e error
+		if at, e = instant("at", *in.At); e != nil {
+			return old, e
+		}
+	} else {
+		loc, _ := zone(old.TimeZone)
+		at = latestOccurrenceAtOrBefore(*old.At, now, *old.Recurrence, loc)
+	}
+	tag, e := u.tx.Exec(ctx, `DELETE FROM life.occurrences WHERE item_id=$1 AND at=$2`, old.ID, at.UTC().Truncate(time.Second))
+	if e != nil {
+		return old, e
+	}
+	if tag.RowsAffected() == 0 {
+		return old, conflict("That occurrence is not done")
+	}
+	return old, u.audit(ctx, "item", old.ID, nil, map[string]any{"occurrence": at.UTC(), "state": "reopened"})
 }
 
 // latestOccurrenceAtOrBefore is the occurrence now due: the last one not after now, or the first if the series has not

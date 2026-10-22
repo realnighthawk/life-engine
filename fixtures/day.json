@@ -3,7 +3,7 @@
   "entries": [
     {
       "item": {
-        "id": "85f6f909-3c57-4bc5-92f9-87258bd35b6e",
+        "id": "e71ad544-9072-4a71-bd27-c35ebdb5e0c3",
         "kind": "task",
         "subject": "person",
         "title": "Drink water",
@@ -22,8 +22,8 @@
         "done_at": null,
         "version": 1,
         "deleted_at": null,
-        "created_at": "2026-10-22T04:53:06.634859Z",
-        "updated_at": "2026-10-22T04:53:06.634859Z"
+        "created_at": "2026-10-22T04:57:32.186594Z",
+        "updated_at": "2026-10-22T04:57:32.186594Z"
       },
       "at": "2026-10-22T08:00:00Z",
       "state": "open",
@@ -31,7 +31,7 @@
     },
     {
       "item": {
-        "id": "7924c381-238b-4421-bafe-67c304a24690",
+        "id": "b8610854-c6be-4218-bd00-2cac98277e88",
         "kind": "event",
         "subject": "person",
         "title": "Standup",
@@ -47,8 +47,8 @@
         "done_at": null,
         "version": 1,
         "deleted_at": null,
-        "created_at": "2026-10-22T04:53:06.637482Z",
-        "updated_at": "2026-10-22T04:53:06.637482Z"
+        "created_at": "2026-10-22T04:57:32.189423Z",
+        "updated_at": "2026-10-22T04:57:32.189423Z"
       },
       "at": "2026-10-22T09:00:00Z",
       "state": "upcoming",
@@ -56,12 +56,12 @@
     },
     {
       "item": {
-        "id": "7455d193-7679-4f7d-bcbd-8ab95db90a12",
+        "id": "ebdc2212-052f-45a1-8a75-c5380e75f7cd",
         "kind": "task",
         "subject": "person",
         "title": "Book flights",
         "notes": "",
-        "goal_id": "c5b5a443-9732-45e4-bf8e-eeb37a075415",
+        "goal_id": "7318ee72-f705-4df8-914d-8b48537d0b11",
         "at": "2026-10-22T23:00:00Z",
         "minutes": 30,
         "time_zone": "UTC",
@@ -72,8 +72,8 @@
         "done_at": null,
         "version": 1,
         "deleted_at": null,
-        "created_at": "2026-10-22T04:53:06.630744Z",
-        "updated_at": "2026-10-22T04:53:06.630744Z"
+        "created_at": "2026-10-22T04:57:32.181017Z",
+        "updated_at": "2026-10-22T04:57:32.181017Z"
       },
       "at": "2026-10-22T23:00:00Z",
       "state": "open",

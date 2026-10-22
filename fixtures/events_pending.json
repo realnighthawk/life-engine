@@ -2,7 +2,7 @@
   "items": [
     {
       "event_key": "life:notice",
-      "event_id": "notice:006a9e08-1b38-449b-bd77-aa529d960cfd",
+      "event_id": "notice:07736c26-a65a-4ca6-8dca-138c3ce71922",
       "detail": "Notice for the person: Weigh-in",
       "notice": {
         "kind": "notice",
@@ -11,7 +11,7 @@
         "priority": "normal",
         "link": {
           "entity": "goal",
-          "id": "c5b5a443-9732-45e4-bf8e-eeb37a075415"
+          "id": "7318ee72-f705-4df8-914d-8b48537d0b11"
         }
       }
     }

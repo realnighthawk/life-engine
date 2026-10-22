@@ -141,6 +141,13 @@ func TestTaskLifecycle(t *testing.T) {
 		t.Fatalf("completed: %+v", done)
 	}
 	errorCode(t, s, "tasks_complete", map[string]any{"idempotency_key": key(), "id": task.ID, "expected_version": 4}, "conflict")
+	// Done can be taken back; reopening what is open is refused.
+	reopened := execute[engine.Item](t, s, "tasks_complete", map[string]any{"idempotency_key": key(), "id": task.ID, "expected_version": 4, "done": false})
+	if reopened.DoneAt != nil || reopened.Version != 5 {
+		t.Fatalf("reopened: %+v", reopened)
+	}
+	errorCode(t, s, "tasks_complete", map[string]any{"idempotency_key": key(), "id": task.ID, "expected_version": 5, "done": false}, "conflict")
+	execute[engine.Item](t, s, "tasks_complete", map[string]any{"idempotency_key": key(), "id": task.ID, "expected_version": 5})
 
 	// Lists default to open and exclude deleted; delete and restore round trip.
 	if open := execute[engine.Page[engine.Item]](t, s, "tasks_list", map[string]any{}); open.Total != 1 { // Call mum; Pay rent is done
@@ -161,7 +168,7 @@ func TestTaskLifecycle(t *testing.T) {
 	errorCode(t, s, "calendar_events_get", map[string]any{"id": task.ID}, "not_found")
 
 	h := execute[engine.Page[engine.Change]](t, s, "history_list", map[string]any{"entity_type": "item", "id": task.ID})
-	if h.Total != 4 || h.Items[0].Operation != "tasks_complete" {
+	if h.Total != 6 || h.Items[0].Operation != "tasks_complete" {
 		t.Fatalf("history: total %d first %s", h.Total, h.Items[0].Operation)
 	}
 }
