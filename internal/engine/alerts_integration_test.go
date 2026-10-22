@@ -2,6 +2,7 @@ package engine_test
 
 import (
 	"context"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -20,25 +21,30 @@ func pendingNotices(t *testing.T, s *engine.Service) []engine.Event {
 	return out
 }
 
-func TestAPersonsAlertBecomesOneNoticeHoweverManyTimesItFires(t *testing.T) {
+func TestAPersonsAlertIsHandedBackForTheGatewayAndRecordsNothingHere(t *testing.T) {
 	s := integrationService(t)
 	at := time.Now().UTC().Add(time.Hour).Truncate(time.Second)
 	task := execute[engine.Item](t, s, "tasks_create", map[string]any{"idempotency_key": key(), "title": "Call Sam", "notes": "about the car", "at": at.Format(time.RFC3339), "alert_before_minutes": 10, "is_priority": true})
 	fired := at.Add(-10 * time.Minute)
-	for i := 0; i < 2; i++ { // a retried delivery records one notice
+	var first engine.FireResult
+	for i := 0; i < 2; i++ { // a retried firing names the same occurrence
 		res, err := s.Fire(context.Background(), task.ID, fired)
-		if err != nil || !res.Fired || res.Wake != nil {
+		if err != nil || !res.Fired || res.Wake != nil || res.Notify == nil {
 			t.Fatalf("fire: %+v %v", res, err)
 		}
+		if i == 0 {
+			first = res
+		} else if *res.Notify != *first.Notify {
+			t.Fatalf("the same occurrence must give the same event: %+v vs %+v", res.Notify, first.Notify)
+		}
 	}
-	n := pendingNotices(t, s)
-	if len(n) != 1 || n[0].Notice.Title != "Call Sam" || n[0].Notice.Priority != "high" || n[0].Notice.Link == nil || n[0].Notice.Link.Entity != "task" || n[0].Notice.Link.ID != task.ID {
-		t.Fatalf("notices: %+v", n)
+	n := first.Notify
+	if n.Title != "Call Sam" || n.Priority != "high" || n.LinkEntity != "task" || n.LinkID != task.ID || n.EventID == "" || !strings.Contains(n.Body, "about the car") {
+		t.Fatalf("notice: %+v", n)
 	}
-	// Acknowledged, it is not handed over again.
-	execute[engine.AckEventsResult](t, s, "events_ack", map[string]any{"event_ids": []string{n[0].EventID}})
+	// Delivery is the workflow's job: nothing is recorded for mcp-hub to collect.
 	if got := pendingNotices(t, s); len(got) != 0 {
-		t.Fatalf("handed over again: %+v", got)
+		t.Fatalf("a person's alert must not go through the hub's feed: %+v", got)
 	}
 }
 

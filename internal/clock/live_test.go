@@ -3,6 +3,8 @@ package clock
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"strconv"
 	"testing"
@@ -21,6 +23,12 @@ import (
 //
 //	LIVE_TEMPORAL_ADDRESS=127.0.0.1:57233 TEST_DATABASE_URL=... go test ./internal/clock -run Live -v
 func liveEnv(t *testing.T) (*engine.Service, *Clock, *pgxpool.Pool, context.Context) {
+	svc, k, pool, ctx, _ := liveEnvWithGateway(t)
+	return svc, k, pool, ctx
+}
+
+// liveEnvWithGateway also returns what a fake gateway received.
+func liveEnvWithGateway(t *testing.T) (*engine.Service, *Clock, *pgxpool.Pool, context.Context, chan map[string]any) {
 	t.Helper()
 	addr, dsn := os.Getenv("LIVE_TEMPORAL_ADDRESS"), os.Getenv("TEST_DATABASE_URL")
 	if addr == "" || dsn == "" {
@@ -35,13 +43,21 @@ func liveEnv(t *testing.T) (*engine.Service, *Clock, *pgxpool.Pool, context.Cont
 	_, err = pool.Exec(ctx, "TRUNCATE life.requests, life.changes, life.acked_events, life.notices, life.occurrences, life.items, life.goals, life.views, life.measurements")
 	require.NoError(t, err)
 	queue := "life-engine-live-" + strconv.FormatInt(time.Now().UnixNano(), 36)
-	k, err := New(Config{Address: addr, Namespace: "default", TaskQueue: queue, CoordinatorTaskQueue: queue + "-coordinator", TenantSlug: "live"})
+	received := make(chan map[string]any, 8)
+	gateway := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var body map[string]any
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		received <- body
+		w.WriteHeader(200)
+	}))
+	t.Cleanup(gateway.Close)
+	k, err := New(Config{Address: addr, Namespace: "default", TaskQueue: queue, CoordinatorTaskQueue: queue + "-coordinator", TenantSlug: "live", GatewayEventsURL: gateway.URL})
 	require.NoError(t, err)
 	t.Cleanup(k.Close)
 	svc := engine.New(pool)
 	svc.SetWaker(ctx, k, time.Second)
 	go func() { _ = k.Run(ctx, svc) }()
-	return svc, k, pool, ctx
+	return svc, k, pool, ctx, received
 }
 
 func run(t *testing.T, ctx context.Context, s *engine.Service, op string, body map[string]any) json.RawMessage {
@@ -55,17 +71,21 @@ func run(t *testing.T, ctx context.Context, s *engine.Service, op string, body m
 	return out
 }
 
-func TestLiveAPersonsAlertFiresIntoANotice(t *testing.T) {
-	svc, _, pool, ctx := liveEnv(t)
+func TestLiveAPersonsAlertIsPostedToTheGateway(t *testing.T) {
+	svc, _, _, ctx, received := liveEnvWithGateway(t)
 	at := time.Now().UTC().Add(8 * time.Second).Truncate(time.Second)
 	var task engine.Item
 	require.NoError(t, json.Unmarshal(run(t, ctx, svc, "tasks_create", map[string]any{"title": "Call Sam", "at": at.Format(time.RFC3339), "alert_before_minutes": 0}), &task))
 
-	require.Eventually(t, func() bool {
-		var n int
-		_ = pool.QueryRow(ctx, "SELECT count(*) FROM life.notices WHERE link_id=$1", task.ID).Scan(&n)
-		return n == 1
-	}, 40*time.Second, 500*time.Millisecond, "the alert should have become a notice")
+	select {
+	case body := <-received:
+		require.Equal(t, "life", body["source"])
+		require.Equal(t, "live", body["tenant_slug"])
+		require.Contains(t, body["event_id"], "item:"+task.ID+"@")
+		require.Equal(t, "Call Sam", body["notice"].(map[string]any)["title"])
+	case <-time.After(40 * time.Second):
+		t.Fatal("the gateway never received the alert")
+	}
 }
 
 func TestLiveAnAgentsAlertSignalsItsCoordinator(t *testing.T) {

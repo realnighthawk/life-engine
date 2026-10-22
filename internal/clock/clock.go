@@ -29,6 +29,9 @@ type Config struct {
 	// CoordinatorTaskQueue is where the harness's session coordinators run; an agent's alert signals one there.
 	CoordinatorTaskQueue string
 	TenantSlug           string
+	// GatewayEventsURL and GatewayEventsToken are where a person's alert is posted when it fires (the gateway's events
+	// intake). Without a URL a person's alert fails loudly when it fires; an agent's still wakes its conversation.
+	GatewayEventsURL, GatewayEventsToken string
 }
 
 type Clock struct {

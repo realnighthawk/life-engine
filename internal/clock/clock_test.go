@@ -2,7 +2,10 @@ package clock
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -66,19 +69,70 @@ func fireEnv(t *testing.T, fire func(FireScheduled) (engine.FireResult, error), 
 	return env
 }
 
-func TestAPersonsAlertFiresInTheEngineAndWakesNoOne(t *testing.T) {
+func TestAPersonsAlertIsPostedToTheGatewayAndWakesNoOne(t *testing.T) {
 	at := time.Date(2026, 10, 12, 8, 50, 0, 0, time.UTC)
 	var fired FireScheduled
 	woke := false
-	env := fireEnv(t, func(in FireScheduled) (engine.FireResult, error) {
+	notice := engine.FireNotice{EventID: "item:i1@1", Title: "Call Sam", Priority: "high", LinkEntity: "task", LinkID: "i1"}
+	var posted *engine.FireNotice
+	var ts testsuite.WorkflowTestSuite
+	env := ts.NewTestWorkflowEnvironment()
+	env.RegisterActivityWithOptions(func(_ context.Context, in FireScheduled) (engine.FireResult, error) {
 		fired = in
-		return engine.FireResult{Fired: true}, nil
-	},
-		func(engine.FireWake) error { woke = true; return nil }, at)
+		return engine.FireResult{Fired: true, Notify: &notice}, nil
+	}, activity.RegisterOptions{Name: "Fire"})
+	env.RegisterActivityWithOptions(func(_ context.Context, n engine.FireNotice) error { posted = &n; return nil }, activity.RegisterOptions{Name: "Notify"})
+	env.RegisterActivityWithOptions(func(_ context.Context, w engine.FireWake) error { woke = true; return nil }, activity.RegisterOptions{Name: "WakeSession"})
+	env.SetStartTime(at)
+	env.SetTypedSearchAttributesOnStart(temporal.NewSearchAttributes(saScheduledStart.ValueSet(at)))
 	env.ExecuteWorkflow(FireWorkflow, FireInput{ItemID: "i1", Name: "main"})
 	require.NoError(t, env.GetWorkflowError())
 	require.Equal(t, FireScheduled{ItemID: "i1", Scheduled: at}, fired) // the occurrence is the scheduled instant
+	require.Equal(t, &notice, posted)
 	require.False(t, woke)
+}
+
+func gatewayActivities(url, token string) *Activities {
+	return &Activities{Cfg: Config{TenantSlug: "acme", GatewayEventsURL: url, GatewayEventsToken: token}}
+}
+
+func TestTheGatewayGetsTheAlertAsAnEventWithItsToken(t *testing.T) {
+	var got map[string]any
+	var auth string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		auth = r.Header.Get("Authorization")
+		require.Equal(t, http.MethodPost, r.Method)
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&got))
+		w.WriteHeader(200)
+	}))
+	defer srv.Close()
+	err := gatewayActivities(srv.URL, "secret").Notify(context.Background(), engine.FireNotice{EventID: "item:i1@9", Detail: "d", Title: "Call Sam", Body: "Mon 09:00", Priority: "high", LinkEntity: "event", LinkID: "i1"})
+	require.NoError(t, err)
+	require.Equal(t, "Bearer secret", auth)
+	require.Equal(t, "acme", got["tenant_slug"])
+	require.Equal(t, "life", got["source"]) // which app is pushed is decided by the source
+	require.Equal(t, "item:i1@9", got["event_id"])
+	notice := got["notice"].(map[string]any)
+	require.Equal(t, "Call Sam", notice["title"])
+	require.Equal(t, "high", notice["priority"])
+	require.Equal(t, map[string]any{"entity": "event", "id": "i1"}, notice["link"])
+}
+
+func TestAGatewayThatCannotTakeTheAlertFailsItLoudly(t *testing.T) {
+	status := 503
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(status) }))
+	defer srv.Close()
+	a := gatewayActivities(srv.URL, "")
+	n := engine.FireNotice{EventID: "e", Title: "x"}
+	err := a.Notify(context.Background(), n)
+	require.Error(t, err) // a server error is retried by the workflow's policy
+	var app *temporal.ApplicationError
+	require.False(t, errors.As(err, &app) && app.NonRetryable())
+	status = 400
+	err = a.Notify(context.Background(), n)
+	require.True(t, errors.As(err, &app) && app.NonRetryable(), "a request the gateway can never accept is not retried: %v", err)
+	err = gatewayActivities("", "").Notify(context.Background(), n)
+	require.True(t, errors.As(err, &app) && app.NonRetryable(), "no URL is a configuration fault, not a transient one: %v", err)
 }
 
 func TestAnAgentsAlertWakesItsConversation(t *testing.T) {

@@ -1,7 +1,12 @@
 package clock
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
 	"time"
 
 	"github.com/realnighthawk/life-engine/internal/engine"
@@ -22,9 +27,11 @@ type FireScheduled struct {
 	Scheduled time.Time `json:"scheduled"`
 }
 
-// FireWorkflow is one alert coming due. It tells the engine (which records a notice for a person's item, or says which
-// conversation to wake for an agent's), then wakes that conversation. Each step is an activity with its own retries, so a
-// delivery that fails is retried, and one that cannot be made fails the workflow where it can be seen.
+// FireWorkflow is one alert coming due. It asks the engine what to deliver (a notice for a person's item, or which conversation
+// to wake for an agent's), then delivers it: the notice to the gateway, which stores it and pushes it to their devices, or the
+// wake to the conversation's coordinator. Each step is an activity with its own retries, so a delivery that fails is retried,
+// and one that cannot be made fails the workflow where it can be seen. mcp-hub is not involved: it carries events from
+// external connections to the agent, not the engine's own alerts.
 func FireWorkflow(ctx workflow.Context, in FireInput) error {
 	scheduled, ok := workflow.GetTypedSearchAttributes(ctx).GetTime(saScheduledStart)
 	if !ok {
@@ -37,11 +44,14 @@ func FireWorkflow(ctx workflow.Context, in FireInput) error {
 	if err := workflow.ExecuteActivity(ctx, "Fire", FireScheduled{ItemID: in.ItemID, Scheduled: scheduled}).Get(ctx, &res); err != nil {
 		return err
 	}
-	if res.Wake == nil {
-		workflow.GetLogger(ctx).Info("alert handled", "item", in.ItemID, "fired", res.Fired, "skip", res.Skip)
-		return nil
+	switch {
+	case res.Notify != nil:
+		return workflow.ExecuteActivity(ctx, "Notify", *res.Notify).Get(ctx, nil)
+	case res.Wake != nil:
+		return workflow.ExecuteActivity(ctx, "WakeSession", *res.Wake).Get(ctx, nil)
 	}
-	return workflow.ExecuteActivity(ctx, "WakeSession", *res.Wake).Get(ctx, nil)
+	workflow.GetLogger(ctx).Info("alert handled", "item", in.ItemID, "fired", res.Fired, "skip", res.Skip)
+	return nil
 }
 
 // Activities carry out a firing.
@@ -53,6 +63,44 @@ type Activities struct {
 
 func (a *Activities) Fire(ctx context.Context, in FireScheduled) (engine.FireResult, error) {
 	return a.Service.Fire(ctx, in.ItemID, in.Scheduled)
+}
+
+// Notify posts a person's alert to the gateway's events intake. The gateway deduplicates by event_id, so a retry after a lost
+// response stores one notice. Anything but a 2xx is an error, and the activity is retried.
+func (a *Activities) Notify(ctx context.Context, n engine.FireNotice) error {
+	if a.Cfg.GatewayEventsURL == "" {
+		return temporal.NewNonRetryableApplicationError("GATEWAY_EVENTS_URL is not configured: nowhere to send a person's alert", "NotConfigured", nil)
+	}
+	body, err := json.Marshal(map[string]any{
+		"tenant_slug": a.Cfg.TenantSlug, "source": "life", "event_key": "life:alert", "event_id": n.EventID, "detail": n.Detail,
+		"notice": map[string]any{"kind": "alert", "title": n.Title, "body": n.Body, "priority": n.Priority,
+			"link": map[string]string{"entity": n.LinkEntity, "id": n.LinkID}},
+	})
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, a.Cfg.GatewayEventsURL, bytes.NewReader(body))
+	if err != nil {
+		return temporal.NewNonRetryableApplicationError(err.Error(), "BadRequest", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	if a.Cfg.GatewayEventsToken != "" {
+		req.Header.Set("Authorization", "Bearer "+a.Cfg.GatewayEventsToken)
+	}
+	resp, err := (&http.Client{Timeout: 15 * time.Second}).Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode/100 != 2 {
+		msg, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
+		// A request the gateway can never accept (bad event, wrong tenant) is not retried; a wrong token or a server error may be.
+		if resp.StatusCode == http.StatusBadRequest {
+			return temporal.NewNonRetryableApplicationError(fmt.Sprintf("the gateway refused the alert: %d %s", resp.StatusCode, msg), "Refused", nil)
+		}
+		return fmt.Errorf("the gateway answered %d: %s", resp.StatusCode, msg)
+	}
+	return nil
 }
 
 // WakeSession signals the conversation's coordinator, starting it if it has gone idle. The coordinator turns the wake into

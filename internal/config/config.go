@@ -13,12 +13,16 @@ type Config struct {
 	TemporalAddress, TemporalNamespace, TenantSlug string
 	// CoordinatorTaskQueue is where the harness's session coordinators run; EngineTaskQueue is this engine's own.
 	CoordinatorTaskQueue, EngineTaskQueue string
+	// The gateway's events intake, where a person's alert is posted when it fires (the gateway stores it in their inbox and
+	// pushes it to their devices). Both are the tenant's: the chart already derives the token and shares it with mcp-hub.
+	GatewayEventsURL, GatewayEventsToken string
 }
 
 func Load() (Config, error) {
 	c := Config{DatabaseURL: os.Getenv("DATABASE_URL"), ListenAddr: os.Getenv("LISTEN_ADDR"), TrustedOrigins: strings.Split(os.Getenv("TRUSTED_ORIGINS"), ",")}
 	c.TemporalAddress, c.TemporalNamespace, c.TenantSlug = os.Getenv("TEMPORAL_ADDRESS"), os.Getenv("TEMPORAL_NAMESPACE"), os.Getenv("TENANT_SLUG")
 	c.CoordinatorTaskQueue, c.EngineTaskQueue = os.Getenv("TEMPORAL_WORKFLOW_TASK_QUEUE"), os.Getenv("LIFE_ENGINE_TASK_QUEUE")
+	c.GatewayEventsURL, c.GatewayEventsToken = os.Getenv("GATEWAY_EVENTS_URL"), os.Getenv("GATEWAY_EVENTS_TOKEN")
 	if c.TemporalNamespace == "" {
 		c.TemporalNamespace = "agents"
 	}

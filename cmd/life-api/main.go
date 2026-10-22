@@ -49,11 +49,14 @@ func run() error {
 	service := engine.New(pool)
 	if cfg.TemporalAddress != "" {
 		clk, err := clock.New(clock.Config{Address: cfg.TemporalAddress, Namespace: cfg.TemporalNamespace, TaskQueue: cfg.EngineTaskQueue,
-			CoordinatorTaskQueue: cfg.CoordinatorTaskQueue, TenantSlug: cfg.TenantSlug})
+			CoordinatorTaskQueue: cfg.CoordinatorTaskQueue, TenantSlug: cfg.TenantSlug, GatewayEventsURL: cfg.GatewayEventsURL, GatewayEventsToken: cfg.GatewayEventsToken})
 		if err != nil {
 			return err
 		}
 		defer clk.Close()
+		if cfg.GatewayEventsURL == "" {
+			slog.Warn("a person's alert will fail when it fires", "reason", "GATEWAY_EVENTS_URL unset: nowhere to send it")
+		}
 		service.SetWaker(ctx, clk, 30*time.Second)
 		go func() {
 			if err := clk.Run(ctx, service); err != nil {

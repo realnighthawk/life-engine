@@ -7,9 +7,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"strconv"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 // An alert is when an item tells its owner. The engine owns the clock (project-hub ADR 0008): the item row says what, and
@@ -282,14 +281,29 @@ func scanItemWith(row scanner, extra *string) (Item, error) {
 	return it, err
 }
 
-// Fire is what an alert coming due asks of the engine, called by the workflow its Schedule starts. A person's item becomes a
-// notice the hub delivers to their app (ADR 0005); an agent's item returns the conversation to wake and what to wake it with,
-// for the caller to deliver. An item that is gone, done, deleted or already cleared for this occurrence fires nothing.
+// Fire is what an alert coming due asks of the engine, called by the workflow its Schedule starts. It decides what is to be
+// delivered and returns it; delivering is the workflow's job, as an activity with retries. A person's item returns the
+// notice for the gateway to store and push (ADR 0008); an agent's item returns the conversation to wake and what to wake it
+// with. An item that is gone, done, deleted or already cleared for this occurrence fires nothing.
 type FireResult struct {
 	Fired bool   `json:"fired"`
 	Skip  string `json:"skip,omitempty"`
+	// Notify is set for a person's item: post it to the gateway.
+	Notify *FireNotice `json:"notify,omitempty"`
 	// Wake is set for an agent's item: deliver it into SessionKey.
 	Wake *FireWake `json:"wake,omitempty"`
+}
+
+// FireNotice is a person's alert as the gateway's events intake takes it. EventID names the occurrence, so a retried delivery
+// is stored once.
+type FireNotice struct {
+	EventID    string `json:"event_id"`
+	Detail     string `json:"detail"`
+	Title      string `json:"title"`
+	Body       string `json:"body"`
+	Priority   string `json:"priority"`
+	LinkEntity string `json:"link_entity"`
+	LinkID     string `json:"link_id"`
 }
 type FireWake struct {
 	SessionKey string `json:"session_key"`
@@ -298,16 +312,12 @@ type FireWake struct {
 	Why        string `json:"why,omitempty"`
 }
 
-// fireNamespace makes a fired occurrence's notice id deterministic, so a retried delivery records one notice.
-var fireNamespace = uuid.MustParse("6f2d0b64-7a49-4f0e-9a64-3c1f5f7d1e11")
-
 func (s *Service) Fire(ctx context.Context, itemID string, scheduled time.Time) (FireResult, error) {
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return FireResult{}, err
 	}
 	defer tx.Rollback(context.Background())
-	u := &unit{tx: tx, actor: "clock", operation: "fire"}
 	row := tx.QueryRow(ctx, "SELECT "+itemCols+" FROM life.items WHERE id=$1", itemID)
 	it, err := scanItem(row)
 	if isNoRows(err) {
@@ -358,11 +368,7 @@ func (s *Service) Fire(ctx context.Context, itemID string, scheduled time.Time) 
 	if it.IsPriority {
 		priority = "high"
 	}
-	nid := uuid.NewSHA1(fireNamespace, []byte(fmt.Sprintf("%s@%d", it.ID, occurrence.Unix())))
-	if _, err = tx.Exec(ctx, `INSERT INTO life.notices(id,title,body,priority,link_entity,link_id) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT (id) DO NOTHING`,
-		nid, it.Title, body, priority, it.Kind, it.ID); err != nil {
-		return FireResult{}, err
-	}
-	_ = u
-	return FireResult{Fired: true}, tx.Commit(ctx)
+	return FireResult{Fired: true, Notify: &FireNotice{
+		EventID: fmt.Sprintf("item:%s@%d", it.ID, occurrence.Unix()), Detail: "Your " + it.Kind + " " + strconv.Quote(it.Title) + " is due.",
+		Title: it.Title, Body: body, Priority: priority, LinkEntity: it.Kind, LinkID: it.ID}}, nil
 }
