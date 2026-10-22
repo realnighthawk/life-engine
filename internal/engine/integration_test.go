@@ -35,7 +35,7 @@ func integrationEnv(t *testing.T) (*engine.Service, *pgxpool.Pool) {
 		t.Fatal(e)
 	}
 	// One person per database, so tests start from an empty one.
-	if _, e = pool.Exec(context.Background(), "TRUNCATE life.requests, life.changes, life.acked_events, life.notices, life.occurrences, life.items, life.goals"); e != nil {
+	if _, e = pool.Exec(context.Background(), "TRUNCATE life.requests, life.changes, life.acked_events, life.notices, life.occurrences, life.items, life.goals, life.views, life.measurements"); e != nil {
 		t.Fatal(e)
 	}
 	if _, e = pool.Exec(context.Background(), "UPDATE life.settings SET time_zone='UTC',work_start='09:00',work_end='17:00',version=1"); e != nil {

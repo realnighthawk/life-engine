@@ -32,7 +32,7 @@ func liveEnv(t *testing.T) (*engine.Service, *Clock, *pgxpool.Pool, context.Cont
 	require.NoError(t, err)
 	t.Cleanup(pool.Close)
 	require.NoError(t, postgres.Migrate(ctx, pool))
-	_, err = pool.Exec(ctx, "TRUNCATE life.requests, life.changes, life.acked_events, life.notices, life.occurrences, life.items, life.goals")
+	_, err = pool.Exec(ctx, "TRUNCATE life.requests, life.changes, life.acked_events, life.notices, life.occurrences, life.items, life.goals, life.views, life.measurements")
 	require.NoError(t, err)
 	queue := "life-engine-live-" + strconv.FormatInt(time.Now().UnixNano(), 36)
 	k, err := New(Config{Address: addr, Namespace: "default", TaskQueue: queue, CoordinatorTaskQueue: queue + "-coordinator", TenantSlug: "live"})

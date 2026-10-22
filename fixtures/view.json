@@ -1,0 +1,40 @@
+{
+  "id": "1cc734a7-cded-42a7-98a2-285f3835cce4",
+  "subject_kind": "goal",
+  "subject_id": "3f5b21ac-d4ba-44b5-9738-a0eeace2effa",
+  "catalog_id": "view-kit.v1",
+  "metrics": [
+    {
+      "id": "distance",
+      "label": "Distance",
+      "unit": "km",
+      "target": 5
+    }
+  ],
+  "pages": [
+    {
+      "id": "main",
+      "sections": [
+        {
+          "id": "s",
+          "title": "Progress",
+          "blocks": [
+            {
+              "id": "log",
+              "kind": "log",
+              "metric": "distance"
+            },
+            {
+              "id": "todo",
+              "kind": "tasks",
+              "title": "Tasks"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": 1,
+  "created_at": "2026-10-21T22:13:11.868942-07:00",
+  "updated_at": "2026-10-21T22:13:11.868942-07:00"
+}

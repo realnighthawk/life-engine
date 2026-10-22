@@ -8,10 +8,10 @@ import (
 
 // batchable are the operations a batch may run: the creates a plan is made of. A task or event links to a goal in the same
 // batch by that goal's chosen id.
-var batchable = map[string]bool{"goals_create": true, "tasks_create": true, "calendar_events_create": true}
+var batchable = map[string]bool{"goals_create": true, "tasks_create": true, "calendar_events_create": true, "views_create": true}
 
 type BatchOp struct {
-	Operation string          `json:"operation" jsonschema:"goals_create, tasks_create or calendar_events_create"`
+	Operation string          `json:"operation" jsonschema:"goals_create, tasks_create, calendar_events_create or views_create"`
 	Input     json.RawMessage `json:"input" jsonschema:"that operation's own input; leave out idempotency_key, the batch sets it. Give each new record an id so later operations can refer to it"`
 }
 type BatchPlan struct {
@@ -107,6 +107,7 @@ var inverse = map[string]struct{ op, table, removed string }{
 	"tasks_create":           {"tasks_delete", "items", "deleted_at"},
 	"calendar_events_create": {"calendar_events_delete", "items", "deleted_at"},
 	"goals_create":           {"goals_archive", "goals", "deleted_at"},
+	"views_create":           {"views_delete", "views", "deleted_at"},
 }
 
 type BatchUndoInput struct {

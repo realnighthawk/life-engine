@@ -30,6 +30,19 @@ func (s *Service) registerOperations() {
 	register(s, "calendar_events_delete", "Delete an event (it can be restored).", true, lifecycleItem("event", false))
 	register(s, "calendar_events_restore", "Restore a deleted event.", true, lifecycleItem("event", true))
 
+	register(s, "tasks_history", "A repeating task's recent days: for each, whether an occurrence fell and how many were done, the last 7 and 30 days, and the current and best run. A missed day lowers the rate; it never resets the history to zero. Use it to see how a habit is going.", false, tasksHistory)
+
+	register(s, "tracker_catalog_get", "Read the view kit a client supports: the blocks it can draw, the calculations it can run on live data, and how to compose them. Read it before composing a view of a goal, task or event; it names the exact catalog_id to use. The kit is finite and says nothing about kinds of goal: you compose it for the subject in front of you.", false, getTrackerCatalog)
+	register(s, "views_create", "Create a view of a goal, task or event, composed from the client's view kit: metrics (data sources: a provider series, a repeating task's done occurrences, or numbers the person logs) and pages of titled sections of blocks (sentence, bar, series, grid, steps, timeline, tasks, events, log, text, link) that draw them and calculate over them. Give each section one purpose and a short intro; use several pages only when the subject has genuinely separate concerns. Read tracker_catalog_get first and use the requesting client's exact catalog_id. A view holds no data and no markup, and you never write a figure: bind to a metric and use a function. Create it as the last step of a batch_apply plan, after the subject it is a view of.", true, createView)
+	register(s, "views_update", "Change a view's metrics and pages using the version last read; both replace the current ones. A metric that has recorded observations must stay, in the same unit. Use this when the person asks to change what a view shows, or when the subject has changed enough that its view should be composed again.", true, updateView)
+	register(s, "views_delete", "Remove a view; the subject and its records stay.", true, deleteView)
+	register(s, "views_state", "Open a subject's view for one client catalog: the view (or null) and the observations recorded against its metrics. Never substitute another app's view.", false, viewState)
+	register(s, "views_get", "Read one view by id.", false, getView)
+	register(s, "views_list", "List the views of a goal, task or event, optionally only the one for a client catalog.", false, listViews)
+	register(s, "measurements_record", "Record an actual numeric observation for a view's defined metric, with its observed time and notes. Never invent values or treat completing a task as an outcome measurement.", true, recordMeasurement)
+	register(s, "measurements_update", "Correct a recorded observation using the version last read; preserves its time unless supplied.", true, updateMeasurement)
+	register(s, "measurements_delete", "Remove an erroneous observation; its audit history remains.", true, deleteMeasurement)
+
 	register(s, "day_get", "A day's tasks and events, one entry per occurrence, earliest first, followed by the open tasks from earlier days that are still waiting (when the day is today). This is the person's Today screen; there is no stored plan. Defaults to today in the person's time zone.", false, dayView)
 
 	register(s, "batch_apply", "Create a plan's records together, all or nothing: goals, tasks and events. Operations run in order, and each new record carries an id you chose so a later operation can refer to it (a task's goal_id). Use it for a composed use case such as a trip: the goal, then the tasks and events that serve it. Pass an idempotency_key; retrying with it is safe.", true, s.batchApply)

@@ -1,0 +1,135 @@
+{
+  "task": {
+    "id": "16d30957-1898-4480-b3f5-7bd6ab6822db",
+    "kind": "task",
+    "subject": "person",
+    "title": "Drink water",
+    "notes": "",
+    "goal_id": null,
+    "at": "2026-10-22T08:00:00Z",
+    "minutes": null,
+    "time_zone": "Europe/London",
+    "recurrence": {
+      "freq": "daily",
+      "interval": 1
+    },
+    "alert_before_minutes": 0,
+    "is_priority": false,
+    "snoozed_until": null,
+    "done_at": null,
+    "version": 1,
+    "deleted_at": null,
+    "created_at": "2026-10-22T05:13:11.845112Z",
+    "updated_at": "2026-10-22T05:13:11.845112Z"
+  },
+  "days": [
+    {
+      "day": "2026-10-09",
+      "scheduled": false,
+      "count": 0,
+      "target": 0,
+      "done": false
+    },
+    {
+      "day": "2026-10-10",
+      "scheduled": false,
+      "count": 0,
+      "target": 0,
+      "done": false
+    },
+    {
+      "day": "2026-10-11",
+      "scheduled": false,
+      "count": 0,
+      "target": 0,
+      "done": false
+    },
+    {
+      "day": "2026-10-12",
+      "scheduled": false,
+      "count": 0,
+      "target": 0,
+      "done": false
+    },
+    {
+      "day": "2026-10-13",
+      "scheduled": false,
+      "count": 0,
+      "target": 0,
+      "done": false
+    },
+    {
+      "day": "2026-10-14",
+      "scheduled": false,
+      "count": 0,
+      "target": 0,
+      "done": false
+    },
+    {
+      "day": "2026-10-15",
+      "scheduled": false,
+      "count": 0,
+      "target": 0,
+      "done": false
+    },
+    {
+      "day": "2026-10-16",
+      "scheduled": false,
+      "count": 0,
+      "target": 0,
+      "done": false
+    },
+    {
+      "day": "2026-10-17",
+      "scheduled": false,
+      "count": 0,
+      "target": 0,
+      "done": false
+    },
+    {
+      "day": "2026-10-18",
+      "scheduled": false,
+      "count": 0,
+      "target": 0,
+      "done": false
+    },
+    {
+      "day": "2026-10-19",
+      "scheduled": false,
+      "count": 0,
+      "target": 0,
+      "done": false
+    },
+    {
+      "day": "2026-10-20",
+      "scheduled": false,
+      "count": 0,
+      "target": 0,
+      "done": false
+    },
+    {
+      "day": "2026-10-21",
+      "scheduled": false,
+      "count": 0,
+      "target": 0,
+      "done": false
+    },
+    {
+      "day": "2026-10-22",
+      "scheduled": true,
+      "count": 0,
+      "target": 1,
+      "done": false
+    }
+  ],
+  "last7": {
+    "done": 0,
+    "scheduled": 1
+  },
+  "last30": {
+    "done": 0,
+    "scheduled": 1
+  },
+  "streak": 0,
+  "best_streak": 0
+}

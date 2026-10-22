@@ -96,3 +96,9 @@ func day(field, v string) (string, error) {
 	}
 	return v, nil
 }
+
+func utcPtr(t *time.Time) {
+	if t != nil {
+		*t = t.UTC()
+	}
+}

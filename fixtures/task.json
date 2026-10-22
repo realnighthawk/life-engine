@@ -1,10 +1,10 @@
 {
-  "id": "ebdc2212-052f-45a1-8a75-c5380e75f7cd",
+  "id": "0fae58d7-afbd-4983-9adf-d0c9329d1b28",
   "kind": "task",
   "subject": "person",
   "title": "Book flights",
   "notes": "",
-  "goal_id": "7318ee72-f705-4df8-914d-8b48537d0b11",
+  "goal_id": "3f5b21ac-d4ba-44b5-9738-a0eeace2effa",
   "at": "2026-10-22T23:00:00Z",
   "minutes": 30,
   "time_zone": "UTC",
@@ -15,6 +15,6 @@
   "done_at": null,
   "version": 1,
   "deleted_at": null,
-  "created_at": "2026-10-22T04:57:32.181017Z",
-  "updated_at": "2026-10-22T04:57:32.181017Z"
+  "created_at": "2026-10-22T05:13:11.840546Z",
+  "updated_at": "2026-10-22T05:13:11.840546Z"
 }

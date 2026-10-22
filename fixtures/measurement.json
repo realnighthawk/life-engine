@@ -1,0 +1,14 @@
+{
+  "id": "a49f6566-16c8-490c-be03-55811db550b1",
+  "subject_kind": "goal",
+  "subject_id": "3f5b21ac-d4ba-44b5-9738-a0eeace2effa",
+  "metric_id": "distance",
+  "unit": "km",
+  "value": 2.5,
+  "measured_at": "2026-10-22T05:13:11.873387Z",
+  "notes": "",
+  "version": 1,
+  "deleted_at": null,
+  "created_at": "2026-10-22T05:13:11.873387Z",
+  "updated_at": "2026-10-22T05:13:11.873387Z"
+}
