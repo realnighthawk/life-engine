@@ -4,7 +4,7 @@
     {
       "operation": "goals_create",
       "result": {
-        "id": "822bad54-556a-45b3-92de-2ae66d077a51",
+        "id": "3ef2805a-de34-43ec-b011-4f17434cae4c",
         "subject": "person",
         "title": "Dinner party",
         "notes": "",
@@ -16,8 +16,8 @@
         "next": null,
         "version": 1,
         "deleted_at": null,
-        "created_at": "2026-10-22T05:13:11.888607Z",
-        "updated_at": "2026-10-22T05:13:11.888607Z"
+        "created_at": "2026-10-22T05:46:17.614657Z",
+        "updated_at": "2026-10-22T05:46:17.614657Z"
       }
     }
   ]

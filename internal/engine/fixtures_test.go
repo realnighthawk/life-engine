@@ -72,7 +72,6 @@ func TestWriteClientFixtures(t *testing.T) {
 	call("measurement", "measurements_record", map[string]any{"idempotency_key": key(), "subject_kind": "goal", "subject_id": goal["id"], "metric_id": "distance", "value": 2.5})
 	call("view_state", "views_state", map[string]any{"subject_kind": "goal", "subject_id": goal["id"], "catalog_id": engine.TrackerCatalogKit})
 	call("task_history", "tasks_history", map[string]any{"id": repeating["id"], "days": 14})
-	call("notify", "life_notify", map[string]any{"idempotency_key": key(), "title": "Weigh-in", "body": "It is Sunday", "link": map[string]any{"entity": "goal", "id": goal["id"]}})
 	call("events_pending", "events_pending", map[string]any{})
 	call("history", "history_list", map[string]any{"entity_type": "item", "id": task["id"]})
 	call("batch_dry_run", "batch_dry_run", map[string]any{"operations": []any{map[string]any{"operation": "goals_create", "input": map[string]any{"title": "Dinner party"}}}})

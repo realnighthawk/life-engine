@@ -1,19 +1,3 @@
 {
-  "items": [
-    {
-      "event_key": "life:notice",
-      "event_id": "notice:8bd4cc8e-74e4-4d57-9cde-ac85e60dbf27",
-      "detail": "Notice for the person: Weigh-in",
-      "notice": {
-        "kind": "notice",
-        "title": "Weigh-in",
-        "body": "It is Sunday",
-        "priority": "normal",
-        "link": {
-          "entity": "goal",
-          "id": "3f5b21ac-d4ba-44b5-9738-a0eeace2effa"
-        }
-      }
-    }
-  ]
+  "items": []
 }

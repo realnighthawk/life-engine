@@ -4,7 +4,7 @@ The shared personal data layer for the agent harness: the system of record for a
 
 ## Status
 
-Clean-slate rebuild on branch `clean-slate-engine` (2026-10-21), not yet merged or deployed. Implemented and tested against Postgres 17 and a real Temporal server: goals (progress derived from linked tasks), tasks and calendar events (versioned, soft-delete, repeating on the person's local clock, alert before, snooze, per-occurrence completion), a `subject` of person or agent on every item, `day_get`, `batch_apply`/`batch_undo`/`batch_dry_run`, settings, audit history, and the `events_pending`/`events_ack` contract (notices only).
+Clean-slate rebuild on branch `clean-slate-engine` (2026-10-21), not yet merged or deployed. Implemented and tested against Postgres 17 and a real Temporal server: goals (progress derived from linked tasks), tasks and calendar events (versioned, soft-delete, repeating on the person's local clock, alert before, snooze, per-occurrence completion), a `subject` of person or agent on every item, `day_get`, `batch_apply`/`batch_undo`/`batch_dry_run`, settings, audit history, and the `events_pending`/`events_ack` contract (the engine emits no events, so it answers empty).
 
 The engine owns the clock: it keeps a Temporal Schedule matched to each item with an alert (`internal/clock`, updated in place, native recurrence in the item's zone) and runs the worker for `FireWorkflow`. A person's alert is posted to the gateway's events intake (`GATEWAY_EVENTS_URL`, `GATEWAY_EVENTS_TOKEN`), which stores it in their inbox and pushes it to their devices; mcp-hub is not involved. An agent's alert signals the conversation it was created from. Needs `TEMPORAL_ADDRESS` and `TENANT_SLUG` together (alerts are off without them). Migration 0022 drops the older model (reminders, schedules, routines, plan, steps, commitments, monitors, trackers and views, journal, notes, captures, attachments): nothing is migrated.
 
@@ -29,7 +29,7 @@ DATABASE_URL=$TEST_DATABASE_URL make run   # serves on 127.0.0.1:8093
 - Errors are `{"error":{"code","message"}}`: `invalid_input` 400, `not_found` 404, `conflict`/`duplicate` 409, `too_large` 413, `busy` 503, `internal` 500.
 - One person per database; the engine has no authentication or user handling. The router verifies Clerk and the tenant's network policy is the boundary, so never expose this service directly.
 - Timestamps are RFC 3339 UTC. A repeating item repeats on its own IANA zone's wall-clock time.
-- The engine owns the clock (Temporal Schedules, see Status). A person's alert is posted straight to the gateway by `FireWorkflow`; `events_pending` carries only what the agent sends with `life_notify`.
+- The engine owns the clock (Temporal Schedules, see Status). A person's alert is posted straight to the gateway by `FireWorkflow`; `events_pending` is empty: the engine emits no events, and the agent reaches the person with `notify_user`.
 - Add a numbered migration; never edit an applied one.
 - "Today" is computed in the time zone from `settings_get`; set it first.
 

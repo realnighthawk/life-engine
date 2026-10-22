@@ -52,7 +52,6 @@ func (s *Service) registerOperations() {
 	register(s, "settings_get", "Read the person's settings: their time zone (which decides what 'today' means) and working hours.", false, func(c context.Context, u *unit, _ struct{}) (Settings, error) { return u.getSettings(c) })
 	register(s, "settings_set", "Set the person's time zone and working hours (versioned). Set the time zone first: what today is depends on it.", true, setSettings)
 	register(s, "history_list", "Read the audit trail of changes to a record, newest first.", false, history)
-	register(s, "life_notify", "Tell the person something outside the conversation: it reaches this app as a notification (and its inbox), and no other app. Use it sparingly, for something they would want to know now or would miss; never for chatter or progress.", true, notifyPerson)
 	register(s, "events_pending", "Hand over the notices this engine has recorded and not yet delivered. Called by the hub's delivery loop, not by the agent. (Not calendar events.)", false,
 		func(c context.Context, u *unit, _ struct{}) (EventsResult, error) { return u.eventsPending(c) })
 	registerKeyless(s, "events_ack", "Mark notices delivered so they are not handed over twice. Called by the hub's delivery loop, not by the agent.",

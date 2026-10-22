@@ -8,21 +8,12 @@ import (
 // understanding any of it (agent-harness docs/components/event-delivery.md). Nothing here reaches outwards: the engine
 // records and answers when asked, and delivery, retries and waking are the hub's job.
 //
-// Pending notices are the only thing in this feed: an alert coming due for a person's item is recorded as a notice by Fire
-// (alerts.go), as is anything the agent tells the person (notices.go). There is no engine timer here; latency is the hub's
-// delivery interval.
-
-// linkEntities are the record kinds a notice can open.
-var linkEntities = []string{"goal", "task", "event"}
+// The engine emits no events any more: a person's alert goes straight to the gateway (clock/fire.go) and the agent tells the
+// person something with notify_user. The hub still asks every engine for its events, so the operations stay and answer an empty
+// list; acknowledging is idempotent by construction.
 
 func (u *unit) eventsPending(ctx context.Context) (EventsResult, error) {
-	result := EventsResult{Items: []Event{}}
-	items, err := u.pendingNotices(ctx)
-	if err != nil {
-		return result, err
-	}
-	result.Items = append(result.Items, items...)
-	return result, nil
+	return EventsResult{Items: []Event{}}, nil
 }
 
 // eventsAck marks occurrences handed over. Idempotent by construction.

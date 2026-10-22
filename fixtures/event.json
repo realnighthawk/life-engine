@@ -1,5 +1,5 @@
 {
-  "id": "b7e559fe-eeae-4c4d-b497-e4cbf12a738c",
+  "id": "01ca899a-52f4-4b86-a2ab-7227ec3bbb4c",
   "kind": "event",
   "subject": "person",
   "title": "Standup",
@@ -15,6 +15,6 @@
   "done_at": null,
   "version": 1,
   "deleted_at": null,
-  "created_at": "2026-10-22T05:13:11.847818Z",
-  "updated_at": "2026-10-22T05:13:11.847818Z"
+  "created_at": "2026-10-22T05:46:17.572368Z",
+  "updated_at": "2026-10-22T05:46:17.572368Z"
 }

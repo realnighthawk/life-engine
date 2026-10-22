@@ -40,7 +40,7 @@ func liveEnvWithGateway(t *testing.T) (*engine.Service, *Clock, *pgxpool.Pool, c
 	require.NoError(t, err)
 	t.Cleanup(pool.Close)
 	require.NoError(t, postgres.Migrate(ctx, pool))
-	_, err = pool.Exec(ctx, "TRUNCATE life.requests, life.changes, life.acked_events, life.notices, life.occurrences, life.items, life.goals, life.views, life.measurements")
+	_, err = pool.Exec(ctx, "TRUNCATE life.requests, life.changes, life.acked_events, life.occurrences, life.items, life.goals, life.views, life.measurements")
 	require.NoError(t, err)
 	queue := "life-engine-live-" + strconv.FormatInt(time.Now().UnixNano(), 36)
 	received := make(chan map[string]any, 8)
