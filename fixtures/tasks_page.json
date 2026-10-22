@@ -1,0 +1,49 @@
+{
+  "items": [
+    {
+      "id": "85f6f909-3c57-4bc5-92f9-87258bd35b6e",
+      "kind": "task",
+      "subject": "person",
+      "title": "Drink water",
+      "notes": "",
+      "goal_id": null,
+      "at": "2026-10-22T08:00:00Z",
+      "minutes": null,
+      "time_zone": "Europe/London",
+      "recurrence": {
+        "freq": "daily",
+        "interval": 1
+      },
+      "alert_before_minutes": 0,
+      "is_priority": false,
+      "snoozed_until": null,
+      "done_at": null,
+      "version": 1,
+      "deleted_at": null,
+      "created_at": "2026-10-22T04:53:06.634859Z",
+      "updated_at": "2026-10-22T04:53:06.634859Z"
+    },
+    {
+      "id": "7455d193-7679-4f7d-bcbd-8ab95db90a12",
+      "kind": "task",
+      "subject": "person",
+      "title": "Book flights",
+      "notes": "",
+      "goal_id": "c5b5a443-9732-45e4-bf8e-eeb37a075415",
+      "at": "2026-10-22T23:00:00Z",
+      "minutes": 30,
+      "time_zone": "UTC",
+      "recurrence": null,
+      "alert_before_minutes": 15,
+      "is_priority": true,
+      "snoozed_until": null,
+      "done_at": null,
+      "version": 1,
+      "deleted_at": null,
+      "created_at": "2026-10-22T04:53:06.630744Z",
+      "updated_at": "2026-10-22T04:53:06.630744Z"
+    }
+  ],
+  "total": 2,
+  "next_offset": null
+}

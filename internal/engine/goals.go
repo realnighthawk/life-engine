@@ -7,62 +7,40 @@ import (
 	"time"
 )
 
-type Step struct {
+// A goal is an outcome the person's tasks and events serve: finite ("Lisbon, June 3-10") with an end date, open-ended
+// ("get fit") without one. It is also the container for a composed use case: a trip or a dinner is a goal whose tasks and
+// events link to it. Nothing about a kind of goal is stored; progress is read from what is linked, never kept.
+type Goal struct {
 	ID        string     `json:"id"`
-	GoalID    string     `json:"goal_id"`
+	Subject   string     `json:"subject" jsonschema:"person (the default) or agent: whose goal it is"`
 	Title     string     `json:"title"`
-	Minutes   int        `json:"minutes"`
-	Position  int        `json:"position" jsonschema:"1-based order within the goal"`
-	DoneAt    *time.Time `json:"done_at"`
+	Notes     string     `json:"notes" jsonschema:"short free text kept with the goal, such as take the coolers or watch the weather"`
+	EndsOn    *string    `json:"ends_on" jsonschema:"local date the goal finishes by; null for an open-ended goal"`
+	Progress  Progress   `json:"progress" jsonschema:"read from the tasks linked to the goal"`
+	Next      *Item      `json:"next" jsonschema:"the linked open task that comes first, soonest time first, or null"`
 	Version   int64      `json:"version"`
+	DeletedAt *time.Time `json:"deleted_at"`
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
 }
 
-// GoalConsistency is the scheduled days the linked routines were done on, summed over the routines. A goal's progress is read from
-// the routines, not ticked off on the goal.
-type GoalConsistency struct {
-	Last7  Consistency `json:"last_7"`
-	Last30 Consistency `json:"last_30"`
-}
-
-type GoalProgress struct {
+// Progress counts a goal's one-off tasks and the occurrences of its repeating ones that have been done. Events are not
+// counted: they happen, they are not done.
+type Progress struct {
 	Done  int `json:"done"`
 	Total int `json:"total"`
 }
 
-// Goal always carries its steps, so a screen needs one read.
-type Goal struct {
-	ID           string          `json:"id"`
-	Title        string          `json:"title"`
-	Why          string          `json:"why"`
-	WeeklyTarget int             `json:"weekly_target" jsonschema:"steps the person aims to finish each week"`
-	ArchivedAt   *time.Time      `json:"archived_at"`
-	Version      int64           `json:"version"`
-	Steps        []Step          `json:"steps"`
-	RoutineIDs   []string        `json:"routine_ids" jsonschema:"routines that serve this goal; they are tracked as routines, not as steps"`
-	Consistency  GoalConsistency `json:"consistency" jsonschema:"how well the routines that serve this goal were kept, summed over them. A measure of keeping up, not of how far the outcome has moved"`
-	Progress     GoalProgress    `json:"progress"`
-	NextStep     *Step           `json:"next_step" jsonschema:"the first step not yet done, or null"`
-	CreatedAt    time.Time       `json:"created_at"`
-	UpdatedAt    time.Time       `json:"updated_at"`
-}
-
-type StepData struct {
-	Title   string `json:"title" jsonschema:"one small, concrete action, 1-200 characters"`
-	Minutes int    `json:"minutes,omitempty" jsonschema:"how long it should take, 1-480, default 15"`
-}
 type GoalData struct {
-	Title        string `json:"title" jsonschema:"what the person wants to make progress on, 1-200 characters"`
-	Why          string `json:"why,omitempty" jsonschema:"why it matters, up to 1000 characters"`
-	WeeklyTarget *int   `json:"weekly_target,omitempty" jsonschema:"steps to finish each week, 0-21, default 3"`
+	Title   string  `json:"title" jsonschema:"the outcome, 1-200 characters, in the person's words"`
+	Notes   string  `json:"notes,omitempty" jsonschema:"short free text, up to 2000 characters"`
+	EndsOn  *string `json:"ends_on,omitempty" jsonschema:"YYYY-MM-DD the goal finishes by; omit for an open-ended goal"`
+	Subject string  `json:"subject,omitempty" jsonschema:"person (default) or agent; agent is for a goal of your own, which the person's screens do not show"`
 }
 type CreateGoalInput struct {
 	Meta
-	ID string `json:"id,omitempty"`
+	ID string `json:"id,omitempty" jsonschema:"optional client-generated UUID so a later operation in the same batch can refer to this goal"`
 	GoalData
-	Steps      []StepData `json:"steps,omitempty" jsonschema:"optional starting steps in order, each a ONE-OFF task; anything repeated is a routine, passed in routine_ids"`
-	RoutineIDs []string   `json:"routine_ids,omitempty" jsonschema:"ids of existing routines that serve this goal (reuse what the person already has before creating a routine)"`
 }
 type UpdateGoalInput struct {
 	EditInput
@@ -70,139 +48,43 @@ type UpdateGoalInput struct {
 }
 type ListGoalsInput struct {
 	ListInput
-}
-type AddStepInput struct {
-	Meta
-	ID       string `json:"id,omitempty"`
-	GoalID   string `json:"goal_id"`
-	Position *int   `json:"position,omitempty" jsonschema:"1-based place to insert; default the end"`
-	StepData
-}
-type UpdateStepInput struct {
-	EditInput
-	StepData
-}
-type CompleteInput struct {
-	EditInput
-	Done bool `json:"done" jsonschema:"true marks it done now; false reopens it"`
-}
-type ReorderStepsInput struct {
-	Meta
-	GoalID  string   `json:"goal_id"`
-	StepIDs []string `json:"step_ids" jsonschema:"every step of the goal, in the new order"`
+	Subject string `json:"subject,omitempty" jsonschema:"person (default) or agent"`
 }
 
-const goalCols = `id::text,title,why,weekly_target,archived_at,version,created_at,updated_at`
-const stepCols = `id::text,goal_id::text,title,minutes,position,done_at,version,created_at,updated_at`
+const goalCols = `id::text,subject,title,notes,ends_on::text,version,deleted_at,created_at,updated_at`
 
-func scanStep(row scanner) (Step, error) {
-	var s Step
-	err := row.Scan(&s.ID, &s.GoalID, &s.Title, &s.Minutes, &s.Position, &s.DoneAt, &s.Version, &s.CreatedAt, &s.UpdatedAt)
-	utcPtr(s.DoneAt)
-	s.CreatedAt, s.UpdatedAt = s.CreatedAt.UTC(), s.UpdatedAt.UTC()
-	return s, err
-}
-
-func utcPtr(t *time.Time) {
-	if t != nil {
-		*t = t.UTC()
+func scanGoal(row scanner) (Goal, error) {
+	var g Goal
+	if err := row.Scan(&g.ID, &g.Subject, &g.Title, &g.Notes, &g.EndsOn, &g.Version, &g.DeletedAt, &g.CreatedAt, &g.UpdatedAt); err != nil {
+		return g, err
 	}
+	if g.DeletedAt != nil {
+		*g.DeletedAt = g.DeletedAt.UTC()
+	}
+	g.CreatedAt, g.UpdatedAt = g.CreatedAt.UTC(), g.UpdatedAt.UTC()
+	return g, nil
 }
 
-func (g *Goal) fill(steps []Step) {
-	g.Steps = steps
-	if g.Steps == nil {
-		g.Steps = []Step{}
-	}
-	g.Progress = GoalProgress{Total: len(g.Steps)}
-	g.NextStep = nil
-	for i := range g.Steps {
-		if g.Steps[i].DoneAt != nil {
-			g.Progress.Done++
-		} else if g.NextStep == nil {
-			g.NextStep = &g.Steps[i]
-		}
-	}
-}
-
-func (u *unit) goals(ctx context.Context, where string, args ...any) ([]Goal, error) {
-	rows, err := u.tx.Query(ctx, "SELECT "+goalCols+" FROM life.goals "+where, args...)
+// withProgress fills in what is derived from the linked items.
+func (u *unit) withProgress(ctx context.Context, g Goal) (Goal, error) {
+	err := u.tx.QueryRow(ctx, `SELECT
+		(SELECT count(*) FROM life.items WHERE goal_id=$1 AND kind='task' AND deleted_at IS NULL AND recurrence IS NULL AND done_at IS NOT NULL)
+		+ (SELECT count(*) FROM life.occurrences o JOIN life.items i ON i.id=o.item_id WHERE i.goal_id=$1 AND i.kind='task' AND i.deleted_at IS NULL AND o.state='done'),
+		(SELECT count(*) FROM life.items WHERE goal_id=$1 AND kind='task' AND deleted_at IS NULL AND recurrence IS NULL)
+		+ (SELECT count(*) FROM life.occurrences o JOIN life.items i ON i.id=o.item_id WHERE i.goal_id=$1 AND i.kind='task' AND i.deleted_at IS NULL)`, g.ID).Scan(&g.Progress.Done, &g.Progress.Total)
 	if err != nil {
-		return nil, err
+		return g, err
 	}
-	var goals []Goal
-	index := map[string]int{}
-	var ids []string
-	for rows.Next() {
-		var g Goal
-		if err := rows.Scan(&g.ID, &g.Title, &g.Why, &g.WeeklyTarget, &g.ArchivedAt, &g.Version, &g.CreatedAt, &g.UpdatedAt); err != nil {
-			rows.Close()
-			return nil, err
-		}
-		utcPtr(g.ArchivedAt)
-		g.CreatedAt, g.UpdatedAt = g.CreatedAt.UTC(), g.UpdatedAt.UTC()
-		index[g.ID] = len(goals)
-		ids = append(ids, g.ID)
-		goals = append(goals, g)
+	row := u.tx.QueryRow(ctx, "SELECT "+itemCols+" FROM life.items WHERE goal_id=$1 AND kind='task' AND deleted_at IS NULL AND recurrence IS NULL AND done_at IS NULL ORDER BY at ASC NULLS LAST, created_at, id LIMIT 1", g.ID)
+	next, err := scanItem(row)
+	switch {
+	case err == nil:
+		g.Next = &next
+	case isNoRows(err):
+	default:
+		return g, err
 	}
-	rows.Close()
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	if len(ids) == 0 {
-		return goals, nil
-	}
-	srows, err := u.tx.Query(ctx, "SELECT "+stepCols+" FROM life.steps WHERE goal_id = ANY($1::uuid[]) ORDER BY goal_id, position", ids)
-	if err != nil {
-		return nil, err
-	}
-	defer srows.Close()
-	steps := map[string][]Step{}
-	for srows.Next() {
-		s, err := scanStep(srows)
-		if err != nil {
-			return nil, err
-		}
-		steps[s.GoalID] = append(steps[s.GoalID], s)
-	}
-	if err := srows.Err(); err != nil {
-		return nil, err
-	}
-	lrows, err := u.tx.Query(ctx, `SELECT gr.goal_id::text, gr.routine_id::text FROM life.goal_routines gr
-		JOIN life.routines r ON r.id = gr.routine_id AND r.deleted_at IS NULL WHERE gr.goal_id = ANY($1::uuid[]) ORDER BY gr.created_at, gr.routine_id`, ids)
-	if err != nil {
-		return nil, err
-	}
-	defer lrows.Close()
-	links := map[string][]string{}
-	for lrows.Next() {
-		var gid, rid string
-		if err := lrows.Scan(&gid, &rid); err != nil {
-			return nil, err
-		}
-		links[gid] = append(links[gid], rid)
-	}
-	if err := lrows.Err(); err != nil {
-		return nil, err
-	}
-	for i := range goals {
-		goals[i].fill(steps[goals[i].ID])
-		goals[i].RoutineIDs = links[goals[i].ID]
-		if goals[i].RoutineIDs == nil {
-			goals[i].RoutineIDs = []string{}
-		}
-		for _, rid := range goals[i].RoutineIDs {
-			h, err := routineHistory(ctx, u, RoutineHistoryInput{RoutineID: rid, Days: 30})
-			if err != nil {
-				return nil, err
-			}
-			goals[i].Consistency.Last7.Done += h.Last7.Done
-			goals[i].Consistency.Last7.Scheduled += h.Last7.Scheduled
-			goals[i].Consistency.Last30.Done += h.Last30.Done
-			goals[i].Consistency.Last30.Scheduled += h.Last30.Scheduled
-		}
-	}
-	return goals, nil
+	return g, nil
 }
 
 func (u *unit) getGoal(ctx context.Context, key string, forUpdate bool) (Goal, error) {
@@ -210,51 +92,42 @@ func (u *unit) getGoal(ctx context.Context, key string, forUpdate bool) (Goal, e
 	if e != nil {
 		return Goal{}, e
 	}
+	q := "SELECT " + goalCols + " FROM life.goals WHERE id=$1"
 	if forUpdate {
-		var locked string
-		if e = u.tx.QueryRow(ctx, "SELECT id::text FROM life.goals WHERE id=$1 FOR UPDATE", k).Scan(&locked); e != nil {
-			return Goal{}, e
+		q += " FOR UPDATE"
+	}
+	g, e := scanGoal(u.tx.QueryRow(ctx, q, k))
+	if e != nil {
+		return g, e
+	}
+	return u.withProgress(ctx, g)
+}
+
+type goalValues struct {
+	title, notes, subject string
+	endsOn                *string
+}
+
+func (d GoalData) values() (goalValues, error) {
+	v := goalValues{title: strings.TrimSpace(d.Title), notes: d.Notes, subject: d.Subject, endsOn: d.EndsOn}
+	if v.title == "" || len(v.title) > 200 {
+		return v, invalid("title must be 1-200 characters")
+	}
+	if len(v.notes) > 2000 {
+		return v, invalid("notes must be at most 2000 characters")
+	}
+	if v.subject == "" {
+		v.subject = "person"
+	}
+	if !oneOf(v.subject, "person", "agent") {
+		return v, invalid("subject must be person or agent")
+	}
+	if v.endsOn != nil {
+		if _, e := day("ends_on", *v.endsOn); e != nil {
+			return v, e
 		}
 	}
-	list, e := u.goals(ctx, "WHERE id=$1", k)
-	if e != nil {
-		return Goal{}, e
-	}
-	if len(list) == 0 {
-		return Goal{}, notFound()
-	}
-	return list[0], nil
-}
-
-func (d GoalData) values() (title, why string, target int, err error) {
-	title, why, target = strings.TrimSpace(d.Title), d.Why, 3
-	if title == "" || len(title) > 200 {
-		return "", "", 0, invalid("title must be 1-200 characters")
-	}
-	if len(why) > 1000 {
-		return "", "", 0, invalid("why must be at most 1000 characters")
-	}
-	if d.WeeklyTarget != nil {
-		target = *d.WeeklyTarget
-	}
-	if target < 0 || target > 21 {
-		return "", "", 0, invalid("weekly_target must be 0-21")
-	}
-	return
-}
-
-func (d StepData) values() (string, int, error) {
-	title, minutes := strings.TrimSpace(d.Title), d.Minutes
-	if title == "" || len(title) > 200 {
-		return "", 0, invalid("step title must be 1-200 characters")
-	}
-	if minutes == 0 {
-		minutes = 15
-	}
-	if minutes < 1 || minutes > 480 {
-		return "", 0, invalid("step minutes must be 1-480")
-	}
-	return title, minutes, nil
+	return v, nil
 }
 
 func createGoal(ctx context.Context, u *unit, in CreateGoalInput) (Goal, error) {
@@ -262,91 +135,18 @@ func createGoal(ctx context.Context, u *unit, in CreateGoalInput) (Goal, error) 
 	if e != nil {
 		return Goal{}, e
 	}
-	title, why, target, e := in.GoalData.values()
+	v, e := in.GoalData.values()
 	if e != nil {
 		return Goal{}, e
 	}
-	if len(in.Steps) > 50 {
-		return Goal{}, invalid("at most 50 starting steps")
-	}
-	if _, e = u.tx.Exec(ctx, `INSERT INTO life.goals(id,title,why,weekly_target) VALUES($1,$2,$3,$4)`, key, title, why, target); e != nil {
+	if _, e = u.tx.Exec(ctx, `INSERT INTO life.goals(id,subject,title,notes,ends_on) VALUES($1,$2,$3,$4,$5::date)`, key, v.subject, v.title, v.notes, v.endsOn); e != nil {
 		return Goal{}, e
-	}
-	for i, sd := range in.Steps {
-		st, minutes, e := sd.values()
-		if e != nil {
-			return Goal{}, e
-		}
-		var sid string
-		if e = u.tx.QueryRow(ctx, `INSERT INTO life.steps(goal_id,title,minutes,position) VALUES($1,$2,$3,$4) RETURNING id::text`, key, st, minutes, i+1).Scan(&sid); e != nil {
-			return Goal{}, e
-		}
-		created, e := u.getStep(ctx, sid, false)
-		if e != nil {
-			return Goal{}, e
-		}
-		if e = u.audit(ctx, "step", sid, nil, created); e != nil {
-			return Goal{}, e
-		}
-	}
-	for _, rid := range in.RoutineIDs {
-		if e = u.linkRoutine(ctx, key, rid); e != nil {
-			return Goal{}, e
-		}
 	}
 	g, e := u.getGoal(ctx, key, false)
 	if e != nil {
 		return g, e
 	}
 	return g, u.audit(ctx, "goal", key, nil, g)
-}
-
-// linkRoutine records that a routine serves a goal. It is idempotent, and the routine must exist and not be deleted.
-func (u *unit) linkRoutine(ctx context.Context, goalID, routineID string) error {
-	r, e := u.getRoutine(ctx, routineID, false)
-	if e != nil {
-		return e
-	}
-	if r.DeletedAt != nil {
-		return conflict("That routine is deleted; restore it before linking it")
-	}
-	_, e = u.tx.Exec(ctx, `INSERT INTO life.goal_routines(goal_id, routine_id) VALUES($1,$2) ON CONFLICT DO NOTHING`, goalID, r.ID)
-	return e
-}
-
-type LinkRoutineInput struct {
-	Meta
-	GoalID    string `json:"goal_id"`
-	RoutineID string `json:"routine_id"`
-}
-
-func linkGoalRoutine(ctx context.Context, u *unit, in LinkRoutineInput, link bool) (Goal, error) {
-	old, e := u.getGoal(ctx, in.GoalID, true)
-	if e != nil {
-		return old, e
-	}
-	if old.ArchivedAt != nil {
-		return old, conflict("Restore the goal before changing its routines")
-	}
-	if link {
-		e = u.linkRoutine(ctx, old.ID, in.RoutineID)
-	} else {
-		var rid string
-		if rid, e = id(in.RoutineID); e == nil {
-			_, e = u.tx.Exec(ctx, `DELETE FROM life.goal_routines WHERE goal_id=$1 AND routine_id=$2`, old.ID, rid)
-		}
-	}
-	if e != nil {
-		return old, e
-	}
-	g, e := u.getGoal(ctx, old.ID, false)
-	if e != nil {
-		return g, e
-	}
-	if len(g.RoutineIDs) != len(old.RoutineIDs) {
-		e = u.audit(ctx, "goal", g.ID, old, g)
-	}
-	return g, e
 }
 
 func updateGoal(ctx context.Context, u *unit, in UpdateGoalInput) (Goal, error) {
@@ -357,20 +157,16 @@ func updateGoal(ctx context.Context, u *unit, in UpdateGoalInput) (Goal, error) 
 	if e = version(in.ExpectedVersion, old.Version); e != nil {
 		return old, e
 	}
-	if old.ArchivedAt != nil {
+	if old.DeletedAt != nil {
 		return old, conflict("Restore the goal before editing it")
 	}
-	title, why, target, e := in.GoalData.values()
+	v, e := in.GoalData.values()
 	if e != nil {
 		return old, e
 	}
-	if _, e = u.tx.Exec(ctx, `UPDATE life.goals SET title=$2,why=$3,weekly_target=$4,version=version+1,updated_at=now() WHERE id=$1`, old.ID, title, why, target); e != nil {
+	if _, e = u.tx.Exec(ctx, `UPDATE life.goals SET title=$2,notes=$3,ends_on=$4::date,subject=$5,version=version+1,updated_at=now() WHERE id=$1`, old.ID, v.title, v.notes, v.endsOn, v.subject); e != nil {
 		return old, e
 	}
-	return u.goalChanged(ctx, old)
-}
-
-func (u *unit) goalChanged(ctx context.Context, old Goal) (Goal, error) {
 	g, e := u.getGoal(ctx, old.ID, false)
 	if e != nil {
 		return g, e
@@ -378,6 +174,7 @@ func (u *unit) goalChanged(ctx context.Context, old Goal) (Goal, error) {
 	return g, u.audit(ctx, "goal", g.ID, old, g)
 }
 
+// lifecycleGoal archives or restores a goal. What is linked to it stays, so restoring brings the whole back.
 func lifecycleGoal(ctx context.Context, u *unit, in EditInput, restore bool) (Goal, error) {
 	old, e := u.getGoal(ctx, in.ID, true)
 	if e != nil {
@@ -386,20 +183,24 @@ func lifecycleGoal(ctx context.Context, u *unit, in EditInput, restore bool) (Go
 	if e = version(in.ExpectedVersion, old.Version); e != nil {
 		return old, e
 	}
-	if restore == (old.ArchivedAt == nil) {
+	if restore == (old.DeletedAt == nil) {
 		if restore {
 			return old, conflict("Goal is not archived")
 		}
 		return old, conflict("Goal is already archived")
 	}
-	set := "archived_at=now()"
+	set := "deleted_at=now()"
 	if restore {
-		set = "archived_at=NULL"
+		set = "deleted_at=NULL"
 	}
 	if _, e = u.tx.Exec(ctx, `UPDATE life.goals SET `+set+`,version=version+1,updated_at=now() WHERE id=$1`, old.ID); e != nil {
 		return old, e
 	}
-	return u.goalChanged(ctx, old)
+	g, e := u.getGoal(ctx, old.ID, false)
+	if e != nil {
+		return g, e
+	}
+	return g, u.audit(ctx, "goal", g.ID, old, g)
 }
 
 func listGoals(ctx context.Context, u *unit, in ListGoalsInput) (Page[Goal], error) {
@@ -408,176 +209,52 @@ func listGoals(ctx context.Context, u *unit, in ListGoalsInput) (Page[Goal], err
 	if e != nil {
 		return result, e
 	}
-	where, args := []string{"true"}, []any{}
-	switch state { // for goals "deleted" means archived
+	subject := in.Subject
+	if subject == "" {
+		subject = "person"
+	}
+	if !oneOf(subject, "person", "agent") {
+		return result, invalid("subject must be person or agent")
+	}
+	where, args := []string{"subject=$1"}, []any{subject}
+	arg := func(v any) string { args = append(args, v); return "$" + strconv.Itoa(len(args)) }
+	switch state {
 	case "active":
-		where = append(where, "archived_at IS NULL")
+		where = append(where, "deleted_at IS NULL")
 	case "deleted":
-		where = append(where, "archived_at IS NOT NULL")
+		where = append(where, "deleted_at IS NOT NULL")
 	}
 	if in.Search != "" {
-		args = append(args, like(in.Search))
-		where = append(where, "(title ILIKE $1 OR why ILIKE $1)")
+		p := arg(like(in.Search))
+		where = append(where, "(title ILIKE "+p+" OR notes ILIKE "+p+")")
 	}
 	clause := strings.Join(where, " AND ")
 	if e = u.tx.QueryRow(ctx, "SELECT count(*) FROM life.goals WHERE "+clause, args...).Scan(&result.Total); e != nil {
 		return result, e
 	}
-	args = append(args, limit, offset)
-	goals, e := u.goals(ctx, "WHERE "+clause+" ORDER BY created_at, id LIMIT $"+strconv.Itoa(len(args)-1)+" OFFSET $"+strconv.Itoa(len(args)), args...)
+	rows, e := u.tx.Query(ctx, "SELECT "+goalCols+" FROM life.goals WHERE "+clause+" ORDER BY ends_on ASC NULLS LAST, created_at, id LIMIT "+arg(limit)+" OFFSET "+arg(offset), args...)
 	if e != nil {
 		return result, e
 	}
-	if goals != nil {
-		result.Items = goals
+	var goals []Goal
+	for rows.Next() {
+		g, e := scanGoal(rows)
+		if e != nil {
+			rows.Close()
+			return result, e
+		}
+		goals = append(goals, g)
+	}
+	rows.Close()
+	if e = rows.Err(); e != nil {
+		return result, e
+	}
+	for _, g := range goals {
+		if g, e = u.withProgress(ctx, g); e != nil {
+			return result, e
+		}
+		result.Items = append(result.Items, g)
 	}
 	result.NextOffset = nextOffset(offset, limit, result.Total)
 	return result, nil
-}
-
-// ---- steps
-
-func (u *unit) getStep(ctx context.Context, key string, forUpdate bool) (Step, error) {
-	k, e := id(key)
-	if e != nil {
-		return Step{}, e
-	}
-	q := "SELECT " + stepCols + " FROM life.steps WHERE id=$1"
-	if forUpdate {
-		q += " FOR UPDATE"
-	}
-	return scanStep(u.tx.QueryRow(ctx, q, k))
-}
-
-func addStep(ctx context.Context, u *unit, in AddStepInput) (Step, error) {
-	key, e := createID(in.ID)
-	if e != nil {
-		return Step{}, e
-	}
-	goal, e := u.getGoal(ctx, in.GoalID, true)
-	if e != nil {
-		return Step{}, e
-	}
-	if goal.ArchivedAt != nil {
-		return Step{}, conflict("Restore the goal before adding steps")
-	}
-	title, minutes, e := in.StepData.values()
-	if e != nil {
-		return Step{}, e
-	}
-	if len(goal.Steps) >= 100 {
-		return Step{}, invalid("a goal can have at most 100 steps")
-	}
-	pos := len(goal.Steps) + 1
-	if in.Position != nil {
-		if *in.Position < 1 || *in.Position > pos {
-			return Step{}, invalid("position must be 1-" + strconv.Itoa(pos))
-		}
-		pos = *in.Position
-	}
-	if _, e = u.tx.Exec(ctx, `UPDATE life.steps SET position=position+1 WHERE goal_id=$1 AND position>=$2`, goal.ID, pos); e != nil {
-		return Step{}, e
-	}
-	if _, e = u.tx.Exec(ctx, `INSERT INTO life.steps(id,goal_id,title,minutes,position) VALUES($1,$2,$3,$4,$5)`, key, goal.ID, title, minutes, pos); e != nil {
-		return Step{}, e
-	}
-	s, e := u.getStep(ctx, key, false)
-	if e != nil {
-		return s, e
-	}
-	return s, u.audit(ctx, "step", key, nil, s)
-}
-
-func (u *unit) stepChanged(ctx context.Context, old Step) (Step, error) {
-	s, e := u.getStep(ctx, old.ID, false)
-	if e != nil {
-		return s, e
-	}
-	return s, u.audit(ctx, "step", s.ID, old, s)
-}
-
-func updateStep(ctx context.Context, u *unit, in UpdateStepInput) (Step, error) {
-	old, e := u.getStep(ctx, in.ID, true)
-	if e != nil {
-		return old, e
-	}
-	if e = version(in.ExpectedVersion, old.Version); e != nil {
-		return old, e
-	}
-	title, minutes, e := in.StepData.values()
-	if e != nil {
-		return old, e
-	}
-	if _, e = u.tx.Exec(ctx, `UPDATE life.steps SET title=$2,minutes=$3,version=version+1,updated_at=now() WHERE id=$1`, old.ID, title, minutes); e != nil {
-		return old, e
-	}
-	return u.stepChanged(ctx, old)
-}
-
-func (u *unit) setStepDone(ctx context.Context, step Step, done bool) (Step, error) {
-	if (step.DoneAt != nil) == done {
-		return step, nil
-	}
-	val := "NULL"
-	if done {
-		val = "now()"
-	}
-	if _, e := u.tx.Exec(ctx, `UPDATE life.steps SET done_at=`+val+`,version=version+1,updated_at=now() WHERE id=$1`, step.ID); e != nil {
-		return step, e
-	}
-	return u.stepChanged(ctx, step)
-}
-
-func completeStep(ctx context.Context, u *unit, in CompleteInput) (Step, error) {
-	old, e := u.getStep(ctx, in.ID, true)
-	if e != nil {
-		return old, e
-	}
-	if e = version(in.ExpectedVersion, old.Version); e != nil {
-		return old, e
-	}
-	return u.setStepDone(ctx, old, in.Done)
-}
-
-func deleteStep(ctx context.Context, u *unit, in EditInput) (Step, error) {
-	old, e := u.getStep(ctx, in.ID, true)
-	if e != nil {
-		return old, e
-	}
-	if e = version(in.ExpectedVersion, old.Version); e != nil {
-		return old, e
-	}
-	if _, e = u.tx.Exec(ctx, `DELETE FROM life.steps WHERE id=$1`, old.ID); e != nil {
-		return old, e
-	}
-	if _, e = u.tx.Exec(ctx, `UPDATE life.steps SET position=position-1 WHERE goal_id=$1 AND position>$2`, old.GoalID, old.Position); e != nil {
-		return old, e
-	}
-	// The audit row keeps the deleted step; there is no restore for a step, add it again.
-	return old, u.audit(ctx, "step", old.ID, old, nil)
-}
-
-func reorderSteps(ctx context.Context, u *unit, in ReorderStepsInput) (Goal, error) {
-	old, e := u.getGoal(ctx, in.GoalID, true)
-	if e != nil {
-		return old, e
-	}
-	if len(in.StepIDs) != len(old.Steps) {
-		return old, invalid("step_ids must list every step of the goal exactly once")
-	}
-	have := map[string]bool{}
-	for _, s := range old.Steps {
-		have[s.ID] = true
-	}
-	for i, raw := range in.StepIDs {
-		sid, e := id(raw)
-		if e != nil || !have[sid] {
-			return old, invalid("step_ids must list every step of the goal exactly once")
-		}
-		delete(have, sid)
-		if _, e = u.tx.Exec(ctx, `UPDATE life.steps SET position=$2,updated_at=now() WHERE id=$1`, sid, i+1); e != nil {
-			return old, e
-		}
-	}
-	return u.goalChanged(ctx, old)
 }

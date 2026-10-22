@@ -16,7 +16,6 @@ import (
 	"github.com/google/jsonschema-go/jsonschema"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/realnighthawk/life-engine/internal/blobs"
 )
 
 type Operation struct {
@@ -31,7 +30,6 @@ type Operation struct {
 }
 type Service struct {
 	pool       *pgxpool.Pool
-	blobs      blobs.Store
 	operations map[string]*Operation
 	waker      Waker
 	nudge      chan struct{}
@@ -44,9 +42,9 @@ type unit struct {
 	session          string // the agent session this call came from, if any
 }
 
-// New builds the service. blobs may be nil, in which case attachment operations answer busy.
-func New(pool *pgxpool.Pool, store blobs.Store) *Service {
-	s := &Service{pool: pool, blobs: store, operations: map[string]*Operation{}}
+// New builds the service.
+func New(pool *pgxpool.Pool) *Service {
+	s := &Service{pool: pool, operations: map[string]*Operation{}}
 	s.registerOperations()
 	return s
 }
@@ -64,14 +62,12 @@ func registerKeyless[I, O any](s *Service, name, description string, run func(co
 func add[I, O any](s *Service, name, description string, write, keyless bool, run func(context.Context, *unit, I) (O, error)) {
 	input, err := jsonschema.For[I](&jsonschema.ForOptions{TypeSchemas: map[reflect.Type]*jsonschema.Schema{
 		reflect.TypeFor[json.RawMessage](): {},
-		reflect.TypeFor[Calc]():            calcSchema(),
 	}})
 	if err != nil {
 		panic(err)
 	}
 	output, err := jsonschema.For[O](&jsonschema.ForOptions{TypeSchemas: map[reflect.Type]*jsonschema.Schema{
 		reflect.TypeFor[json.RawMessage](): {Types: []string{"object", "null"}},
-		reflect.TypeFor[Calc]():            calcSchema(),
 	}})
 	if err != nil {
 		panic(err)

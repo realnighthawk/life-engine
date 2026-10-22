@@ -6,14 +6,12 @@ import (
 	"fmt"
 )
 
-// batchable are the operations a batch may run: the creates a plan is made of, and the one link between them.
-var batchable = map[string]bool{
-	"routines_create": true, "goals_create": true, "goals_link_routine": true,
-	"reminders_create": true, "plan_items_create": true, "views_create": true,
-}
+// batchable are the operations a batch may run: the creates a plan is made of. A task or event links to a goal in the same
+// batch by that goal's chosen id.
+var batchable = map[string]bool{"goals_create": true, "tasks_create": true, "calendar_events_create": true}
 
 type BatchOp struct {
-	Operation string          `json:"operation" jsonschema:"routines_create, goals_create, goals_link_routine, reminders_create, plan_items_create or views_create"`
+	Operation string          `json:"operation" jsonschema:"goals_create, tasks_create or calendar_events_create"`
 	Input     json.RawMessage `json:"input" jsonschema:"that operation's own input; leave out idempotency_key, the batch sets it. Give each new record an id so later operations can refer to it"`
 }
 type BatchPlan struct {
@@ -106,11 +104,9 @@ func (s *Service) batchDryRun(ctx context.Context, u *unit, in BatchPlan) (Batch
 
 // inverse is how each record a batch creates is taken away again, and where to see if it already is.
 var inverse = map[string]struct{ op, table, removed string }{
-	"routines_create":   {"routines_delete", "routines", "deleted_at"},
-	"reminders_create":  {"reminders_delete", "reminders", "deleted_at"},
-	"plan_items_create": {"plan_items_delete", "plan_items", "deleted_at"},
-	"views_create":      {"views_delete", "views", "deleted_at"},
-	"goals_create":      {"goals_archive", "goals", "archived_at"},
+	"tasks_create":           {"tasks_delete", "items", "deleted_at"},
+	"calendar_events_create": {"calendar_events_delete", "items", "deleted_at"},
+	"goals_create":           {"goals_archive", "goals", "deleted_at"},
 }
 
 type BatchUndoInput struct {

@@ -1,6 +1,0 @@
-{
-  "error": {
-    "code": "conflict",
-    "message": "Stale version: expected 1, current 2. Fetch the record and reapply your edit."
-  }
-}

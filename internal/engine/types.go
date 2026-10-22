@@ -40,13 +40,13 @@ type Change struct {
 }
 type HistoryInput struct {
 	ListInput
-	EntityType string `json:"entity_type" jsonschema:"goal_measurement, view, reminder, schedule, settings, goal, step, commitment, plan_item, plan_proposal, routine, journal_entry, note, capture or attachment"`
+	EntityType string `json:"entity_type" jsonschema:"goal, item or settings"`
 	ID         string `json:"id" jsonschema:"record UUID"`
 }
 
 // Events: the delivery contract mcp-hub drains. See events.go.
 type Link struct {
-	Entity string `json:"entity" jsonschema:"reminder, schedule, goal, step, plan_item, routine, journal_entry, note or capture"`
+	Entity string `json:"entity" jsonschema:"goal, task or event"`
 	ID     string `json:"id"`
 }
 type Notice struct {

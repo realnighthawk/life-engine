@@ -1,21 +1,23 @@
 # Life Engine
 
-The shared personal data layer for the agent harness: the system of record for what an agent keeps for a person (reminders now; goals, plan, routines, journal and notes next) plus the deterministic rules over them. One operation registry serves the router (`POST /api/v1/operations/<name>`, for apps) and MCP (`/mcp`, for the agent via mcp-hub). Design, contract and plan live in Project Hub: [`projects/life-engine/`](https://github.com/kumarabd/project-hub/tree/main/projects/life-engine).
+The shared personal data layer for the agent harness: the system of record for a person's **goals, tasks and events**, and the alerts on them. A reminder is an alert on a task or event, a routine is a task that repeats, and the day is a view, not a record ([ADR 0008](https://github.com/kumarabd/project-hub/blob/main/projects/life-engine/adr/0008-goal-task-event-primitives.md)). One operation registry serves the router (`POST /api/v1/operations/<name>`, for apps) and MCP (`/mcp`, for the agent via mcp-hub). Design, contract and plan live in Project Hub: [`projects/life-engine/`](https://github.com/kumarabd/project-hub/tree/main/projects/life-engine).
 
 ## Status
 
-Implemented and tested: settings; reminders (repeating, on the person's local clock); schedules (recurring prompts for the agent); goals, steps and weekly commitments; the daily plan with agent-proposed revisions; routines with busy-day versions, check-ins, streaks and gap detection; journal and notes with full-text search; captures; monitors (checked on an interval, told only when it matters); goal check-ins (a schedule linked to a goal); attachments in object storage; `next_action`, `plan_replan_preview`, `day_close`, `week_stats`, `life_context_get`; audit history; and the `events_pending`/`events_ack` contract (routine gaps and captures); reminders, schedules and routine nudges (records owned by their routine) fire from Temporal Schedules the engine arms and keeps in step with the records (`internal/wakes`, ADR 0003) when `TEMPORAL_ADDRESS`, `TENANT_SLUG` and `LIFE_WAKE_SESSION_KEY` are set. 105 operations in `api/openapi.json`.
+Clean-slate rebuild on branch `clean-slate-engine` (2026-10-21), not yet merged or deployed. Implemented and tested against Postgres 17 and a real Temporal server: goals (progress derived from linked tasks), tasks and calendar events (versioned, soft-delete, repeating on the person's local clock, alert before, snooze, per-occurrence completion), a `subject` of person or agent on every item, `day_get`, `batch_apply`/`batch_undo`/`batch_dry_run`, settings, audit history, and the `events_pending`/`events_ack` contract (notices only).
 
-Not yet: router/chart wiring and the mcp-hub catalog entry (they live in `agent-harness` and `infra/mcp-hub`), shared client fixtures, and gateway push.
+The engine owns the clock: it keeps a Temporal Schedule matched to each item with an alert (`internal/clock`, updated in place, native recurrence in the item's zone) and runs the worker for `FireWorkflow`. A person's alert becomes a notice the hub delivers; an agent's alert signals the conversation it was created from. Needs `TEMPORAL_ADDRESS` and `TENANT_SLUG` together (alerts are off without them). Migration 0022 drops the older model (reminders, schedules, routines, plan, steps, commitments, monitors, trackers and views, journal, notes, captures, attachments): nothing is migrated.
+
+Not here: views and trackers (deferred, to be rebuilt on this base), and the client apps, which still speak the old operations.
 
 ## Run
 
 ```sh
 make test-db                       # disposable Postgres on :56393
-make test-minio                    # optional: MinIO on :59003, for the object-storage tests
 export TEST_DATABASE_URL=postgres://life_test:local-life-test-only@127.0.0.1:56393/life_test
 make check                         # format, vet, unit tests, build, OpenAPI drift
-make integration                   # full tests against Postgres (and MinIO if MINIO_TEST_* is set), with -race
+make integration                   # full tests against Postgres, with -race
+# LIVE_TEMPORAL_ADDRESS=host:7233 go test ./internal/clock -run Live   # real Temporal; needs TenantSlug, WakeKind, WakeSubject, WakeUserVisible registered
 DATABASE_URL=$TEST_DATABASE_URL make run   # serves on 127.0.0.1:8093
 ```
 
@@ -26,11 +28,10 @@ DATABASE_URL=$TEST_DATABASE_URL make run   # serves on 127.0.0.1:8093
 - Writes carry `idempotency_key`; a retry replays the stored response. Edits carry `expected_version`; a stale one returns `conflict`.
 - Errors are `{"error":{"code","message"}}`: `invalid_input` 400, `not_found` 404, `conflict`/`duplicate` 409, `too_large` 413, `busy` 503, `internal` 500.
 - One person per database; the engine has no authentication or user handling. The router verifies Clerk and the tenant's network policy is the boundary, so never expose this service directly.
-- Timestamps are RFC 3339 UTC. Recurring reminders repeat on their own IANA zone's wall-clock time.
-- No timers and no outbound calls: due notices are derived when `events_pending` is polled by mcp-hub, which routes them to the user or the agent.
+- Timestamps are RFC 3339 UTC. A repeating item repeats on its own IANA zone's wall-clock time.
+- The engine owns the clock (Temporal Schedules, see Status). A person's alert is recorded as a notice that mcp-hub collects with `events_pending`; an agent's alert signals the conversation it was created from.
 - Add a numbered migration; never edit an applied one.
-- Attachments are optional: set `MINIO_*` (see `.env.example`) to enable them. Bytes go through the engine (`PUT`/`GET /api/v1/attachments/<id>/content`), since object storage is not reachable from clients. Objects are immutable and checksummed.
-- "Today" and the week are computed in the time zone from `settings_get`; set it first.
+- "Today" is computed in the time zone from `settings_get`; set it first.
 
 ## Client fixtures
 

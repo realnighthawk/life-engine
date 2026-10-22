@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"strconv"
 	"strings"
 	"time"
 	_ "time/tzdata" // IANA zones must resolve in a distroless image
@@ -97,19 +96,3 @@ func day(field, v string) (string, error) {
 	}
 	return v, nil
 }
-
-func toDayNumber(v string) dayNumber {
-	t, _ := time.Parse("2006-01-02", v)
-	return dayNumber(t.Unix() / 86400)
-}
-
-func fromDayNumber(d dayNumber) string {
-	return time.Unix(int64(d)*86400, 0).UTC().Format("2006-01-02")
-}
-
-// weekdayOf is 0 (Sunday) to 6 for a day number; 1970-01-01 was a Thursday.
-func weekdayOf(d dayNumber) int { return (int(d)%7 + 4 + 7) % 7 }
-
-func addDays(v string, n int) string { return fromDayNumber(toDayNumber(v) + dayNumber(n)) }
-
-func itoa(n int) string { return strconv.Itoa(n) }

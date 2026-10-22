@@ -2,7 +2,7 @@ package engine
 
 import "time"
 
-// Recurrence repeats a reminder on local wall-clock time in its own zone, so "9:00 every weekday" stays 9:00 across daylight saving.
+// Recurrence repeats an item on local wall-clock time in its own zone, so "9:00 every weekday" stays 9:00 across daylight saving.
 type Recurrence struct {
 	Freq     string `json:"freq" jsonschema:"daily, weekly or monthly"`
 	Interval int    `json:"interval,omitempty" jsonschema:"repeat every N days/weeks/months, 1-365, default 1"`
@@ -122,4 +122,27 @@ func scheduleNext(now time.Time, timeOfDay string, loc *time.Location, r Recurre
 		return anchor.UTC(), nil
 	}
 	return nextOccurrence(anchor, now, r, loc).UTC(), nil
+}
+
+// occurrencesIn expands a repeating item's series between start (inclusive) and end (exclusive).
+func occurrencesIn(anchor time.Time, rule Recurrence, loc *time.Location, start, end time.Time) []time.Time {
+	var out []time.Time
+	if !anchor.Before(start) && anchor.Before(end) {
+		out = append(out, anchor)
+	}
+	after := start.Add(-time.Second)
+	if after.Before(anchor) {
+		after = anchor
+	}
+	t := after
+	for i := 0; i < 64; i++ { // a day holds a handful of occurrences at most; the bound only guards a malformed rule
+		t = nextOccurrence(anchor, t, rule, loc)
+		if !t.Before(end) {
+			break
+		}
+		if !t.Before(start) {
+			out = append(out, t)
+		}
+	}
+	return out
 }

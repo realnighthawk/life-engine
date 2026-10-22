@@ -37,18 +37,10 @@ func (s *Service) OpenAPI() map[string]any {
 			},
 		}}
 	}
-	paths["/api/v1/attachments/{id}/content"] = map[string]any{
-		"parameters": []any{map[string]any{"name": "id", "in": "path", "required": true, "schema": map[string]string{"type": "string", "format": "uuid"}}},
-		"put": map[string]any{"operationId": "attachments_upload", "description": "Upload the exact bytes reserved by attachments_upload_init (maximum 25 MiB). The Content-Type must match the reserved type. Identical retries are safe.", "security": []any{map[string]any{"routerBearer": []string{}}},
-			"requestBody": map[string]any{"required": true, "content": map[string]any{"application/octet-stream": map[string]any{"schema": map[string]string{"type": "string", "format": "binary"}}}},
-			"responses":   map[string]any{"200": map[string]any{"description": "Attachment status", "content": map[string]any{"application/json": map[string]any{"schema": map[string]string{"$ref": "#/components/schemas/attachments_get_output"}}}}, "400": errorResponse("Wrong type or size"), "401": errorResponse("Authentication required by router"), "404": errorResponse("Attachment not found"), "409": errorResponse("Attachment already has different content"), "413": errorResponse("Attachment exceeds 25 MiB"), "503": errorResponse("Attachment storage unavailable")}},
-		"get": map[string]any{"operationId": "attachments_content", "description": "Read a ready attachment's bytes.", "security": []any{map[string]any{"routerBearer": []string{}}},
-			"responses": map[string]any{"200": map[string]any{"description": "The stored bytes", "content": map[string]any{"application/octet-stream": map[string]any{"schema": map[string]string{"type": "string", "format": "binary"}}}}, "401": errorResponse("Authentication required by router"), "404": errorResponse("Attachment not found or not ready"), "503": errorResponse("Attachment storage unavailable")}},
-	}
 	schemas["Error"] = map[string]any{"type": "object", "required": []string{"error"}, "properties": map[string]any{
 		"error": map[string]any{"type": "object", "required": []string{"code", "message"}, "properties": map[string]any{"code": map[string]string{"type": "string"}, "message": map[string]string{"type": "string"}}},
 	}}
-	return map[string]any{"openapi": "3.1.0", "info": map[string]string{"title": "Life Engine", "version": "0.1.0", "description": "Reminders and the personal records an agent keeps for a person. One registry serves HTTP and MCP."},
+	return map[string]any{"openapi": "3.1.0", "info": map[string]string{"title": "Life Engine", "version": "0.1.0", "description": "A person's goals, tasks and events, and the alerts on them. One registry serves HTTP and MCP."},
 		"servers": []any{map[string]string{"url": "/life", "description": "Trusted identity router; direct engine uses /"}},
 		"paths":   paths, "components": map[string]any{"schemas": schemas, "securitySchemes": map[string]any{"routerBearer": map[string]string{
 			"type": "http", "scheme": "bearer", "bearerFormat": "JWT", "description": "Verified by the identity router; the private engine has no authentication or user identity handling.",

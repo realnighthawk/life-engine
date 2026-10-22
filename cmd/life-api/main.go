@@ -11,12 +11,11 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/realnighthawk/life-engine/internal/blobs"
+	"github.com/realnighthawk/life-engine/internal/clock"
 	"github.com/realnighthawk/life-engine/internal/config"
 	"github.com/realnighthawk/life-engine/internal/engine"
 	"github.com/realnighthawk/life-engine/internal/store/postgres"
 	"github.com/realnighthawk/life-engine/internal/transport"
-	"github.com/realnighthawk/life-engine/internal/wakes"
 )
 
 func main() {
@@ -47,35 +46,29 @@ func run() error {
 	if err = postgres.Migrate(startup, pool); err != nil {
 		return err
 	}
-	var store blobs.Store
-	if cfg.MinioEndpoint != "" {
-		minio, err := blobs.NewMinio(cfg.MinioEndpoint, cfg.MinioBucket, cfg.MinioAccess, cfg.MinioSecret, cfg.MinioRegion)
-		if err != nil {
-			return err
-		}
-		if err = minio.Check(startup); err != nil {
-			return err
-		}
-		store = minio
-	}
-	service := engine.New(pool, store)
+	service := engine.New(pool)
 	if cfg.TemporalAddress != "" {
-		waker, err := wakes.New(wakes.Config{Address: cfg.TemporalAddress, Namespace: cfg.TemporalNamespace, TaskQueue: cfg.TemporalTaskQueue,
-			TenantSlug: cfg.TenantSlug, SessionKey: cfg.WakeSessionKey})
+		clk, err := clock.New(clock.Config{Address: cfg.TemporalAddress, Namespace: cfg.TemporalNamespace, TaskQueue: cfg.EngineTaskQueue,
+			CoordinatorTaskQueue: cfg.CoordinatorTaskQueue, TenantSlug: cfg.TenantSlug})
 		if err != nil {
 			return err
 		}
-		defer waker.Close()
-		service.SetWaker(ctx, waker, 30*time.Second)
+		defer clk.Close()
+		service.SetWaker(ctx, clk, 30*time.Second)
+		go func() {
+			if err := clk.Run(ctx, service); err != nil {
+				slog.Error("alert worker stopped", "error", err)
+			}
+		}()
 	} else {
-		slog.Warn("wakes disabled: reminders are stored but nothing will fire them", "reason", "TEMPORAL_ADDRESS unset")
+		slog.Warn("alerts disabled: items are stored but nothing will fire them", "reason", "TEMPORAL_ADDRESS unset")
 	}
 	health := http.NewServeMux()
 	health.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(200); _, _ = w.Write([]byte("ok")) })
 	health.HandleFunc("GET /readyz", func(w http.ResponseWriter, r *http.Request) {
 		c, cancel := context.WithTimeout(r.Context(), 3*time.Second)
 		defer cancel()
-		if pool.Ping(c) != nil || service.StorageReady(c) != nil {
+		if pool.Ping(c) != nil {
 			http.Error(w, "unavailable", 503)
 			return
 		}

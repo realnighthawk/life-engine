@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "conflict",
+    "message": "Stale version: expected 1, current 3. Fetch the record and reapply your edit."
+  }
+}

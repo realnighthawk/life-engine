@@ -11,7 +11,6 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
-	"github.com/realnighthawk/life-engine/internal/blobs"
 	"github.com/realnighthawk/life-engine/internal/engine"
 	"github.com/realnighthawk/life-engine/internal/store/postgres"
 )
@@ -31,7 +30,7 @@ func TestMCPCallRecordsTheCallingSession(t *testing.T) {
 	if err = postgres.Migrate(ctx, pool); err != nil {
 		t.Fatal(err)
 	}
-	service := engine.New(pool, blobs.NewMemory())
+	service := engine.New(pool)
 	handler, err := New(service, http.NewServeMux(), nil)
 	if err != nil {
 		t.Fatal(err)
@@ -49,7 +48,7 @@ func TestMCPCallRecordsTheCallingSession(t *testing.T) {
 		t.Helper()
 		res, err := session.CallTool(ctx, &mcp.CallToolParams{Name: name, Arguments: args, Meta: meta})
 		if err != nil || res.IsError {
-			t.Fatalf("%s: %v %+v", name, err, res)
+			t.Fatalf("%s: %v %+v %s", name, err, res, textOf(res))
 		}
 		var out map[string]any
 		raw, _ := json.Marshal(res.StructuredContent)
@@ -57,10 +56,22 @@ func TestMCPCallRecordsTheCallingSession(t *testing.T) {
 		return out
 	}
 	key := "agent:main:web:user:meta-test:session:s1"
-	created := call("reminders_create", map[string]any{"idempotency_key": "meta-" + time.Now().Format("150405.000000"), "title": "Via MCP"},
-		map[string]any{engine.SessionMetaKey: key})
-	got := call("reminders_get", map[string]any{"id": created["id"]}, nil)
-	if got["session_id"] != key {
-		t.Fatalf("session_id = %v, want %s", got["session_id"], key)
+	at := time.Now().Add(time.Hour).UTC().Format(time.RFC3339)
+	created := call("tasks_create", map[string]any{"idempotency_key": "meta-" + time.Now().Format("150405.000000"), "title": "Via MCP", "subject": "agent",
+		"at": at, "alert_before_minutes": 0}, map[string]any{engine.SessionMetaKey: key})
+	got := call("tasks_get", map[string]any{"id": created["id"]}, nil)
+	// An agent's item wakes the user-stable conversation: the key without its per-branch ":session:<id>" suffix.
+	if want := "agent:main:web:user:meta-test"; got["session_key"] != want {
+		t.Fatalf("session_key = %v, want %s", got["session_key"], want)
 	}
+}
+
+func textOf(res *mcp.CallToolResult) string {
+	if res == nil || len(res.Content) == 0 {
+		return ""
+	}
+	if t, ok := res.Content[0].(*mcp.TextContent); ok {
+		return t.Text
+	}
+	return ""
 }

@@ -1,17 +1,17 @@
 {
   "items": [
     {
-      "event_key": "life:capture",
-      "event_id": "capture:aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa:1791836678",
-      "detail": "The person captured: \"remind me to book the dentist\". Decide what it is (reminder, plan item, journal entry, note or goal), create it, then resolve the capture.",
+      "event_key": "life:notice",
+      "event_id": "notice:006a9e08-1b38-449b-bd77-aa529d960cfd",
+      "detail": "Notice for the person: Weigh-in",
       "notice": {
-        "kind": "capture.open",
-        "title": "Captured",
-        "body": "remind me to book the dentist",
+        "kind": "notice",
+        "title": "Weigh-in",
+        "body": "It is Sunday",
         "priority": "normal",
         "link": {
-          "entity": "capture",
-          "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+          "entity": "goal",
+          "id": "c5b5a443-9732-45e4-bf8e-eeb37a075415"
         }
       }
     }

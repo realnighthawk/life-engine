@@ -3,7 +3,7 @@ package engine
 import "context"
 
 // historyTables maps an auditable entity type to its table; add an entry with each new entity.
-var historyTables = map[string]string{"goal_measurement": "goal_measurements", "view": "views", "reminder": "reminders", "schedule": "schedules", "monitor": "monitors", "settings": "settings", "goal": "goals", "step": "steps", "commitment": "commitments", "plan_item": "plan_items", "plan_proposal": "plan_proposals", "routine": "routines", "journal_entry": "journal_entries", "note": "notes", "capture": "captures", "attachment": "attachments"}
+var historyTables = map[string]string{"goal": "goals", "item": "items", "settings": "settings"}
 
 func history(ctx context.Context, u *unit, in HistoryInput) (Page[Change], error) {
 	result := Page[Change]{Items: []Change{}}
@@ -21,7 +21,7 @@ func history(ctx context.Context, u *unit, in HistoryInput) (Page[Change], error
 		return result, e
 	}
 	if !found {
-		// Hard-deleted records (steps, commitments) keep their audit trail.
+		// A record that is gone keeps its audit trail.
 		if e = u.tx.QueryRow(ctx, "SELECT EXISTS (SELECT 1 FROM life.changes WHERE entity_type=$1 AND entity_id=$2)", in.EntityType, key).Scan(&found); e != nil || !found {
 			if e != nil {
 				return result, e

@@ -1,0 +1,26 @@
+{
+  "items": [
+    {
+      "id": "7924c381-238b-4421-bafe-67c304a24690",
+      "kind": "event",
+      "subject": "person",
+      "title": "Standup",
+      "notes": "",
+      "goal_id": null,
+      "at": "2026-10-22T09:00:00Z",
+      "minutes": 15,
+      "time_zone": "UTC",
+      "recurrence": null,
+      "alert_before_minutes": null,
+      "is_priority": false,
+      "snoozed_until": null,
+      "done_at": null,
+      "version": 1,
+      "deleted_at": null,
+      "created_at": "2026-10-22T04:53:06.637482Z",
+      "updated_at": "2026-10-22T04:53:06.637482Z"
+    }
+  ],
+  "total": 1,
+  "next_offset": null
+}
