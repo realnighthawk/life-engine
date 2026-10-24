@@ -48,7 +48,7 @@ func (s *Service) runBatch(ctx context.Context, u *unit, plan BatchPlan, key str
 	for i, o := range plan.Operations {
 		op := s.operations[o.Operation]
 		if op == nil || !batchable[o.Operation] {
-			return res, invalid(fmt.Sprintf("operations[%d]: %q cannot be part of a batch", i, o.Operation))
+			return res, invalid(fmt.Sprintf("operations[%d]: %q cannot be part of a batch. A batch holds only goals_create, tasks_create, calendar_events_create and views_create; call any other tool (reads, other servers) on its own, outside the batch", i, o.Operation))
 		}
 		raw, e := withKey(o.Input, fmt.Sprintf("%s:%d", key, i))
 		if e != nil {
