@@ -88,7 +88,7 @@ func (u *unit) withProgress(ctx context.Context, g Goal) (Goal, error) {
 }
 
 func (u *unit) getGoal(ctx context.Context, key string, forUpdate bool) (Goal, error) {
-	k, e := id(key)
+	k, e := u.resolveRef(ctx, "goals", "", key)
 	if e != nil {
 		return Goal{}, e
 	}
@@ -97,6 +97,9 @@ func (u *unit) getGoal(ctx context.Context, key string, forUpdate bool) (Goal, e
 		q += " FOR UPDATE"
 	}
 	g, e := scanGoal(u.tx.QueryRow(ctx, q, k))
+	if isNoRows(e) {
+		e = u.missing(ctx, "goals", "", k)
+	}
 	if e != nil {
 		return g, e
 	}

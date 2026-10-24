@@ -104,7 +104,7 @@ func scanItem(row scanner) (Item, error) {
 func isNoRows(err error) bool { return errors.Is(err, pgx.ErrNoRows) }
 
 func (u *unit) getItem(ctx context.Context, kind, key string, forUpdate bool) (Item, error) {
-	k, e := id(key)
+	k, e := u.resolveRef(ctx, "items", kind, key)
 	if e != nil {
 		return Item{}, e
 	}
@@ -112,7 +112,11 @@ func (u *unit) getItem(ctx context.Context, kind, key string, forUpdate bool) (I
 	if forUpdate {
 		q += " FOR UPDATE"
 	}
-	return scanItem(u.tx.QueryRow(ctx, q, k, kind))
+	it, e := scanItem(u.tx.QueryRow(ctx, q, k, kind))
+	if isNoRows(e) {
+		e = u.missing(ctx, "items", kind, k)
+	}
+	return it, e
 }
 
 type itemValues struct {
