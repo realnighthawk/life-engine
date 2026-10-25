@@ -2,6 +2,7 @@ package engine_test
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"sync"
 	"testing"
@@ -99,9 +100,22 @@ type fakeWaker struct {
 	mu      sync.Mutex
 	applied map[string]engine.AlertSpec
 	log     []string
+	wakes   map[string]engine.FireWake // by workflow id: starting one twice is one wake
+	failing bool
 }
 
-func newFakeWaker() *fakeWaker { return &fakeWaker{applied: map[string]engine.AlertSpec{}} }
+func newFakeWaker() *fakeWaker {
+	return &fakeWaker{applied: map[string]engine.AlertSpec{}, wakes: map[string]engine.FireWake{}}
+}
+func (f *fakeWaker) Wake(_ context.Context, id string, w engine.FireWake) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if f.failing {
+		return errors.New("temporal is down")
+	}
+	f.wakes[id] = w
+	return nil
+}
 func (f *fakeWaker) Apply(_ context.Context, id string, sp engine.AlertSpec) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()

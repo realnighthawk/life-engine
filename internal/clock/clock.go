@@ -147,3 +147,16 @@ func (k *Clock) Exists(ctx context.Context, itemID, name string) (bool, error) {
 	}
 	return err == nil, err
 }
+
+// Wake starts the workflow that delivers one watch firing's wake. A workflow that already ran to completion under this id is
+// the same wake done, not an error.
+func (k *Clock) Wake(ctx context.Context, workflowID string, w engine.FireWake) error {
+	_, err := k.c.ExecuteWorkflow(ctx, client.StartWorkflowOptions{ID: workflowID, TaskQueue: k.cfg.TaskQueue,
+		WorkflowIDReusePolicy:    enumspb.WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE_FAILED_ONLY,
+		WorkflowExecutionTimeout: 10 * time.Minute}, "WatchWakeWorkflow", w)
+	var started *serviceerror.WorkflowExecutionAlreadyStarted
+	if errors.As(err, &started) {
+		return nil
+	}
+	return err
+}

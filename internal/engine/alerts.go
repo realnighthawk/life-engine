@@ -47,6 +47,8 @@ type Waker interface {
 	Apply(ctx context.Context, itemID string, spec AlertSpec) error
 	Remove(ctx context.Context, itemID, name string) error
 	Exists(ctx context.Context, itemID, name string) (bool, error)
+	// Wake delivers one wake into a conversation as a workflow named workflowID, so starting it twice is one wake.
+	Wake(ctx context.Context, workflowID string, w FireWake) error
 }
 
 // alertGrace is how far past its time a one-shot alert is still armed. Temporal does not fire a calendar time already gone,
@@ -164,6 +166,9 @@ func (s *Service) SetWaker(ctx context.Context, w Waker, every time.Duration) {
 		for {
 			if err := s.SyncAlerts(ctx); err != nil {
 				slog.Error("alert sync failed", "error", err)
+			}
+			if err := s.SendWatchWakes(ctx); err != nil {
+				slog.Error("watch wakes failed", "error", err)
 			}
 			select {
 			case <-ctx.Done():

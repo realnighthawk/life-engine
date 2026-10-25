@@ -54,6 +54,14 @@ func FireWorkflow(ctx workflow.Context, in FireInput) error {
 	return nil
 }
 
+// WatchWakeWorkflow is one watch firing's wake: it hands the conversation the objective and what happened, with the same
+// retries as an alert's wake. It is named for the firing (the watch and the event), so a second start is the same wake.
+func WatchWakeWorkflow(ctx workflow.Context, w engine.FireWake) error {
+	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{StartToCloseTimeout: 30 * time.Second,
+		RetryPolicy: &temporal.RetryPolicy{InitialInterval: 2 * time.Second, BackoffCoefficient: 2, MaximumInterval: time.Minute, MaximumAttempts: 6}})
+	return workflow.ExecuteActivity(ctx, "WakeSession", w).Get(ctx, nil)
+}
+
 // Activities carry out a firing.
 type Activities struct {
 	Service *engine.Service
@@ -121,6 +129,7 @@ func (a *Activities) WakeSession(ctx context.Context, w engine.FireWake) error {
 func (k *Clock) Run(ctx context.Context, svc *engine.Service) error {
 	w := worker.New(k.c, k.cfg.TaskQueue, worker.Options{})
 	w.RegisterWorkflowWithOptions(FireWorkflow, workflow.RegisterOptions{Name: "FireWorkflow"})
+	w.RegisterWorkflowWithOptions(WatchWakeWorkflow, workflow.RegisterOptions{Name: "WatchWakeWorkflow"})
 	acts := &Activities{Service: svc, Client: k.c, Cfg: k.cfg}
 	w.RegisterActivity(acts)
 	if err := w.Start(); err != nil {

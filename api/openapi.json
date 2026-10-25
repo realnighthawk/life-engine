@@ -1789,6 +1789,51 @@
         ],
         "type": "object"
       },
+      "events_deliver_input": {
+        "additionalProperties": false,
+        "properties": {
+          "detail": {
+            "description": "what happened, in one sentence",
+            "type": "string"
+          },
+          "event_id": {
+            "description": "this occurrence, durable and deterministic so a re-delivery is recognised",
+            "type": "string"
+          },
+          "event_key": {
+            "description": "the class of notice, as the engine that raised it names it",
+            "type": "string"
+          },
+          "source": {
+            "description": "the connection that raised it",
+            "type": "string"
+          }
+        },
+        "required": [
+          "event_key",
+          "event_id",
+          "detail"
+        ],
+        "type": "object"
+      },
+      "events_deliver_output": {
+        "additionalProperties": false,
+        "properties": {
+          "matched": {
+            "description": "live watches for this event_key",
+            "type": "integer"
+          },
+          "queued": {
+            "description": "wakes newly queued; fewer than matched when this event was delivered before",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "matched",
+          "queued"
+        ],
+        "type": "object"
+      },
       "events_pending_input": {
         "additionalProperties": false,
         "type": "object"
@@ -13086,6 +13131,497 @@
           "updated_at"
         ],
         "type": "object"
+      },
+      "watches_create_input": {
+        "additionalProperties": false,
+        "properties": {
+          "event_key": {
+            "description": "the event to watch, exactly as the engine that raises it names it",
+            "type": "string"
+          },
+          "expires_at": {
+            "description": "RFC 3339 instant after which the watch stops firing; optional",
+            "type": "string"
+          },
+          "goal_id": {
+            "description": "UUID of the goal this watch serves; optional",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          },
+          "name": {
+            "description": "short, lowercase letters, digits and dashes, 1-60 characters; arming the same name again revises that watch",
+            "type": "string"
+          },
+          "objective": {
+            "description": "what you should do when you are woken, up to 2000 characters: the event says only what happened",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "name",
+          "event_key",
+          "objective"
+        ],
+        "type": "object"
+      },
+      "watches_create_output": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "event_key": {
+            "description": "the event watched, exactly as the engine that raises it names it",
+            "type": "string"
+          },
+          "expires_at": {
+            "description": "the watch stops firing at this time, or null",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "goal_id": {
+            "description": "the goal this watch serves, or null",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "description": "the watch's identity within the conversation",
+            "type": "string"
+          },
+          "objective": {
+            "description": "what to do when woken",
+            "type": "string"
+          },
+          "session_key": {
+            "description": "the conversation a firing wakes",
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "session_key",
+          "event_key",
+          "objective",
+          "goal_id",
+          "expires_at",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "watches_delete_input": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "description": "the version you last read; a stale version is rejected",
+            "type": "integer"
+          },
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "expected_version"
+        ],
+        "type": "object"
+      },
+      "watches_delete_output": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "event_key": {
+            "description": "the event watched, exactly as the engine that raises it names it",
+            "type": "string"
+          },
+          "expires_at": {
+            "description": "the watch stops firing at this time, or null",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "goal_id": {
+            "description": "the goal this watch serves, or null",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "description": "the watch's identity within the conversation",
+            "type": "string"
+          },
+          "objective": {
+            "description": "what to do when woken",
+            "type": "string"
+          },
+          "session_key": {
+            "description": "the conversation a firing wakes",
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "session_key",
+          "event_key",
+          "objective",
+          "goal_id",
+          "expires_at",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "watches_get_input": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "watches_get_output": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "event_key": {
+            "description": "the event watched, exactly as the engine that raises it names it",
+            "type": "string"
+          },
+          "expires_at": {
+            "description": "the watch stops firing at this time, or null",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "goal_id": {
+            "description": "the goal this watch serves, or null",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "description": "the watch's identity within the conversation",
+            "type": "string"
+          },
+          "objective": {
+            "description": "what to do when woken",
+            "type": "string"
+          },
+          "session_key": {
+            "description": "the conversation a firing wakes",
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "session_key",
+          "event_key",
+          "objective",
+          "goal_id",
+          "expires_at",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "watches_list_input": {
+        "additionalProperties": false,
+        "properties": {
+          "limit": {
+            "description": "1-200, default 50",
+            "type": "integer"
+          },
+          "offset": {
+            "description": "0-1000000, default 0",
+            "type": "integer"
+          },
+          "search": {
+            "description": "literal text to find",
+            "type": "string"
+          },
+          "state": {
+            "description": "active (default), deleted or all",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "watches_list_output": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "created_at": {
+                  "type": "string"
+                },
+                "deleted_at": {
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "event_key": {
+                  "description": "the event watched, exactly as the engine that raises it names it",
+                  "type": "string"
+                },
+                "expires_at": {
+                  "description": "the watch stops firing at this time, or null",
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "goal_id": {
+                  "description": "the goal this watch serves, or null",
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "description": "the watch's identity within the conversation",
+                  "type": "string"
+                },
+                "objective": {
+                  "description": "what to do when woken",
+                  "type": "string"
+                },
+                "session_key": {
+                  "description": "the conversation a firing wakes",
+                  "type": "string"
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "session_key",
+                "event_key",
+                "objective",
+                "goal_id",
+                "expires_at",
+                "version",
+                "deleted_at",
+                "created_at",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "next_offset": {
+            "description": "offset of the next page, or null at the end",
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "next_offset"
+        ],
+        "type": "object"
+      },
+      "watches_update_input": {
+        "additionalProperties": false,
+        "properties": {
+          "event_key": {
+            "description": "the event to watch instead; left out, it stays",
+            "type": "string"
+          },
+          "expected_version": {
+            "description": "the version you last read; a stale version is rejected",
+            "type": "integer"
+          },
+          "expires_at": {
+            "description": "RFC 3339 instant after which the watch stops firing; left out, it stays",
+            "type": "string"
+          },
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          },
+          "objective": {
+            "description": "what to do when woken, instead; left out, it stays",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "expected_version"
+        ],
+        "type": "object"
+      },
+      "watches_update_output": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "event_key": {
+            "description": "the event watched, exactly as the engine that raises it names it",
+            "type": "string"
+          },
+          "expires_at": {
+            "description": "the watch stops firing at this time, or null",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "goal_id": {
+            "description": "the goal this watch serves, or null",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "description": "the watch's identity within the conversation",
+            "type": "string"
+          },
+          "objective": {
+            "description": "what to do when woken",
+            "type": "string"
+          },
+          "session_key": {
+            "description": "the conversation a firing wakes",
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "session_key",
+          "event_key",
+          "objective",
+          "goal_id",
+          "expires_at",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -14361,6 +14897,111 @@
           }
         ],
         "x-mcp-tool": "events_ack",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/events_deliver": {
+      "post": {
+        "description": "Hand the engine a notice another engine raised, so the watches armed for its event_key wake their conversations. Called by the hub's delivery loop, not by the agent. Idempotent: the same event_id queues nothing twice.",
+        "operationId": "events_deliver",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/events_deliver_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/events_deliver_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "events_deliver",
         "x-read-only": false
       }
     },
@@ -17406,6 +18047,531 @@
           }
         ],
         "x-mcp-tool": "views_update",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/watches_create": {
+      "post": {
+        "description": "Arm a watch: be woken, with a fresh turn, when an EVENT happens that an engine notices (a budget crossing its line, an arrival). Give the event_key exactly as the engine that raises it names it, and an objective: what to do when woken, since the event says only what happened. The name is the watch's identity: arming the same name again revises it. To be woken at a TIME, create a task of your own with an alert instead.",
+        "operationId": "watches_create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/watches_create_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/watches_create_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "watches_create",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/watches_delete": {
+      "post": {
+        "description": "Cancel a watch. It stops firing at once.",
+        "operationId": "watches_delete",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/watches_delete_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/watches_delete_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "watches_delete",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/watches_get": {
+      "post": {
+        "description": "Read one watch.",
+        "operationId": "watches_get",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/watches_get_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/watches_get_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "watches_get",
+        "x-read-only": true
+      }
+    },
+    "/api/v1/operations/watches_list": {
+      "post": {
+        "description": "List your watches for this conversation, by name. State deleted means cancelled.",
+        "operationId": "watches_list",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/watches_list_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/watches_list_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "watches_list",
+        "x-read-only": true
+      }
+    },
+    "/api/v1/operations/watches_update": {
+      "post": {
+        "description": "Change what a watch listens for, what it does or when it expires, using the version you last read. A field you leave out stays.",
+        "operationId": "watches_update",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/watches_update_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/watches_update_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "watches_update",
         "x-read-only": false
       }
     }

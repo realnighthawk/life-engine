@@ -30,6 +30,12 @@ func (s *Service) registerOperations() {
 	register(s, "calendar_events_delete", "Delete an event (it can be restored).", true, lifecycleItem("event", false))
 	register(s, "calendar_events_restore", "Restore a deleted event.", true, lifecycleItem("event", true))
 
+	register(s, "watches_create", "Arm a watch: be woken, with a fresh turn, when an EVENT happens that an engine notices (a budget crossing its line, an arrival). Give the event_key exactly as the engine that raises it names it, and an objective: what to do when woken, since the event says only what happened. The name is the watch's identity: arming the same name again revises it. To be woken at a TIME, create a task of your own with an alert instead.", true, createWatch)
+	register(s, "watches_get", "Read one watch.", false, func(c context.Context, u *unit, in GetInput) (Watch, error) { return u.getWatch(c, in.ID, false) })
+	register(s, "watches_list", "List your watches for this conversation, by name. State deleted means cancelled.", false, listWatches)
+	register(s, "watches_update", "Change what a watch listens for, what it does or when it expires, using the version you last read. A field you leave out stays.", true, updateWatch)
+	register(s, "watches_delete", "Cancel a watch. It stops firing at once.", true, deleteWatch)
+
 	register(s, "tasks_history", "A repeating task's recent days: for each, whether an occurrence fell and how many were done, the last 7 and 30 days, and the current and best run. A missed day lowers the rate; it never resets the history to zero. Use it to see how a habit is going.", false, tasksHistory)
 
 	register(s, "tracker_catalog_get", "Read the view kit a client supports: the blocks it can draw, the calculations it can run on live data, and how to compose them. Read it before composing a view of a goal, task or event; it names the exact catalog_id to use. The kit is finite and says nothing about kinds of goal: you compose it for the subject in front of you.", false, getTrackerCatalog)
@@ -57,5 +63,9 @@ func (s *Service) registerOperations() {
 	registerKeyless(s, "events_ack", "Mark notices delivered so they are not handed over twice. Called by the hub's delivery loop, not by the agent.",
 		func(c context.Context, u *unit, in AckEventsInput) (AckEventsResult, error) {
 			return u.eventsAck(c, in)
+		})
+	registerKeyless(s, "events_deliver", "Hand the engine a notice another engine raised, so the watches armed for its event_key wake their conversations. Called by the hub's delivery loop, not by the agent. Idempotent: the same event_id queues nothing twice.",
+		func(c context.Context, u *unit, in DeliverEventInput) (DeliverEventResult, error) {
+			return u.deliverEvent(c, in)
 		})
 }
