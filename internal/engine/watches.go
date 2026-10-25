@@ -356,3 +356,18 @@ func (s *Service) SendWatchWakes(ctx context.Context) error {
 	}
 	return firstErr
 }
+
+// taskDone is the event a one-off task being done raises: "task_done:<task id>". A watch armed on that key wakes its
+// conversation with the task's own result, which is how the agent follows its own work ("when the plan's task is done, check
+// it") without polling. The event id carries the task's version, so reopening and completing it again fires again. It runs in
+// the completing transaction, so a watch cannot miss the completion or see it twice.
+func (u *unit) taskDone(ctx context.Context, it Item) error {
+	detail := fmt.Sprintf("Task %q is done.", it.Title)
+	if it.Result != "" {
+		detail += " " + it.Result
+	}
+	_, err := u.deliverEvent(ctx, DeliverEventInput{
+		EventKey: "task_done:" + it.ID, EventID: fmt.Sprintf("task_done:%s@%d", it.ID, it.Version), Detail: detail, Source: "life",
+	})
+	return err
+}

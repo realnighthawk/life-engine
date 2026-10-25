@@ -270,7 +270,7 @@ func scanItemWith(row scanner, extra *string) (Item, error) {
 	var it Item
 	var rec []byte
 	err := row.Scan(&it.ID, &it.Kind, &it.Subject, &it.Title, &it.Notes, &it.GoalID, &it.At, &it.Minutes, &it.TimeZone, &rec, &it.AlertBeforeMinutes,
-		&it.IsPriority, &it.SessionKey, &it.SnoozedUntil, &it.DoneAt, &it.Version, &it.DeletedAt, &it.CreatedAt, &it.UpdatedAt, extra)
+		&it.IsPriority, &it.SessionKey, &it.SnoozedUntil, &it.DoneAt, &it.Version, &it.DeletedAt, &it.CreatedAt, &it.UpdatedAt, &it.Result, extra)
 	if err != nil {
 		return it, err
 	}

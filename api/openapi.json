@@ -409,6 +409,10 @@
               "object"
             ]
           },
+          "result": {
+            "description": "for a done one-off task: the line its owner gave when completing it",
+            "type": "string"
+          },
           "session_key": {
             "description": "for an agent's item, the conversation its alert wakes",
             "type": "string"
@@ -573,6 +577,10 @@
               "object"
             ]
           },
+          "result": {
+            "description": "for a done one-off task: the line its owner gave when completing it",
+            "type": "string"
+          },
           "session_key": {
             "description": "for an agent's item, the conversation its alert wakes",
             "type": "string"
@@ -726,6 +734,10 @@
               "null",
               "object"
             ]
+          },
+          "result": {
+            "description": "for a done one-off task: the line its owner gave when completing it",
+            "type": "string"
           },
           "session_key": {
             "description": "for an agent's item, the conversation its alert wakes",
@@ -914,6 +926,10 @@
                     "object"
                   ]
                 },
+                "result": {
+                  "description": "for a done one-off task: the line its owner gave when completing it",
+                  "type": "string"
+                },
                 "session_key": {
                   "description": "for an agent's item, the conversation its alert wakes",
                   "type": "string"
@@ -1101,6 +1117,10 @@
               "object"
             ]
           },
+          "result": {
+            "description": "for a done one-off task: the line its owner gave when completing it",
+            "type": "string"
+          },
           "session_key": {
             "description": "for an agent's item, the conversation its alert wakes",
             "type": "string"
@@ -1269,6 +1289,10 @@
               "null",
               "object"
             ]
+          },
+          "result": {
+            "description": "for a done one-off task: the line its owner gave when completing it",
+            "type": "string"
           },
           "session_key": {
             "description": "for an agent's item, the conversation its alert wakes",
@@ -1510,6 +1534,10 @@
               "object"
             ]
           },
+          "result": {
+            "description": "for a done one-off task: the line its owner gave when completing it",
+            "type": "string"
+          },
           "session_key": {
             "description": "for an agent's item, the conversation its alert wakes",
             "type": "string"
@@ -1679,6 +1707,10 @@
                         "null",
                         "object"
                       ]
+                    },
+                    "result": {
+                      "description": "for a done one-off task: the line its owner gave when completing it",
+                      "type": "string"
                     },
                     "session_key": {
                       "description": "for an agent's item, the conversation its alert wakes",
@@ -2062,6 +2094,10 @@
                   "object"
                 ]
               },
+              "result": {
+                "description": "for a done one-off task: the line its owner gave when completing it",
+                "type": "string"
+              },
               "session_key": {
                 "description": "for an agent's item, the conversation its alert wakes",
                 "type": "string"
@@ -2316,6 +2352,10 @@
                   "object"
                 ]
               },
+              "result": {
+                "description": "for a done one-off task: the line its owner gave when completing it",
+                "type": "string"
+              },
               "session_key": {
                 "description": "for an agent's item, the conversation its alert wakes",
                 "type": "string"
@@ -2545,6 +2585,10 @@
                   "null",
                   "object"
                 ]
+              },
+              "result": {
+                "description": "for a done one-off task: the line its owner gave when completing it",
+                "type": "string"
               },
               "session_key": {
                 "description": "for an agent's item, the conversation its alert wakes",
@@ -2792,6 +2836,10 @@
                         "null",
                         "object"
                       ]
+                    },
+                    "result": {
+                      "description": "for a done one-off task: the line its owner gave when completing it",
+                      "type": "string"
                     },
                     "session_key": {
                       "description": "for an agent's item, the conversation its alert wakes",
@@ -3056,6 +3104,10 @@
                   "object"
                 ]
               },
+              "result": {
+                "description": "for a done one-off task: the line its owner gave when completing it",
+                "type": "string"
+              },
               "session_key": {
                 "description": "for an agent's item, the conversation its alert wakes",
                 "type": "string"
@@ -3315,6 +3367,10 @@
                   "null",
                   "object"
                 ]
+              },
+              "result": {
+                "description": "for a done one-off task: the line its owner gave when completing it",
+                "type": "string"
               },
               "session_key": {
                 "description": "for an agent's item, the conversation its alert wakes",
@@ -4043,6 +4099,10 @@
               "object"
             ]
           },
+          "result": {
+            "description": "for a done one-off task: the line its owner gave when completing it",
+            "type": "string"
+          },
           "session_key": {
             "description": "for an agent's item, the conversation its alert wakes",
             "type": "string"
@@ -4277,6 +4337,10 @@
               "object"
             ]
           },
+          "result": {
+            "description": "for a done one-off task: the line its owner gave when completing it",
+            "type": "string"
+          },
           "session_key": {
             "description": "for an agent's item, the conversation its alert wakes",
             "type": "string"
@@ -4441,6 +4505,10 @@
               "object"
             ]
           },
+          "result": {
+            "description": "for a done one-off task: the line its owner gave when completing it",
+            "type": "string"
+          },
           "session_key": {
             "description": "for an agent's item, the conversation its alert wakes",
             "type": "string"
@@ -4594,6 +4662,10 @@
               "null",
               "object"
             ]
+          },
+          "result": {
+            "description": "for a done one-off task: the line its owner gave when completing it",
+            "type": "string"
           },
           "session_key": {
             "description": "for an agent's item, the conversation its alert wakes",
@@ -4833,6 +4905,10 @@
                   "object"
                 ]
               },
+              "result": {
+                "description": "for a done one-off task: the line its owner gave when completing it",
+                "type": "string"
+              },
               "session_key": {
                 "description": "for an agent's item, the conversation its alert wakes",
                 "type": "string"
@@ -5031,6 +5107,10 @@
                     "object"
                   ]
                 },
+                "result": {
+                  "description": "for a done one-off task: the line its owner gave when completing it",
+                  "type": "string"
+                },
                 "session_key": {
                   "description": "for an agent's item, the conversation its alert wakes",
                   "type": "string"
@@ -5218,6 +5298,10 @@
               "object"
             ]
           },
+          "result": {
+            "description": "for a done one-off task: the line its owner gave when completing it",
+            "type": "string"
+          },
           "session_key": {
             "description": "for an agent's item, the conversation its alert wakes",
             "type": "string"
@@ -5386,6 +5470,10 @@
               "null",
               "object"
             ]
+          },
+          "result": {
+            "description": "for a done one-off task: the line its owner gave when completing it",
+            "type": "string"
           },
           "session_key": {
             "description": "for an agent's item, the conversation its alert wakes",
@@ -5626,6 +5714,10 @@
               "null",
               "object"
             ]
+          },
+          "result": {
+            "description": "for a done one-off task: the line its owner gave when completing it",
+            "type": "string"
           },
           "session_key": {
             "description": "for an agent's item, the conversation its alert wakes",
@@ -18052,7 +18144,7 @@
     },
     "/api/v1/operations/watches_create": {
       "post": {
-        "description": "Arm a watch: be woken, with a fresh turn, when an EVENT happens that an engine notices (a budget crossing its line, an arrival). Give the event_key exactly as the engine that raises it names it, and an objective: what to do when woken, since the event says only what happened. The name is the watch's identity: arming the same name again revises it. To be woken at a TIME, create a task of your own with an alert instead.",
+        "description": "Arm a watch: be woken, with a fresh turn, when an EVENT happens that an engine notices (a budget crossing its line, an arrival). Give the event_key exactly as the engine that raises it names it, and an objective: what to do when woken, since the event says only what happened. The name is the watch's identity: arming the same name again revises it. To be woken when one of your own tasks is DONE, watch the event_key \"task_done:\u003cthe task id\u003e\" (an agent task's id is in tasks_list); you are woken with its result. To be woken at a TIME, create a task of your own with an alert instead.",
         "operationId": "watches_create",
         "requestBody": {
           "content": {

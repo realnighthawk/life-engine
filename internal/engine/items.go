@@ -34,6 +34,7 @@ type Item struct {
 	DeletedAt          *time.Time  `json:"deleted_at"`
 	CreatedAt          time.Time   `json:"created_at"`
 	UpdatedAt          time.Time   `json:"updated_at"`
+	Result             string      `json:"result,omitempty" jsonschema:"for a done one-off task: the line its owner gave when completing it"`
 }
 
 type ItemData struct {
@@ -76,7 +77,7 @@ type ListItemsInput struct {
 	Before  string `json:"before,omitempty" jsonschema:"RFC 3339; only items before this time"`
 }
 
-const itemCols = `id::text,kind,subject,title,notes,goal_id::text,at,minutes,time_zone,recurrence,alert_before_minutes,is_priority,coalesce(session_key,''),snoozed_until,done_at,version,deleted_at,created_at,updated_at`
+const itemCols = `id::text,kind,subject,title,notes,goal_id::text,at,minutes,time_zone,recurrence,alert_before_minutes,is_priority,coalesce(session_key,''),snoozed_until,done_at,version,deleted_at,created_at,updated_at,result`
 
 type scanner interface{ Scan(...any) error }
 
@@ -84,7 +85,7 @@ func scanItem(row scanner) (Item, error) {
 	var it Item
 	var rec []byte
 	err := row.Scan(&it.ID, &it.Kind, &it.Subject, &it.Title, &it.Notes, &it.GoalID, &it.At, &it.Minutes, &it.TimeZone, &rec, &it.AlertBeforeMinutes,
-		&it.IsPriority, &it.SessionKey, &it.SnoozedUntil, &it.DoneAt, &it.Version, &it.DeletedAt, &it.CreatedAt, &it.UpdatedAt)
+		&it.IsPriority, &it.SessionKey, &it.SnoozedUntil, &it.DoneAt, &it.Version, &it.DeletedAt, &it.CreatedAt, &it.UpdatedAt, &it.Result)
 	if err != nil {
 		return it, err
 	}
@@ -334,7 +335,7 @@ func completeTask(ctx context.Context, u *unit, in CompleteItemInput) (Item, err
 		if old.DoneAt != nil {
 			return old, conflict("Task is already done")
 		}
-		if _, e = u.tx.Exec(ctx, `UPDATE life.items SET done_at=$2,snoozed_until=NULL,version=version+1,updated_at=now() WHERE id=$1`, old.ID, now); e != nil {
+		if _, e = u.tx.Exec(ctx, `UPDATE life.items SET done_at=$2,result=$3,snoozed_until=NULL,version=version+1,updated_at=now() WHERE id=$1`, old.ID, now, in.Result); e != nil {
 			return old, e
 		}
 		if in.Result != "" && old.At != nil {
@@ -342,7 +343,11 @@ func completeTask(ctx context.Context, u *unit, in CompleteItemInput) (Item, err
 				return old, e
 			}
 		}
-		return u.itemChanged(ctx, "task", old)
+		done, e := u.itemChanged(ctx, "task", old)
+		if e != nil {
+			return done, e
+		}
+		return done, u.taskDone(ctx, done)
 	}
 	// A repeating task: the occurrence named, else the latest one that has come due, else the next.
 	var at time.Time
@@ -368,7 +373,7 @@ func reopenTask(ctx context.Context, u *unit, old Item, in CompleteItemInput, no
 		if old.DoneAt == nil {
 			return old, conflict("Task is not done")
 		}
-		if _, e := u.tx.Exec(ctx, `UPDATE life.items SET done_at=NULL,version=version+1,updated_at=now() WHERE id=$1`, old.ID); e != nil {
+		if _, e := u.tx.Exec(ctx, `UPDATE life.items SET done_at=NULL,result='',version=version+1,updated_at=now() WHERE id=$1`, old.ID); e != nil {
 			return old, e
 		}
 		return u.itemChanged(ctx, "task", old)
