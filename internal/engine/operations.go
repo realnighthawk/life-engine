@@ -55,6 +55,73 @@ func (s *Service) registerOperations() {
 	register(s, "batch_undo", "Undo a batch_apply plan as a whole: archives the goals and deletes the tasks and events it created, newest first, in one transaction. Pass the idempotency_key the batch_apply used. Records already removed are skipped.", true, s.batchUndo)
 	registerKeyless(s, "batch_dry_run", "Run a plan exactly as batch_apply would, then undo it, so every rule is checked and nothing is created. Use it on the same operations before batch_apply.", s.batchDryRun)
 
+	register(s, "intentions_create", "Create an intention: a standing WANT. kind achieve (\"run a 10k\"), maintain (\"keep weekends free\") or experience (\"see the northern lights\"). It may have a target, an end date, both or neither. Use this for what the person wants; use a commitment for what they owe; use a task for what they will do. Link the tasks that serve it with links_set.", true, createIntention)
+	register(s, "intentions_get", "Read one intention with its progress, read from the tasks linked to it.", false, func(c context.Context, u *unit, in GetInput) (Intention, error) {
+		return u.getIntention(c, in.ID, false)
+	})
+	register(s, "intentions_list", "List intentions, soonest end date first, optionally by status or matching text.", false, listIntentions)
+	register(s, "intentions_update", "Replace an intention's fields using the version you last read, including its status (active, satisfied or abandoned).", true, updateIntention)
+	register(s, "intentions_archive", "Archive an intention (it can be restored). Links and records stay.", true, func(c context.Context, u *unit, in EditInput) (Intention, error) {
+		return lifecycleIntention(c, u, in, false)
+	})
+	register(s, "intentions_restore", "Restore an archived intention.", true, func(c context.Context, u *unit, in EditInput) (Intention, error) {
+		return lifecycleIntention(c, u, in, true)
+	})
+
+	register(s, "commitments_create", "Create a commitment: something the person OWES to another person, an institution or themselves (\"pay rent by November 1\", \"send Sam the contract\"). Give it due_at (an instant) or due_on (a local date), not both; add counterparty and consequence when they matter. A commitment is not a task: it generates the action that discharges it. Completing it records an activity.", true, createCommitment)
+	register(s, "commitments_get", "Read one commitment.", false, func(c context.Context, u *unit, in GetInput) (Commitment, error) {
+		return u.getCommitment(c, in.ID, false)
+	})
+	register(s, "commitments_list", "List commitments, soonest due first, optionally by status or matching text.", false, listCommitments)
+	register(s, "commitments_update", "Replace a commitment's fields using the version you last read.", true, updateCommitment)
+	register(s, "commitments_complete", "Mark a commitment met. Records an activity that fulfils it, in the same transaction.", true, func(c context.Context, u *unit, in CommitmentStatusInput) (Commitment, error) {
+		return setCommitmentStatus(c, u, in, "met")
+	})
+	register(s, "commitments_miss", "Mark a commitment missed, with a note on why.", true, func(c context.Context, u *unit, in CommitmentStatusInput) (Commitment, error) {
+		return setCommitmentStatus(c, u, in, "missed")
+	})
+	register(s, "commitments_renegotiate", "Mark a commitment renegotiated, with the new terms in the note.", true, func(c context.Context, u *unit, in CommitmentStatusInput) (Commitment, error) {
+		return setCommitmentStatus(c, u, in, "renegotiated")
+	})
+	register(s, "commitments_waive", "Waive a commitment: it no longer applies. Records why.", true, func(c context.Context, u *unit, in CommitmentStatusInput) (Commitment, error) {
+		return setCommitmentStatus(c, u, in, "waived")
+	})
+	register(s, "commitments_delete", "Delete a commitment (it can be restored).", true, func(c context.Context, u *unit, in EditInput) (Commitment, error) {
+		return lifecycleCommitment(c, u, in, false)
+	})
+	register(s, "commitments_restore", "Restore a deleted commitment.", true, func(c context.Context, u *unit, in EditInput) (Commitment, error) {
+		return lifecycleCommitment(c, u, in, true)
+	})
+
+	register(s, "decisions_create", "Create a decision: a choice the person is facing or has made. Give 2-10 options. kind change makes it a promotion gate: give effect (a batch plan, the same shape as batch_apply) and an option with id accept; choosing accept applies the batch atomically. A change derived from memory (derived_from set) can only be resolved with a person-sourced confirmation.", true, createDecision)
+	register(s, "decisions_get", "Read one decision.", false, func(c context.Context, u *unit, in GetInput) (Decision, error) { return u.getDecision(c, in.ID, false) })
+	register(s, "decisions_list", "List decisions, soonest expiry first, optionally by status or matching text.", false, listDecisions)
+	register(s, "decisions_update", "Replace a decision's question, options, effect or expiry while it is still open.", true, updateDecision)
+	register(s, "decisions_resolve", "Record the option the person chose. For a change, choosing accept applies its effect in the same transaction. A change that came from memory needs confirmation {source: client or turn, ref}.", true, func(c context.Context, u *unit, in ResolveDecisionInput) (Decision, error) {
+		return resolveDecision(c, u, s, in)
+	})
+	register(s, "decisions_defer", "Defer a decision, optionally with the instant it becomes open again.", true, deferDecision)
+	register(s, "decisions_expire", "Expire a decision that no longer needs an answer.", true, expireDecision)
+
+	register(s, "states_create", "Record a confirmed state: what is currently true about the person, their environment or their resources. kind fact, preference, constraint or need; topic and predicate name it; value is any JSON. Never record an inference as a state: a hypothesis stays in memory until the person confirms it.", true, createState)
+	register(s, "states_get", "Read one state record.", false, func(c context.Context, u *unit, in GetInput) (State, error) { return u.getState(c, in.ID, false) })
+	register(s, "states_list", "List confirmed states, optionally by kind, topic, status or matching text.", false, listStates)
+	register(s, "states_update", "Replace a state record using the version you last read, including its value and status.", true, updateState)
+	register(s, "states_retract", "Retract a state that is no longer true, keeping its history.", true, retractState)
+	register(s, "states_delete", "Delete a state record (it can be restored).", true, func(c context.Context, u *unit, in EditInput) (State, error) { return lifecycleState(c, u, in, false) })
+	register(s, "states_restore", "Restore a deleted state record.", true, func(c context.Context, u *unit, in EditInput) (State, error) { return lifecycleState(c, u, in, true) })
+
+	register(s, "activities_record", "Record something that HAPPENED, whether or not it was planned: \"I called the dentist\", \"ran 30 minutes\", \"paid the deposit\". Append-only and correctable. A completed task or met commitment writes one automatically; use this for what no record anticipated.", true, recordActivity)
+	register(s, "activities_get", "Read one activity.", false, func(c context.Context, u *unit, in GetInput) (Activity, error) { return u.getActivity(c, in.ID) })
+	register(s, "activities_list", "List what happened, newest first, optionally by actor, kind, time range or matching text.", false, listActivities)
+	register(s, "activities_correct", "Correct an activity's text or time. The correction is audited.", true, correctActivity)
+
+	register(s, "links_set", "Link two records explicitly: relation serves, fulfils, affects, constrains or evidences. Linking is idempotent. No record requires a link; this is how an activity evidences an intention, a task serves an intention, or a decision affects a commitment.", true, setLink)
+	register(s, "links_remove", "Remove one explicit link.", true, removeLink)
+	register(s, "links_list", "List a record's links, in either direction, optionally by relation.", false, listLinks)
+
+	register(s, "attention_get", "What needs the person now: open commitments due today or earlier, open decisions that are not expired, and tasks whose time has passed. A deterministic read; delivery is the gateway's.", false, attentionGet)
+
 	register(s, "settings_get", "Read the person's settings: their time zone (which decides what 'today' means) and working hours.", false, func(c context.Context, u *unit, _ struct{}) (Settings, error) { return u.getSettings(c) })
 	register(s, "settings_set", "Set the person's time zone and working hours (versioned). Set the time zone first: what today is depends on it.", true, setSettings)
 	register(s, "history_list", "Read the audit trail of changes to a record, newest first.", false, history)

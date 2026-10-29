@@ -62,9 +62,23 @@ func (u *unit) missing(ctx context.Context, table, kind, key string) error {
 }
 
 func (u *unit) candidates(ctx context.Context, table, kind, like string) ([]refRow, error) {
-	q, args := "SELECT id::text, title FROM life.goals WHERE id::text LIKE $1 AND deleted_at IS NULL LIMIT 200", []any{like}
-	if table == "items" {
+	var q string
+	var args []any
+	switch table {
+	case "items":
 		q, args = "SELECT id::text, title FROM life.items WHERE id::text LIKE $1 AND kind=$2 AND deleted_at IS NULL LIMIT 200", []any{like, kind}
+	case "intentions":
+		q, args = "SELECT id::text, title FROM life.intentions WHERE id::text LIKE $1 AND deleted_at IS NULL LIMIT 200", []any{like}
+	case "commitments":
+		q, args = "SELECT id::text, title FROM life.commitments WHERE id::text LIKE $1 AND deleted_at IS NULL LIMIT 200", []any{like}
+	case "decisions":
+		q, args = "SELECT id::text, question FROM life.decisions WHERE id::text LIKE $1 AND deleted_at IS NULL LIMIT 200", []any{like}
+	case "states":
+		q, args = "SELECT id::text, topic || ': ' || predicate FROM life.states WHERE id::text LIKE $1 AND deleted_at IS NULL LIMIT 200", []any{like}
+	case "activities":
+		q, args = "SELECT id::text, text FROM life.activities WHERE id::text LIKE $1 LIMIT 200", []any{like}
+	default:
+		q, args = "SELECT id::text, title FROM life.goals WHERE id::text LIKE $1 AND deleted_at IS NULL LIMIT 200", []any{like}
 	}
 	rs, err := u.tx.Query(ctx, q, args...)
 	if err != nil {
