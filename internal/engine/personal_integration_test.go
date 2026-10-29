@@ -17,7 +17,7 @@ func TestIntentionLinksAndProgress(t *testing.T) {
 	if it.Kind != "achieve" || it.Status != "active" || it.Origin != "person" || it.Target == nil || it.Target.Unit != "km" {
 		t.Fatalf("created: %+v", it)
 	}
-	task := execute[engine.Item](t, s, "tasks_create", map[string]any{"idempotency_key": key(), "title": "Easy 5k"})
+	task := execute[engine.Task](t, s, "tasks_create", map[string]any{"idempotency_key": key(), "title": "Easy 5k"})
 	execute[engine.RecordLink](t, s, "links_set", map[string]any{
 		"idempotency_key": key(), "from_kind": "task", "from_id": task.ID,
 		"relation": "serves", "to_kind": "intention", "to_id": it.ID,

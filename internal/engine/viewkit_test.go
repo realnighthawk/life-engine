@@ -15,7 +15,7 @@ func loadKit(t *testing.T, name string) ViewData {
 	if e != nil {
 		t.Fatal(e)
 	}
-	d := ViewData{SubjectKind: "goal", SubjectID: kitSubject, CatalogID: TrackerCatalogKit}
+	d := ViewData{SubjectKind: "intention", SubjectID: kitSubject, CatalogID: TrackerCatalogKit}
 	if e = json.Unmarshal(raw, &d); e != nil {
 		t.Fatalf("%s: %v", name, e)
 	}
@@ -132,7 +132,7 @@ func TestATasksBlockTakesNothingButItsHeading(t *testing.T) {
 // The catalog's example view is what a composer copies, so it must be one the engine accepts, and it must show the
 // features a composer is told about: several pages, section intros, text points, and the linked tasks and events.
 func TestTheCatalogExampleViewIsAcceptedAndShowsTheStructure(t *testing.T) {
-	d := ViewData{SubjectKind: "goal", SubjectID: kitSubject, CatalogID: TrackerCatalogKit}
+	d := ViewData{SubjectKind: "intention", SubjectID: kitSubject, CatalogID: TrackerCatalogKit}
 	if e := json.Unmarshal([]byte(exampleView), &d); e != nil {
 		t.Fatal(e)
 	}

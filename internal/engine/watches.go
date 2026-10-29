@@ -15,24 +15,24 @@ import (
 // wake is sent to the watch's conversation from that row, retried until it is.
 
 type Watch struct {
-	ID         string     `json:"id"`
-	Name       string     `json:"name" jsonschema:"the watch's identity within the conversation"`
-	SessionKey string     `json:"session_key" jsonschema:"the conversation a firing wakes"`
-	EventKey   string     `json:"event_key" jsonschema:"the event watched, exactly as the engine that raises it names it"`
-	Objective  string     `json:"objective" jsonschema:"what to do when woken"`
-	GoalID     *string    `json:"goal_id" jsonschema:"the goal this watch serves, or null"`
-	ExpiresAt  *time.Time `json:"expires_at" jsonschema:"the watch stops firing at this time, or null"`
-	Version    int64      `json:"version"`
-	DeletedAt  *time.Time `json:"deleted_at"`
-	CreatedAt  time.Time  `json:"created_at"`
-	UpdatedAt  time.Time  `json:"updated_at"`
+	ID          string     `json:"id"`
+	Name        string     `json:"name" jsonschema:"the watch's identity within the conversation"`
+	SessionKey  string     `json:"session_key" jsonschema:"the conversation a firing wakes"`
+	EventKey    string     `json:"event_key" jsonschema:"the event watched, exactly as the engine that raises it names it"`
+	Objective   string     `json:"objective" jsonschema:"what to do when woken"`
+	IntentionID *string    `json:"intention_id" jsonschema:"the intention this watch serves, or null"`
+	ExpiresAt   *time.Time `json:"expires_at" jsonschema:"the watch stops firing at this time, or null"`
+	Version     int64      `json:"version"`
+	DeletedAt   *time.Time `json:"deleted_at"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
 }
 
-const watchCols = `id::text,name,session_key,event_key,objective,goal_id::text,expires_at,version,deleted_at,created_at,updated_at`
+const watchCols = `id::text,name,session_key,event_key,objective,intention_id::text,expires_at,version,deleted_at,created_at,updated_at`
 
 func scanWatch(row scanner) (Watch, error) {
 	var w Watch
-	err := row.Scan(&w.ID, &w.Name, &w.SessionKey, &w.EventKey, &w.Objective, &w.GoalID, &w.ExpiresAt, &w.Version, &w.DeletedAt, &w.CreatedAt, &w.UpdatedAt)
+	err := row.Scan(&w.ID, &w.Name, &w.SessionKey, &w.EventKey, &w.Objective, &w.IntentionID, &w.ExpiresAt, &w.Version, &w.DeletedAt, &w.CreatedAt, &w.UpdatedAt)
 	utcPtr(w.ExpiresAt)
 	utcPtr(w.DeletedAt)
 	return w, err
@@ -40,11 +40,11 @@ func scanWatch(row scanner) (Watch, error) {
 
 type CreateWatchInput struct {
 	Meta
-	Name      string `json:"name" jsonschema:"short, lowercase letters, digits and dashes, 1-60 characters; arming the same name again revises that watch"`
-	EventKey  string `json:"event_key" jsonschema:"the event to watch, exactly as the engine that raises it names it"`
-	Objective string `json:"objective" jsonschema:"what you should do when you are woken, up to 2000 characters: the event says only what happened"`
-	GoalID    string `json:"goal_id,omitempty" jsonschema:"UUID of the goal this watch serves; optional"`
-	ExpiresAt string `json:"expires_at,omitempty" jsonschema:"RFC 3339 instant after which the watch stops firing; optional"`
+	Name        string `json:"name" jsonschema:"short, lowercase letters, digits and dashes, 1-60 characters; arming the same name again revises that watch"`
+	EventKey    string `json:"event_key" jsonschema:"the event to watch, exactly as the engine that raises it names it"`
+	Objective   string `json:"objective" jsonschema:"what you should do when you are woken, up to 2000 characters: the event says only what happened"`
+	IntentionID string `json:"intention_id,omitempty" jsonschema:"UUID of the intention this watch serves; optional"`
+	ExpiresAt   string `json:"expires_at,omitempty" jsonschema:"RFC 3339 instant after which the watch stops firing; optional"`
 }
 type UpdateWatchInput struct {
 	EditInput
@@ -119,12 +119,16 @@ func createWatch(ctx context.Context, u *unit, in CreateWatchInput) (Watch, erro
 	if e != nil {
 		return Watch{}, e
 	}
-	if in.GoalID != "" {
-		if _, e = id(in.GoalID); e != nil {
-			return Watch{}, invalid("goal_id must be a UUID")
+	if in.IntentionID != "" {
+		if _, e = id(in.IntentionID); e != nil {
+			return Watch{}, invalid("intention_id must be a UUID")
 		}
-		if e = u.checkGoal(ctx, in.GoalID); e != nil {
+		var found bool
+		if e = u.tx.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM life.intentions WHERE id=$1 AND deleted_at IS NULL)", in.IntentionID).Scan(&found); e != nil {
 			return Watch{}, e
+		}
+		if !found {
+			return Watch{}, invalid("intention_id points at an intention that does not exist or is archived")
 		}
 	}
 	var existing string
@@ -134,8 +138,8 @@ func createWatch(ctx context.Context, u *unit, in CreateWatchInput) (Watch, erro
 	}
 	if isNoRows(err) {
 		var newID string
-		if err = u.tx.QueryRow(ctx, `INSERT INTO life.watches(name,session_key,event_key,objective,goal_id,expires_at)
-			VALUES($1,$2,$3,$4,NULLIF($5,'')::uuid,$6) RETURNING id::text`, in.Name, u.scope(), event, objective, in.GoalID, exp).Scan(&newID); err != nil {
+		if err = u.tx.QueryRow(ctx, `INSERT INTO life.watches(name,session_key,event_key,objective,intention_id,expires_at)
+			VALUES($1,$2,$3,$4,NULLIF($5,'')::uuid,$6) RETURNING id::text`, in.Name, u.scope(), event, objective, in.IntentionID, exp).Scan(&newID); err != nil {
 			return Watch{}, err
 		}
 		w, e := u.getWatch(ctx, newID, false)
@@ -148,8 +152,8 @@ func createWatch(ctx context.Context, u *unit, in CreateWatchInput) (Watch, erro
 	if e != nil {
 		return old, e
 	}
-	if _, err = u.tx.Exec(ctx, `UPDATE life.watches SET event_key=$2,objective=$3,goal_id=NULLIF($4,'')::uuid,expires_at=$5,version=version+1,updated_at=now() WHERE id=$1`,
-		old.ID, event, objective, in.GoalID, exp); err != nil {
+	if _, err = u.tx.Exec(ctx, `UPDATE life.watches SET event_key=$2,objective=$3,intention_id=NULLIF($4,'')::uuid,expires_at=$5,version=version+1,updated_at=now() WHERE id=$1`,
+		old.ID, event, objective, in.IntentionID, exp); err != nil {
 		return old, err
 	}
 	return u.watchChanged(ctx, old)
@@ -361,7 +365,7 @@ func (s *Service) SendWatchWakes(ctx context.Context) error {
 // conversation with the task's own result, which is how the agent follows its own work ("when the plan's task is done, check
 // it") without polling. The event id carries the task's version, so reopening and completing it again fires again. It runs in
 // the completing transaction, so a watch cannot miss the completion or see it twice.
-func (u *unit) taskDone(ctx context.Context, it Item) error {
+func (u *unit) taskDone(ctx context.Context, it Task) error {
 	detail := fmt.Sprintf("Task %q is done.", it.Title)
 	if it.Result != "" {
 		detail += " " + it.Result

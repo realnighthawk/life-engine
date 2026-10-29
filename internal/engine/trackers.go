@@ -11,7 +11,7 @@ import (
 )
 
 // TrackerCatalogKit names the view kit. One manifest per subject serves every client: the kit is the same vocabulary
-// everywhere and each client draws it with its own components, so a goal made on the web shows up on the phone.
+// everywhere and each client draws it with its own components, so an intention made on the web shows up on the phone.
 const TrackerCatalogKit = "view-kit.v1"
 
 // Data definitions are shared; each catalog describes a shipped native renderer.
@@ -51,11 +51,11 @@ type TrackerCatalogResult struct {
 	Guidance string           `json:"guidance"`
 }
 
-// The kit is finite and describes ways to draw and calculate, never kinds of goal. Each block's purpose says what it
-// shows; which goal needs which blocks is the composer's judgement.
-// exampleView composes the kit for a weight goal: two pages, sections with intros, the calculations pointing the right
+// The kit is finite and describes ways to draw and calculate, never kinds of intention. Each block's purpose says what it
+// shows; which intention needs which blocks is the composer's judgement.
+// exampleView composes the kit for a weight intention: two pages, sections with intros, the calculations pointing the right
 // way (progress toward a lower value is first minus latest). It is held valid by a test.
-const exampleView = `{"metrics":[{"id":"weight","label":"Weight","unit":"kg","target":70}],"pages":[{"id":"progress","title":"Progress","sections":[{"id":"standing","title":"Where you stand","intro":"Your weigh-ins against the 5 kg you set out to lose.","blocks":[{"id":"head","kind":"sentence","emphasis":"hero","text":"{lost} lost, {left} to go","slots":{"lost":{"calc":{"fn":"sub","args":[{"fn":"first","metric":"weight"},{"fn":"latest","metric":"weight"}]},"format":"number","unit":"kg","decimals":1},"left":{"calc":{"fn":"sub","args":[{"fn":"latest","metric":"weight"},{"fn":"const","value":70}]},"format":"number","unit":"kg","decimals":1}}},{"id":"trend","kind":"series","title":"Weight","metric":"weight","style":"line","window":{"days":60},"trend_to":{"fn":"const","value":70},"unit":"kg"},{"id":"log","kind":"log","title":"Log a weigh-in","metric":"weight"}]}]},{"id":"support","title":"What helps","sections":[{"id":"plan","title":"The plan","blocks":[{"id":"why","kind":"text","body":"Small, steady changes.","points":["Walk after lunch","Weigh in on Mondays"]},{"id":"todo","kind":"tasks"}]},{"id":"keeping","title":"Keeping on track","intro":"The tasks and dates set up for this goal.","blocks":[{"id":"dates","kind":"events"}]}]}]}`
+const exampleView = `{"metrics":[{"id":"weight","label":"Weight","unit":"kg","target":70}],"pages":[{"id":"progress","title":"Progress","sections":[{"id":"standing","title":"Where you stand","intro":"Your weigh-ins against the 5 kg you set out to lose.","blocks":[{"id":"head","kind":"sentence","emphasis":"hero","text":"{lost} lost, {left} to go","slots":{"lost":{"calc":{"fn":"sub","args":[{"fn":"first","metric":"weight"},{"fn":"latest","metric":"weight"}]},"format":"number","unit":"kg","decimals":1},"left":{"calc":{"fn":"sub","args":[{"fn":"latest","metric":"weight"},{"fn":"const","value":70}]},"format":"number","unit":"kg","decimals":1}}},{"id":"trend","kind":"series","title":"Weight","metric":"weight","style":"line","window":{"days":60},"trend_to":{"fn":"const","value":70},"unit":"kg"},{"id":"log","kind":"log","title":"Log a weigh-in","metric":"weight"}]}]},{"id":"support","title":"What helps","sections":[{"id":"plan","title":"The plan","blocks":[{"id":"why","kind":"text","body":"Small, steady changes.","points":["Walk after lunch","Weigh in on Mondays"]},{"id":"todo","kind":"tasks"}]},{"id":"keeping","title":"Keeping on track","intro":"The tasks and dates set up for this intention.","blocks":[{"id":"dates","kind":"events"}]}]}]}`
 
 var kitBlocks = []KitBlock{
 	{"sentence", "One or two lines of plain words with numbers filled in from live data. The headline of a goal is usually a sentence.", []string{"text", "slots"},
@@ -70,7 +70,7 @@ var kitBlocks = []KitBlock{
 		`{"id":"ladder","kind":"steps","thresholds":[1000,2000,3000,4000,5000],"value":{"fn":"latest","metric":"saved"},"format":"money","unit":"USD"}`},
 	{"timeline", "Dated marks on a line from today: a deadline, a projected finish.", []string{"markers"},
 		`{"id":"when","kind":"timeline","markers":[{"at":{"fn":"date","date":"2026-12-31"},"label":"deadline"},{"at":{"fn":"eta","metric":"saved","args":[{"fn":"const","value":5000}]},"label":"at this pace"}]}`},
-	{"tasks", "The subject's own tasks (for a goal, the tasks linked to it), soonest first, each with a way to mark it done. Use it when tasks were set up for it.", []string{},
+	{"tasks", "The subject's own tasks (for an intention, the tasks linked to it), soonest first, each with a way to mark it done. Use it when tasks were set up for it.", []string{},
 		`{"id":"todo","kind":"tasks","title":"Tasks"}`},
 	{"events", "The subject's own events, soonest first. Use it when dates were set for it: a flight, a dinner.", []string{},
 		`{"id":"dates","kind":"events","title":"Coming up"}`},
@@ -108,7 +108,7 @@ func getTrackerCatalog(_ context.Context, _ *unit, in TrackerCatalogInput) (Trac
 	if in.CatalogID != "" {
 		ids = []string{in.CatalogID}
 	}
-	result := TrackerCatalogResult{Catalogs: []TrackerCatalog{}, Guidance: "Compose this subject's view (a goal, a task or an event) from the kit, as a designer would for this one subject: lead with what the person most wants to know, in a sentence with live numbers; draw it the way its shape suggests; leave out whatever does not help. A metric is a data source: a provider series (source), a repeating task's done occurrences (task_id), or numbers the person logs (neither). The app does all arithmetic from live data, so never write a figure yourself: bind to a metric and use a function. Organise the view as sections that each answer one question, and copy the shape of example_view. If nothing in the kit fits, use text."}
+	result := TrackerCatalogResult{Catalogs: []TrackerCatalog{}, Guidance: "Compose this subject's view (an intention, a task or an event) from the kit, as a designer would for this one subject: lead with what the person most wants to know, in a sentence with live numbers; draw it the way its shape suggests; leave out whatever does not help. A metric is a data source: a provider series (source), a repeating task's done occurrences (task_id), or numbers the person logs (neither). The app does all arithmetic from live data, so never write a figure yourself: bind to a metric and use a function. Organise the view as sections that each answer one question, and copy the shape of example_view. If nothing in the kit fits, use text."}
 	for _, id := range ids {
 		c, e := trackerCatalog(id)
 		if e != nil {
@@ -179,7 +179,7 @@ type MeasurementData struct {
 }
 type RecordMeasurementInput struct {
 	Meta
-	SubjectKind string `json:"subject_kind" jsonschema:"goal, task or event"`
+	SubjectKind string `json:"subject_kind" jsonschema:"intention, task or event"`
 	SubjectID   string `json:"subject_id"`
 	MetricID    string `json:"metric_id"`
 	MeasurementData
@@ -260,7 +260,7 @@ func (u *unit) measurementTime(ctx context.Context, d MeasurementData) (time.Tim
 }
 func recordMeasurement(ctx context.Context, u *unit, in RecordMeasurementInput) (Measurement, error) {
 	if !oneOf(in.SubjectKind, subjectKinds...) {
-		return Measurement{}, invalid("subject_kind must be goal, task or event")
+		return Measurement{}, invalid("subject_kind must be intention, task or event")
 	}
 	subject, e := id(in.SubjectID)
 	if e != nil {

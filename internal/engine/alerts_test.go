@@ -5,16 +5,16 @@ import (
 	"time"
 )
 
-func item(t *testing.T, at time.Time, before int, rec *Recurrence, zoneName string) Item {
+func item(t *testing.T, at time.Time, before int, rec *Recurrence, zoneName string) scheduledItem {
 	t.Helper()
-	return Item{ID: "i1", Kind: "task", Subject: "person", At: &at, AlertBeforeMinutes: &before, Recurrence: rec, TimeZone: zoneName}
+	return scheduledItem{ID: "i1", Kind: "task", Subject: "person", At: &at, Alert: &before, Recurrence: rec, TimeZone: zoneName}
 }
 
 func TestAnAlertWithoutATimeOrWithoutAnAlertArmsNothing(t *testing.T) {
 	now := time.Date(2026, 10, 12, 8, 0, 0, 0, time.UTC)
-	for name, it := range map[string]Item{
+	for name, it := range map[string]scheduledItem{
 		"no alert": {At: &now, TimeZone: "UTC"},
-		"no time":  {AlertBeforeMinutes: new(int), TimeZone: "UTC"},
+		"no time":  {Alert: new(int), TimeZone: "UTC"},
 	} {
 		if specs, err := desiredAlerts(it, now); err != nil || len(specs) != 0 {
 			t.Errorf("%s: %v %v", name, specs, err)

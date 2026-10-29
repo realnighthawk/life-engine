@@ -63,7 +63,7 @@ type ViewBlock struct {
 // A view is organised as pages of sections of blocks. The structure is mandatory; what goes in it is the composer's call.
 type ViewSection struct {
 	ID     string      `json:"id" jsonschema:"stable lowercase identifier, unique within the view"`
-	Title  string      `json:"title" jsonschema:"what this part of the goal is about, 1-60 characters"`
+	Title  string      `json:"title" jsonschema:"what this part of the intention is about, 1-60 characters"`
 	Intro  string      `json:"intro,omitempty" jsonschema:"optional one or two plain sentences that say why it matters or how to read it, up to 240 characters; never a figure"`
 	Blocks []ViewBlock `json:"blocks" jsonschema:"1-8 blocks in display order"`
 }
@@ -73,7 +73,7 @@ type ViewPage struct {
 	Sections []ViewSection `json:"sections" jsonschema:"1-6 sections in display order"`
 }
 type ViewData struct {
-	SubjectKind string       `json:"subject_kind" jsonschema:"what the view is of: goal, task or event"`
+	SubjectKind string       `json:"subject_kind" jsonschema:"what the view is of: intention, task or event"`
 	SubjectID   string       `json:"subject_id" jsonschema:"UUID of that record; in a batch it may be a record an earlier step creates"`
 	CatalogID   string       `json:"catalog_id" jsonschema:"exact versioned catalog id from tracker_catalog_get; names the app and platform that renders it"`
 	Metrics     []ViewMetric `json:"metrics" jsonschema:"0-6 measurements the blocks refer to; observations are recorded separately, never generated here"`
@@ -97,7 +97,7 @@ type UpdateViewInput struct {
 	Pages   []ViewPage   `json:"pages" jsonschema:"the whole structure, replacing the current one"`
 }
 type ViewsListInput struct {
-	SubjectKind string `json:"subject_kind" jsonschema:"goal, task or event"`
+	SubjectKind string `json:"subject_kind" jsonschema:"intention, task or event"`
 	SubjectID   string `json:"subject_id"`
 	CatalogID   string `json:"catalog_id,omitempty" jsonschema:"only the view for this client catalog"`
 }
@@ -114,7 +114,7 @@ func validateLink(raw string) error {
 
 func validateView(d ViewData) error {
 	if !oneOf(d.SubjectKind, subjectKinds...) {
-		return invalid("subject_kind must be goal, task or event")
+		return invalid("subject_kind must be intention, task or event")
 	}
 	if _, e := id(d.SubjectID); e != nil {
 		return invalid("subject_id must be a UUID")
@@ -256,7 +256,7 @@ func getView(ctx context.Context, u *unit, in GetInput) (View, error) {
 func listViews(ctx context.Context, u *unit, in ViewsListInput) (ViewList, error) {
 	out := ViewList{Items: []View{}}
 	if !oneOf(in.SubjectKind, subjectKinds...) {
-		return out, invalid("subject_kind must be goal, task or event")
+		return out, invalid("subject_kind must be intention, task or event")
 	}
 	subject, e := id(in.SubjectID)
 	if e != nil {
@@ -381,7 +381,7 @@ func deleteView(ctx context.Context, u *unit, in EditInput) (View, error) {
 }
 
 type ViewStateInput struct {
-	SubjectKind string `json:"subject_kind" jsonschema:"goal, task or event"`
+	SubjectKind string `json:"subject_kind" jsonschema:"intention, task or event"`
 	SubjectID   string `json:"subject_id"`
 	CatalogID   string `json:"catalog_id" jsonschema:"exact catalog supported by the requesting client"`
 }
@@ -401,7 +401,7 @@ func viewState(ctx context.Context, u *unit, in ViewStateInput) (ViewState, erro
 		return out, e
 	}
 	if !oneOf(in.SubjectKind, subjectKinds...) {
-		return out, invalid("subject_kind must be goal, task or event")
+		return out, invalid("subject_kind must be intention, task or event")
 	}
 	subject, e := id(in.SubjectID)
 	if e != nil {
@@ -436,7 +436,7 @@ func viewState(ctx context.Context, u *unit, in ViewStateInput) (ViewState, erro
 }
 
 // subjectKinds are what a view can be of and what observations can be recorded against.
-var subjectKinds = []string{"goal", "task", "event"}
+var subjectKinds = []string{"intention", "task", "event"}
 
 // subjectExists refuses a subject that is not there or is archived or deleted.
 func (u *unit) subjectExists(ctx context.Context, kind, rawID string) error {
@@ -444,12 +444,13 @@ func (u *unit) subjectExists(ctx context.Context, kind, rawID string) error {
 	if e != nil {
 		return invalid("subject_id must be a UUID")
 	}
-	q := "SELECT EXISTS(SELECT 1 FROM life.items WHERE id=$1 AND kind=$2 AND deleted_at IS NULL)"
-	if kind == "goal" {
-		q = "SELECT EXISTS(SELECT 1 FROM life.goals WHERE id=$1 AND $2::text=$2 AND deleted_at IS NULL)"
+	table := map[string]string{"intention": "intentions", "task": "tasks", "event": "events"}[kind]
+	if table == "" {
+		return invalid("subject_kind must be intention, task or event")
 	}
+	q := "SELECT EXISTS(SELECT 1 FROM life." + table + " WHERE id=$1 AND deleted_at IS NULL)"
 	var found bool
-	if e = u.tx.QueryRow(ctx, q, key, kind).Scan(&found); e != nil {
+	if e = u.tx.QueryRow(ctx, q, key).Scan(&found); e != nil {
 		return e
 	}
 	if !found {

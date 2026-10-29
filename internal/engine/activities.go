@@ -259,10 +259,10 @@ type RecordLink struct {
 
 type SetLinkInput struct {
 	Meta
-	FromKind string `json:"from_kind" jsonschema:"intention, commitment, decision, state, activity, task, event, goal or item"`
+	FromKind string `json:"from_kind" jsonschema:"intention, commitment, decision, state, activity, task or event"`
 	FromID   string `json:"from_id"`
 	Relation string `json:"relation" jsonschema:"serves, fulfils, affects, constrains or evidences"`
-	ToKind   string `json:"to_kind" jsonschema:"intention, commitment, decision, state, activity, task, event, goal or item"`
+	ToKind   string `json:"to_kind" jsonschema:"intention, commitment, decision, state, activity, task or event"`
 	ToID     string `json:"to_id"`
 }
 type RemoveLinkInput struct {
@@ -280,7 +280,7 @@ type ListLinksInput struct {
 	Direction string `json:"direction,omitempty" jsonschema:"from, to or both (default)"`
 }
 
-var linkKinds = []string{"intention", "commitment", "decision", "state", "activity", "task", "event", "goal", "item"}
+var linkKinds = []string{"intention", "commitment", "decision", "state", "activity", "task", "event"}
 var linkRelations = []string{"serves", "fulfils", "affects", "constrains", "evidences"}
 
 func setLink(ctx context.Context, u *unit, in SetLinkInput) (RecordLink, error) {

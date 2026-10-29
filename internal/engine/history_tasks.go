@@ -5,8 +5,8 @@ import (
 	"time"
 )
 
-// A repeating task's history is how a habit is going, read from the occurrences that fell and the ones that were done. A
-// missed day lowers the rate and never resets it to zero.
+// A repeating task's history is how a habit is going, read from the occurrences that fell and the activities that prove
+// they were done. A missed day lowers the rate and never resets it to zero.
 type TaskHistoryInput struct {
 	ID   string `json:"id" jsonschema:"UUID of a repeating task"`
 	Days int    `json:"days,omitempty" jsonschema:"how many recent days, ending today, 1-90, default 30"`
@@ -23,7 +23,7 @@ type Consistency struct {
 	Scheduled int `json:"scheduled"`
 }
 type TaskHistory struct {
-	Task       Item             `json:"task"`
+	Task       Task             `json:"task"`
 	Days       []TaskHistoryDay `json:"days" jsonschema:"oldest first, ending today"`
 	Last7      Consistency      `json:"last7"`
 	Last30     Consistency      `json:"last30"`
@@ -32,7 +32,7 @@ type TaskHistory struct {
 }
 
 func tasksHistory(ctx context.Context, u *unit, in TaskHistoryInput) (TaskHistory, error) {
-	t, e := u.getItem(ctx, "task", in.ID, false)
+	t, e := u.getTask(ctx, in.ID, false)
 	if e != nil {
 		return TaskHistory{}, e
 	}
@@ -54,7 +54,9 @@ func tasksHistory(ctx context.Context, u *unit, in TaskHistoryInput) (TaskHistor
 	end = end.AddDate(0, 0, 1)
 	start := end.AddDate(0, 0, -days)
 	rloc, _ := zone(t.TimeZone)
-	rows, e := u.tx.Query(ctx, `SELECT at FROM life.occurrences WHERE item_id=$1 AND state='done' AND at >= $2 AND at < $3`, t.ID, start, end)
+	rows, e := u.tx.Query(ctx, `SELECT a.occurred_at FROM life.activities a
+		JOIN life.links l ON l.from_kind='activity' AND l.from_id=a.id
+		WHERE l.relation='fulfils' AND l.to_kind='task' AND l.to_id=$1 AND a.occurred_at >= $2 AND a.occurred_at < $3`, t.ID, start, end)
 	if e != nil {
 		return TaskHistory{}, e
 	}

@@ -21,9 +21,9 @@ var todoBlock = map[string]any{"id": "todo", "kind": "tasks", "title": "Tasks"}
 // A view is its own construct: it can be of a goal, a task or an event, and a client opens it by subject and catalog.
 func TestAViewCanBeOfAGoalATaskOrAnEvent(t *testing.T) {
 	s := integrationService(t)
-	goal := execute[engine.Goal](t, s, "goals_create", map[string]any{"idempotency_key": key(), "title": "Run a 5K"})
-	task := execute[engine.Item](t, s, "tasks_create", map[string]any{"idempotency_key": key(), "title": "Long run", "at": ts(24 * time.Hour)})
-	event := execute[engine.Item](t, s, "calendar_events_create", map[string]any{"idempotency_key": key(), "title": "Race day", "at": ts(48 * time.Hour)})
+	goal := execute[engine.Intention](t, s, "intentions_create", map[string]any{"idempotency_key": key(), "title": "Run a 5K"})
+	task := execute[engine.Task](t, s, "tasks_create", map[string]any{"idempotency_key": key(), "title": "Long run", "at": ts(24 * time.Hour)})
+	event := execute[engine.Task](t, s, "calendar_events_create", map[string]any{"idempotency_key": key(), "title": "Race day", "at": ts(48 * time.Hour)})
 
 	for kind, id := range map[string]string{"goal": goal.ID, "task": task.ID, "event": event.ID} {
 		v := execute[engine.View](t, s, "views_create", viewOf(kind, id, todoBlock, logBlock))
@@ -48,9 +48,9 @@ func TestAViewCanBeOfAGoalATaskOrAnEvent(t *testing.T) {
 
 func TestObservationsAreKeptPerSubjectAndMetric(t *testing.T) {
 	s := integrationService(t)
-	goal := execute[engine.Goal](t, s, "goals_create", map[string]any{"idempotency_key": key(), "title": "Run a 5K"})
+	goal := execute[engine.Intention](t, s, "intentions_create", map[string]any{"idempotency_key": key(), "title": "Run a 5K"})
 	v := execute[engine.View](t, s, "views_create", viewOf("goal", goal.ID, logBlock))
-	rec := map[string]any{"idempotency_key": key(), "subject_kind": "goal", "subject_id": goal.ID, "metric_id": "distance", "value": 2.5}
+	rec := map[string]any{"idempotency_key": key(), "subject_kind": "intention", "subject_id": goal.ID, "metric_id": "distance", "value": 2.5}
 	m := execute[engine.Measurement](t, s, "measurements_record", rec)
 	if m.Unit != "km" || m.Value != 2.5 || m.SubjectKind != "goal" || m.SubjectID != goal.ID {
 		t.Fatalf("recorded: %+v", m)
@@ -75,16 +75,16 @@ func TestObservationsAreKeptPerSubjectAndMetric(t *testing.T) {
 	changed["metrics"] = []map[string]any{}
 	changed["pages"] = viewOf("goal", goal.ID, map[string]any{"id": "t", "kind": "text", "body": "x"})["pages"]
 	errorCode(t, s, "views_update", changed, "conflict")
-	state := execute[engine.ViewState](t, s, "views_state", map[string]any{"subject_kind": "goal", "subject_id": goal.ID, "catalog_id": engine.TrackerCatalogKit})
+	state := execute[engine.ViewState](t, s, "views_state", map[string]any{"subject_kind": "intention", "subject_id": goal.ID, "catalog_id": engine.TrackerCatalogKit})
 	if len(state.Measurements) != 1 || state.Measurements[0].Value != 3 {
 		t.Fatalf("state: %+v", state.Measurements)
 	}
 	execute[engine.Measurement](t, s, "measurements_delete", map[string]any{"idempotency_key": key(), "id": m.ID, "expected_version": 2})
-	if got := execute[engine.ViewState](t, s, "views_state", map[string]any{"subject_kind": "goal", "subject_id": goal.ID, "catalog_id": engine.TrackerCatalogKit}); len(got.Measurements) != 0 {
+	if got := execute[engine.ViewState](t, s, "views_state", map[string]any{"subject_kind": "intention", "subject_id": goal.ID, "catalog_id": engine.TrackerCatalogKit}); len(got.Measurements) != 0 {
 		t.Fatalf("deleted still shown: %+v", got.Measurements)
 	}
 	execute[engine.View](t, s, "views_delete", map[string]any{"idempotency_key": key(), "id": v.ID, "expected_version": 1})
-	if got := execute[engine.ViewState](t, s, "views_state", map[string]any{"subject_kind": "goal", "subject_id": goal.ID, "catalog_id": engine.TrackerCatalogKit}); got.View != nil {
+	if got := execute[engine.ViewState](t, s, "views_state", map[string]any{"subject_kind": "intention", "subject_id": goal.ID, "catalog_id": engine.TrackerCatalogKit}); got.View != nil {
 		t.Fatalf("a removed view: %+v", got.View)
 	}
 }
@@ -94,13 +94,13 @@ func TestAViewIsPartOfABatchAndUndoesWithIt(t *testing.T) {
 	s := integrationService(t)
 	gid := uuid.NewString()
 	ops := []any{
-		map[string]any{"operation": "goals_create", "input": map[string]any{"id": gid, "title": "Lisbon trip"}},
+		map[string]any{"operation": "intentions_create", "input": map[string]any{"id": gid, "title": "Lisbon trip"}},
 		map[string]any{"operation": "tasks_create", "input": map[string]any{"title": "Book flights", "goal_id": gid}},
 		map[string]any{"operation": "views_create", "input": viewOf("goal", gid, todoBlock)},
 	}
 	k := key()
 	execute[engine.BatchResult](t, s, "batch_apply", map[string]any{"idempotency_key": k, "operations": ops})
-	if got := execute[engine.ViewState](t, s, "views_state", map[string]any{"subject_kind": "goal", "subject_id": gid, "catalog_id": engine.TrackerCatalogKit}); got.View == nil {
+	if got := execute[engine.ViewState](t, s, "views_state", map[string]any{"subject_kind": "intention", "subject_id": gid, "catalog_id": engine.TrackerCatalogKit}); got.View == nil {
 		t.Fatal("the batch's view is missing")
 	}
 	undo := execute[engine.BatchUndoResult](t, s, "batch_undo", map[string]any{"idempotency_key": key(), "batch_key": k})
@@ -128,15 +128,15 @@ func TestTheKitNamesTasksAndEventsNotRoutinesOrReminders(t *testing.T) {
 func TestAHabitsHistoryIsReadFromItsOccurrences(t *testing.T) {
 	s := integrationService(t)
 	start := time.Now().UTC().Truncate(24*time.Hour).AddDate(0, 0, -9).Add(8 * time.Hour)
-	task := execute[engine.Item](t, s, "tasks_create", map[string]any{"idempotency_key": key(), "title": "Stretch", "at": start.Format(time.RFC3339), "recurrence": map[string]any{"freq": "daily"}})
+	task := execute[engine.Task](t, s, "tasks_create", map[string]any{"idempotency_key": key(), "title": "Stretch", "at": start.Format(time.RFC3339), "recurrence": map[string]any{"freq": "daily"}})
 	for _, back := range []int{0, 1, 2, 4, 5} { // done today, yesterday, two days ago, then a gap, then two more
 		at := start.AddDate(0, 0, 9-back)
-		execute[engine.Item](t, s, "tasks_complete", map[string]any{"idempotency_key": key(), "id": task.ID, "expected_version": 1, "at": at.Format(time.RFC3339)})
+		execute[engine.Task](t, s, "tasks_complete", map[string]any{"idempotency_key": key(), "id": task.ID, "expected_version": 1, "at": at.Format(time.RFC3339)})
 	}
 	h := execute[engine.TaskHistory](t, s, "tasks_history", map[string]any{"id": task.ID, "days": 10})
 	if len(h.Days) != 10 || h.Last7.Scheduled != 7 || h.Last7.Done != 5 || h.Streak != 3 || h.BestStreak != 3 {
 		t.Fatalf("history: last7 %+v streak %d best %d", h.Last7, h.Streak, h.BestStreak)
 	}
-	one := execute[engine.Item](t, s, "tasks_create", map[string]any{"idempotency_key": key(), "title": "Once"})
+	one := execute[engine.Task](t, s, "tasks_create", map[string]any{"idempotency_key": key(), "title": "Once"})
 	errorCode(t, s, "tasks_history", map[string]any{"id": one.ID}, "invalid_input")
 }

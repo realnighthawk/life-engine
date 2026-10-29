@@ -13,9 +13,10 @@ type DayInput struct {
 	Subject string `json:"subject,omitempty" jsonschema:"person (default) or agent"`
 }
 type DayEntry struct {
-	Item  Item      `json:"item"`
-	At    time.Time `json:"at" jsonschema:"when this occurrence falls"`
-	State string    `json:"state" jsonschema:"tasks: open or done. Events: upcoming or past"`
+	Task  *Task          `json:"task,omitempty" jsonschema:"set for a task entry"`
+	Event *CalendarEvent `json:"event,omitempty" jsonschema:"set for an event entry"`
+	At    time.Time      `json:"at" jsonschema:"when this occurrence falls"`
+	State string         `json:"state" jsonschema:"tasks: open or done. Events: upcoming or past"`
 	// Overdue marks an open one-off task from an earlier day, carried onto today.
 	Overdue bool `json:"overdue"`
 }
@@ -46,43 +47,65 @@ func dayView(ctx context.Context, u *unit, in DayInput) (Day, error) {
 	end := start.AddDate(0, 0, 1)
 	out := Day{Day: d, Entries: []DayEntry{}}
 
-	// Everything timed that could fall on the day: one-offs on it, anything repeating, and (for today) open one-off tasks
-	// from before it.
-	rows, e := u.tx.Query(ctx, "SELECT "+itemCols+` FROM life.items WHERE deleted_at IS NULL AND subject=$1 AND at IS NOT NULL AND
-		(recurrence IS NOT NULL OR (at >= $2 AND at < $3) OR (kind='task' AND done_at IS NULL AND at < $2))`, subject, start, end)
+	var tasks []Task
+	rows, e := u.tx.Query(ctx, "SELECT "+taskCols+` FROM life.tasks WHERE deleted_at IS NULL AND subject=$1 AND at IS NOT NULL AND
+		(recurrence IS NOT NULL OR (at >= $2 AND at < $3) OR (done_at IS NULL AND at < $2))`, subject, start, end)
 	if e != nil {
 		return out, e
 	}
-	var items []Item
 	for rows.Next() {
-		it, e := scanItem(rows)
+		t, e := scanTask(rows)
 		if e != nil {
 			rows.Close()
 			return out, e
 		}
-		items = append(items, it)
+		tasks = append(tasks, t)
 	}
 	rows.Close()
 	if e = rows.Err(); e != nil {
 		return out, e
 	}
+
+	var events []CalendarEvent
+	rows, e = u.tx.Query(ctx, "SELECT "+eventCols+` FROM life.events WHERE deleted_at IS NULL AND cancelled_at IS NULL AND subject=$1
+		AND at IS NOT NULL AND (recurrence IS NOT NULL OR (at >= $2 AND at < $3))`, subject, start, end)
+	if e != nil {
+		return out, e
+	}
+	for rows.Next() {
+		ev, e := scanEvent(rows)
+		if e != nil {
+			rows.Close()
+			return out, e
+		}
+		events = append(events, ev)
+	}
+	rows.Close()
+	if e = rows.Err(); e != nil {
+		return out, e
+	}
+
+	// Which task occurrences an activity proves done, in this day.
 	cleared := map[string]bool{}
-	crows, e := u.tx.Query(ctx, `SELECT item_id::text, at FROM life.occurrences WHERE at >= $1 AND at < $2`, start, end)
+	crows, e := u.tx.Query(ctx, `SELECT l.to_id::text, a.occurred_at FROM life.activities a
+		JOIN life.links l ON l.from_kind='activity' AND l.from_id=a.id
+		WHERE l.relation='fulfils' AND l.to_kind='task' AND a.occurred_at >= $1 AND a.occurred_at < $2`, start, end)
 	if e != nil {
 		return out, e
 	}
 	for crows.Next() {
-		var itemID string
+		var taskID string
 		var at time.Time
-		if e = crows.Scan(&itemID, &at); e != nil {
+		if e = crows.Scan(&taskID, &at); e != nil {
 			crows.Close()
 			return out, e
 		}
-		cleared[itemID+"|"+at.UTC().Format(time.RFC3339)] = true
+		cleared[taskID+"|"+at.UTC().Format(time.RFC3339)] = true
 	}
 	crows.Close()
 
-	for _, it := range items {
+	for _, it := range tasks {
+		it := it
 		var times []time.Time
 		overdue := false
 		switch {
@@ -91,11 +114,32 @@ func dayView(ctx context.Context, u *unit, in DayInput) (Day, error) {
 			times = occurrencesIn(*it.At, *it.Recurrence, rloc, start, end)
 		case !it.At.Before(start) && it.At.Before(end):
 			times = []time.Time{*it.At}
-		case d == today && it.Kind == "task" && it.DoneAt == nil && it.At.Before(start):
+		case d == today && it.DoneAt == nil && it.At.Before(start):
 			times, overdue = []time.Time{*it.At}, true
 		}
 		for _, at := range times {
-			out.Entries = append(out.Entries, DayEntry{Item: it, At: at.UTC(), State: entryState(it, at, now, cleared[it.ID+"|"+at.UTC().Format(time.RFC3339)]), Overdue: overdue})
+			state := "open"
+			if cleared[it.ID+"|"+at.UTC().Format(time.RFC3339)] || (it.Recurrence == nil && it.DoneAt != nil) {
+				state = "done"
+			}
+			out.Entries = append(out.Entries, DayEntry{Task: &it, At: at.UTC(), State: state, Overdue: overdue})
+		}
+	}
+	for _, ev := range events {
+		ev := ev
+		var times []time.Time
+		if ev.Recurrence != nil {
+			rloc, _ := zone(ev.TimeZone)
+			times = occurrencesIn(ev.At, *ev.Recurrence, rloc, start, end)
+		} else if !ev.At.Before(start) && ev.At.Before(end) {
+			times = []time.Time{ev.At}
+		}
+		for _, at := range times {
+			state := "past"
+			if at.After(now) {
+				state = "upcoming"
+			}
+			out.Entries = append(out.Entries, DayEntry{Event: &ev, At: at.UTC(), State: state})
 		}
 	}
 	sort.SliceStable(out.Entries, func(i, j int) bool {
@@ -106,17 +150,4 @@ func dayView(ctx context.Context, u *unit, in DayInput) (Day, error) {
 		return a.At.Before(b.At)
 	})
 	return out, nil
-}
-
-func entryState(it Item, at, now time.Time, cleared bool) string {
-	if it.Kind == "event" {
-		if at.After(now) {
-			return "upcoming"
-		}
-		return "past"
-	}
-	if cleared || (it.Recurrence == nil && it.DoneAt != nil) {
-		return "done"
-	}
-	return "open"
 }

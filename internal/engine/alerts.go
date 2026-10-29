@@ -11,12 +11,12 @@ import (
 	"time"
 )
 
-// An alert is when an item tells its owner. The engine owns the clock (project-hub ADR 0008): the item row says what, and
-// the engine keeps a Temporal Schedule armed to match it, creating, updating in place and removing it as the row changes.
-// Nothing outside the engine creates a timer. This file decides what the Schedule should be and keeps it so; clock/ turns a
-// spec into a Temporal Schedule and runs the workflow it starts.
+// An alert is when a task or an event tells its owner. The engine owns the clock (project-hub ADR 0008): the record says
+// what, and the engine keeps a Temporal Schedule armed to match it, creating, updating in place and removing it as the
+// record changes. Nothing outside the engine creates a timer.
 
-// AlertSpec is one Schedule an item should have. Name is "main" (the item's own alert) or "snooze" (a one-shot deferral).
+// AlertSpec is one Schedule a record should have. Name is "main" (the record's own alert) or "snooze" (a one-shot
+// deferral).
 type AlertSpec struct {
 	Name     string        `json:"name"`
 	TimeZone string        `json:"time_zone"`
@@ -55,8 +55,8 @@ type Waker interface {
 // so an alert missed by longer than this is left, and logged by the sync, not retried forever.
 const alertGrace = 2 * time.Minute
 
-// recurringAlert is the Schedule a repeating item's alert needs. Temporal's calendar specs read local wall-clock time in a
-// zone, which is what a repeat should keep across daylight saving. What they cannot say is "every N weeks on these
+// recurringAlert is the Schedule a repeating record's alert needs. Temporal's calendar specs read local wall-clock time in
+// a zone, which is what a repeat should keep across daylight saving. What they cannot say is "every N weeks on these
 // weekdays" or "every N months", and they cannot move a firing to an earlier day, so those are refused here rather than
 // armed wrongly. ponytail: every N days or weeks (N > 1, no weekday list) uses a fixed-length interval, so it drifts an hour
 // across daylight saving; a monthly day 29-31 skips the shorter months.
@@ -64,7 +64,7 @@ func recurringAlert(at time.Time, before int, r Recurrence, loc *time.Location) 
 	anchor := at.In(loc)
 	alert := anchor.Add(-time.Duration(before) * time.Minute)
 	if alert.Year() != anchor.Year() || alert.YearDay() != anchor.YearDay() {
-		return AlertSpec{}, invalid("a repeating item's alert must fall on the same day as the item: use fewer minutes before, or no alert")
+		return AlertSpec{}, invalid("a repeating record's alert must fall on the same day as the record: use fewer minutes before, or no alert")
 	}
 	spec := AlertSpec{Name: "main", TimeZone: loc.String(), Start: alert.UTC()}
 	cal := CalendarSpec{Hour: alert.Hour(), Minute: alert.Minute(), Second: alert.Second()}
@@ -109,10 +109,51 @@ func offsetOf(t time.Time, every time.Duration) time.Duration {
 	return time.Duration(((t.Unix()%secs)+secs)%secs) * time.Second
 }
 
-// desiredAlerts is every Schedule an item should have right now: none for an item that is deleted, done, without an alert or
-// whose one-shot time has passed.
-func desiredAlerts(it Item, now time.Time) ([]AlertSpec, error) {
-	if it.DeletedAt != nil || it.AlertBeforeMinutes == nil || it.At == nil || it.DoneAt != nil {
+// scheduledItem is the timing half of a task or an event, read across both tables for the clock. An event's
+// cancelled_at is read as done_at, so a cancelled event is treated like a finished task: nothing to fire.
+type scheduledItem struct {
+	ID, Kind, Subject, Title, Notes, TimeZone, SessionKey string
+	At                                                    *time.Time
+	Recurrence                                            *Recurrence
+	Alert                                                 *int
+	SnoozedUntil, DoneAt, DeletedAt                       *time.Time
+	IsPriority                                            bool
+	Armed                                                 string
+}
+
+const scheduledCols = `id::text,kind,subject,title,notes,at,time_zone,recurrence,alert_before_minutes,coalesce(session_key,''),snoozed_until,done_at,is_priority,deleted_at,coalesce(armed,'')`
+const scheduledFrom = `(SELECT id::text AS id,'task' AS kind,subject,title,notes,at,time_zone,recurrence,alert_before_minutes,
+		coalesce(session_key,'') AS session_key,snoozed_until,done_at,is_priority,deleted_at,coalesce(armed,'') AS armed
+		FROM life.tasks
+	UNION ALL
+	SELECT id::text,'event',subject,title,notes,at,time_zone,recurrence,alert_before_minutes,
+		coalesce(session_key,''),snoozed_until,cancelled_at,false,deleted_at,coalesce(armed,'')
+		FROM life.events) s`
+
+func scanScheduled(row scanner) (scheduledItem, error) {
+	var it scheduledItem
+	var rec []byte
+	err := row.Scan(&it.ID, &it.Kind, &it.Subject, &it.Title, &it.Notes, &it.At, &it.TimeZone, &rec, &it.Alert, &it.SessionKey,
+		&it.SnoozedUntil, &it.DoneAt, &it.IsPriority, &it.DeletedAt, &it.Armed)
+	if err != nil {
+		return it, err
+	}
+	if len(rec) > 0 {
+		it.Recurrence = new(Recurrence)
+		if err = json.Unmarshal(rec, it.Recurrence); err != nil {
+			return it, err
+		}
+	}
+	for _, p := range []*time.Time{it.At, it.SnoozedUntil, it.DoneAt, it.DeletedAt} {
+		utcPtr(p)
+	}
+	return it, nil
+}
+
+// desiredAlerts is every Schedule a record should have right now: none for a record that is deleted, done or cancelled,
+// without an alert, or whose one-shot time has passed.
+func desiredAlerts(it scheduledItem, now time.Time) ([]AlertSpec, error) {
+	if it.DeletedAt != nil || it.Alert == nil || it.At == nil || it.DoneAt != nil {
 		return nil, nil
 	}
 	loc, e := zone(it.TimeZone)
@@ -122,7 +163,7 @@ func desiredAlerts(it Item, now time.Time) ([]AlertSpec, error) {
 	var specs []AlertSpec
 	snoozed := it.SnoozedUntil != nil && it.SnoozedUntil.After(now)
 	if it.Recurrence == nil {
-		when := it.At.Add(-time.Duration(*it.AlertBeforeMinutes) * time.Minute)
+		when := it.At.Add(-time.Duration(*it.Alert) * time.Minute)
 		if snoozed {
 			when = *it.SnoozedUntil
 		}
@@ -131,7 +172,7 @@ func desiredAlerts(it Item, now time.Time) ([]AlertSpec, error) {
 		}
 		return []AlertSpec{{Name: "main", TimeZone: loc.String(), Once: &when, Start: when}}, nil
 	}
-	main, e := recurringAlert(*it.At, *it.AlertBeforeMinutes, *it.Recurrence, loc)
+	main, e := recurringAlert(*it.At, *it.Alert, *it.Recurrence, loc)
 	if e != nil {
 		return nil, e
 	}
@@ -156,7 +197,7 @@ func hashSpecs(specs []AlertSpec) string {
 func (s *Service) UseWaker(w Waker) { s.waker = w }
 
 // SetWaker enables alerts and starts syncing: on every committed write, and on a timer to catch a Schedule deleted behind
-// the engine's back. Without a waker, items are stored but nothing fires them.
+// the engine's back. Without a waker, records are stored but nothing fires them.
 func (s *Service) SetWaker(ctx context.Context, w Waker, every time.Duration) {
 	s.UseWaker(w)
 	s.nudge = make(chan struct{}, 1)
@@ -180,31 +221,25 @@ func (s *Service) SetWaker(ctx context.Context, w Waker, every time.Duration) {
 	}()
 }
 
-// SyncAlerts makes every item's Schedules match its row. Safe to run any time, from any replica: arming is idempotent
+// SyncAlerts makes every record's Schedules match its row. Safe to run any time, from any replica: arming is idempotent
 // because Apply updates in place.
 // ponytail: no cross-replica lock; two replicas may apply the same spec twice, which Apply absorbs.
 func (s *Service) SyncAlerts(ctx context.Context) error {
 	if s.waker == nil {
 		return nil
 	}
-	rows, err := s.pool.Query(ctx, "SELECT "+itemCols+", coalesce(armed,'') FROM life.items WHERE alert_before_minutes IS NOT NULL OR armed IS NOT NULL")
+	rows, err := s.pool.Query(ctx, "SELECT "+scheduledCols+" FROM "+scheduledFrom+" WHERE alert_before_minutes IS NOT NULL OR armed IS NOT NULL")
 	if err != nil {
 		return err
 	}
-	type entry struct {
-		item  Item
-		armed string
-	}
-	var entries []entry
+	var entries []scheduledItem
 	for rows.Next() {
-		var en entry
-		it, e := scanItemWith(rows, &en.armed)
+		it, e := scanScheduled(rows)
 		if e != nil {
 			rows.Close()
 			return e
 		}
-		en.item = it
-		entries = append(entries, en)
+		entries = append(entries, it)
 	}
 	rows.Close()
 	if err = rows.Err(); err != nil {
@@ -212,9 +247,9 @@ func (s *Service) SyncAlerts(ctx context.Context) error {
 	}
 	now := time.Now()
 	var firstErr error
-	for _, en := range entries {
-		if e := s.syncOne(ctx, en.item, en.armed, now); e != nil {
-			slog.Error("alert sync failed for an item", "item", en.item.ID, "error", e)
+	for _, it := range entries {
+		if e := s.syncOne(ctx, it, now); e != nil {
+			slog.Error("alert sync failed for a record", "id", it.ID, "error", e)
 			if firstErr == nil {
 				firstErr = e
 			}
@@ -223,17 +258,17 @@ func (s *Service) SyncAlerts(ctx context.Context) error {
 	return firstErr
 }
 
-func (s *Service) syncOne(ctx context.Context, it Item, armed string, now time.Time) error {
+func (s *Service) syncOne(ctx context.Context, it scheduledItem, now time.Time) error {
 	specs, err := desiredAlerts(it, now)
 	if err != nil {
-		return fmt.Errorf("item %s: %w", it.ID, err)
+		return fmt.Errorf("record %s: %w", it.ID, err)
 	}
 	want := hashSpecs(specs)
 	present := map[string]bool{}
 	for _, sp := range specs {
 		present[sp.Name] = true
 	}
-	if want == armed {
+	if want == it.Armed {
 		// Unchanged on paper: check each Schedule is still there, so one removed behind our back is armed again.
 		missing := false
 		for _, sp := range specs {
@@ -261,41 +296,24 @@ func (s *Service) syncOne(ctx context.Context, it Item, armed string, now time.T
 			}
 		}
 	}
-	_, err = s.pool.Exec(ctx, "UPDATE life.items SET armed=NULLIF($2,'') WHERE id=$1", it.ID, want)
+	table := "life.tasks"
+	if it.Kind == "event" {
+		table = "life.events"
+	}
+	_, err = s.pool.Exec(ctx, "UPDATE "+table+" SET armed=NULLIF($2,'') WHERE id=$1", it.ID, want)
 	return err
 }
 
-// scanItemWith scans an item row followed by one extra column.
-func scanItemWith(row scanner, extra *string) (Item, error) {
-	var it Item
-	var rec []byte
-	err := row.Scan(&it.ID, &it.Kind, &it.Subject, &it.Title, &it.Notes, &it.GoalID, &it.At, &it.Minutes, &it.TimeZone, &rec, &it.AlertBeforeMinutes,
-		&it.IsPriority, &it.SessionKey, &it.SnoozedUntil, &it.DoneAt, &it.Version, &it.DeletedAt, &it.CreatedAt, &it.UpdatedAt, &it.Result, extra)
-	if err != nil {
-		return it, err
-	}
-	for _, t := range []*time.Time{it.At, it.SnoozedUntil, it.DoneAt, it.DeletedAt} {
-		if t != nil {
-			*t = t.UTC()
-		}
-	}
-	if len(rec) > 0 {
-		it.Recurrence = new(Recurrence)
-		err = json.Unmarshal(rec, it.Recurrence)
-	}
-	return it, err
-}
-
 // Fire is what an alert coming due asks of the engine, called by the workflow its Schedule starts. It decides what is to be
-// delivered and returns it; delivering is the workflow's job, as an activity with retries. A person's item returns the
-// notice for the gateway to store and push (ADR 0008); an agent's item returns the conversation to wake and what to wake it
-// with. An item that is gone, done, deleted or already cleared for this occurrence fires nothing.
+// delivered and returns it; delivering is the workflow's job, as an activity with retries. A person's record returns the
+// notice for the gateway to store and push (ADR 0008); an agent's returns the conversation to wake and what to wake it
+// with. A record that is gone, done, deleted or already cleared for this occurrence fires nothing.
 type FireResult struct {
 	Fired bool   `json:"fired"`
 	Skip  string `json:"skip,omitempty"`
-	// Notify is set for a person's item: post it to the gateway.
+	// Notify is set for a person's record: post it to the gateway.
 	Notify *FireNotice `json:"notify,omitempty"`
-	// Wake is set for an agent's item: deliver it into SessionKey.
+	// Wake is set for an agent's record: deliver it into SessionKey.
 	Wake *FireWake `json:"wake,omitempty"`
 }
 
@@ -323,34 +341,36 @@ func (s *Service) Fire(ctx context.Context, itemID string, scheduled time.Time) 
 		return FireResult{}, err
 	}
 	defer tx.Rollback(context.Background())
-	row := tx.QueryRow(ctx, "SELECT "+itemCols+" FROM life.items WHERE id=$1", itemID)
-	it, err := scanItem(row)
+	it, err := scanScheduled(tx.QueryRow(ctx, "SELECT "+scheduledCols+" FROM "+scheduledFrom+" WHERE id=$1 LIMIT 1", itemID))
 	if isNoRows(err) {
-		return FireResult{Skip: "the item is gone"}, nil
+		return FireResult{Skip: "the record is gone"}, nil
 	}
 	if err != nil {
 		return FireResult{}, err
 	}
 	switch {
 	case it.DeletedAt != nil:
-		return FireResult{Skip: "the item is deleted"}, nil
+		return FireResult{Skip: "the record is deleted"}, nil
 	case it.DoneAt != nil:
-		return FireResult{Skip: "the task is done"}, nil
-	case it.AlertBeforeMinutes == nil:
-		return FireResult{Skip: "the item no longer has an alert"}, nil
+		return FireResult{Skip: "the record is done or cancelled"}, nil
+	case it.Alert == nil:
+		return FireResult{Skip: "the record no longer has an alert"}, nil
 	}
 	// The occurrence the alert is for starts after the alert by the lead; a cleared occurrence is not announced.
-	occurrence := scheduled.Add(time.Duration(*it.AlertBeforeMinutes) * time.Minute).Truncate(time.Second)
-	var cleared bool
-	if err = tx.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM life.occurrences WHERE item_id=$1 AND at=$2)", it.ID, occurrence).Scan(&cleared); err != nil {
-		return FireResult{}, err
-	}
-	if cleared {
-		return FireResult{Skip: "the occurrence is already cleared"}, nil
+	occurrence := scheduled.Add(time.Duration(*it.Alert) * time.Minute).Truncate(time.Second)
+	if it.Kind == "task" {
+		var cleared bool
+		if err = tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM life.links l JOIN life.activities a ON a.id=l.from_id
+			WHERE l.from_kind='activity' AND l.relation='fulfils' AND l.to_kind='task' AND l.to_id=$1 AND a.occurred_at=$2)`, it.ID, occurrence).Scan(&cleared); err != nil {
+			return FireResult{}, err
+		}
+		if cleared {
+			return FireResult{Skip: "the occurrence is already cleared"}, nil
+		}
 	}
 	if it.Subject == "agent" {
 		if it.SessionKey == "" {
-			return FireResult{}, fmt.Errorf("agent item %s has an alert but no conversation to wake", it.ID)
+			return FireResult{}, fmt.Errorf("agent %s %s has an alert but no conversation to wake", it.Kind, it.ID)
 		}
 		objective := it.Title
 		if it.Notes != "" {
@@ -373,7 +393,11 @@ func (s *Service) Fire(ctx context.Context, itemID string, scheduled time.Time) 
 	if it.IsPriority {
 		priority = "high"
 	}
+	detail := "Your " + it.Kind + " " + strconv.Quote(it.Title) + " is due."
+	if it.Kind == "event" {
+		detail = "Your event " + strconv.Quote(it.Title) + " is starting."
+	}
 	return FireResult{Fired: true, Notify: &FireNotice{
-		EventID: fmt.Sprintf("item:%s@%d", it.ID, occurrence.Unix()), Detail: "Your " + it.Kind + " " + strconv.Quote(it.Title) + " is due.",
+		EventID: fmt.Sprintf("item:%s@%d", it.ID, occurrence.Unix()), Detail: detail,
 		Title: it.Title, Body: body, Priority: priority, LinkEntity: it.Kind, LinkID: it.ID}}, nil
 }

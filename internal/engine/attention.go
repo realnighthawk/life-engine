@@ -7,11 +7,11 @@ import "context"
 type Attention struct {
 	Commitments []Commitment `json:"commitments" jsonschema:"open obligations due today or earlier"`
 	Decisions   []Decision   `json:"decisions" jsonschema:"decisions that are open or deferred and not expired"`
-	Tasks       []Item       `json:"tasks" jsonschema:"open one-off or repeating tasks whose time has passed"`
+	Tasks       []Task       `json:"tasks" jsonschema:"open tasks whose time has passed"`
 }
 
 func attentionGet(ctx context.Context, u *unit, _ struct{}) (Attention, error) {
-	out := Attention{Commitments: []Commitment{}, Decisions: []Decision{}, Tasks: []Item{}}
+	out := Attention{Commitments: []Commitment{}, Decisions: []Decision{}, Tasks: []Task{}}
 	today, _, _, e := u.today(ctx)
 	if e != nil {
 		return out, e
@@ -54,14 +54,14 @@ func attentionGet(ctx context.Context, u *unit, _ struct{}) (Attention, error) {
 	if e = rows.Err(); e != nil {
 		return out, e
 	}
-	rows, e = u.tx.Query(ctx, "SELECT "+itemCols+` FROM life.items
-		WHERE kind='task' AND subject='person' AND deleted_at IS NULL AND done_at IS NULL AND at IS NOT NULL AND at <= now()
+	rows, e = u.tx.Query(ctx, "SELECT "+taskCols+` FROM life.tasks
+		WHERE subject='person' AND deleted_at IS NULL AND done_at IS NULL AND at IS NOT NULL AND at <= now()
 		ORDER BY at, id LIMIT 50`)
 	if e != nil {
 		return out, e
 	}
 	for rows.Next() {
-		it, e := scanItem(rows)
+		it, e := scanTask(rows)
 		if e != nil {
 			rows.Close()
 			return out, e

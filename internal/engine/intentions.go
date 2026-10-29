@@ -89,10 +89,10 @@ func scanIntention(row scanner) (Intention, error) {
 // repeating task counts once until the cutover replaces occurrences with activities; tasks_history reads its detail.
 func (u *unit) withIntentionProgress(ctx context.Context, it Intention) (Intention, error) {
 	err := u.tx.QueryRow(ctx, `SELECT
-		count(*) FILTER (WHERE i.done_at IS NOT NULL), count(*)
-		FROM life.links l JOIN life.items i ON i.id=l.from_id
+		count(*) FILTER (WHERE t.done_at IS NOT NULL), count(*)
+		FROM life.links l JOIN life.tasks t ON t.id=l.from_id
 		WHERE l.relation='serves' AND l.to_kind='intention' AND l.to_id=$1
-		  AND l.from_kind='task' AND i.kind='task' AND i.deleted_at IS NULL`, it.ID).Scan(&it.Progress.Done, &it.Progress.Total)
+		  AND l.from_kind='task' AND t.deleted_at IS NULL`, it.ID).Scan(&it.Progress.Done, &it.Progress.Total)
 	return it, err
 }
 

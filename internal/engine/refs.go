@@ -14,12 +14,12 @@ import (
 // the caller retries with the id the error names.
 var idPrefix = regexp.MustCompile(`^[0-9a-fA-F-]{8,35}$`)
 
-// refRow is one candidate record: kind is "" for goals.
+// refRow is one candidate record.
 type refRow struct{ id, title string }
 
-// resolveRef returns the full id for key, which is a whole UUID or a unique prefix of one. table is "items" (with kind)
-// or "goals" (kind ""). A whole UUID is returned as is and left to the caller's lookup, which reports a miss with
-// suggestions through missing.
+// resolveRef returns the full id for key, which is a whole UUID or a unique prefix of one. table names the record family
+// (tasks, events, intentions, commitments, decisions, states or activities). A whole UUID is returned as is and left to
+// the caller's lookup, which reports a miss with suggestions through missing.
 func (u *unit) resolveRef(ctx context.Context, table, kind, key string) (string, error) {
 	if _, err := uuid.Parse(key); err == nil {
 		return id(key)
@@ -65,8 +65,10 @@ func (u *unit) candidates(ctx context.Context, table, kind, like string) ([]refR
 	var q string
 	var args []any
 	switch table {
-	case "items":
-		q, args = "SELECT id::text, title FROM life.items WHERE id::text LIKE $1 AND kind=$2 AND deleted_at IS NULL LIMIT 200", []any{like, kind}
+	case "tasks":
+		q, args = "SELECT id::text, title FROM life.tasks WHERE id::text LIKE $1 AND deleted_at IS NULL LIMIT 200", []any{like}
+	case "events":
+		q, args = "SELECT id::text, title FROM life.events WHERE id::text LIKE $1 AND deleted_at IS NULL LIMIT 200", []any{like}
 	case "intentions":
 		q, args = "SELECT id::text, title FROM life.intentions WHERE id::text LIKE $1 AND deleted_at IS NULL LIMIT 200", []any{like}
 	case "commitments":
@@ -78,7 +80,7 @@ func (u *unit) candidates(ctx context.Context, table, kind, like string) ([]refR
 	case "activities":
 		q, args = "SELECT id::text, text FROM life.activities WHERE id::text LIKE $1 LIMIT 200", []any{like}
 	default:
-		q, args = "SELECT id::text, title FROM life.goals WHERE id::text LIKE $1 AND deleted_at IS NULL LIMIT 200", []any{like}
+		q, args = "SELECT id::text, title FROM life.tasks WHERE id::text LIKE $1 AND deleted_at IS NULL LIMIT 200", []any{like}
 	}
 	rs, err := u.tx.Query(ctx, q, args...)
 	if err != nil {

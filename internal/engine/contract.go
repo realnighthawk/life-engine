@@ -40,7 +40,7 @@ func (s *Service) OpenAPI() map[string]any {
 	schemas["Error"] = map[string]any{"type": "object", "required": []string{"error"}, "properties": map[string]any{
 		"error": map[string]any{"type": "object", "required": []string{"code", "message"}, "properties": map[string]any{"code": map[string]string{"type": "string"}, "message": map[string]string{"type": "string"}}},
 	}}
-	return map[string]any{"openapi": "3.1.0", "info": map[string]string{"title": "Life Engine", "version": "0.1.0", "description": "A person's goals, tasks and events, and the alerts on them. One registry serves HTTP and MCP."},
+	return map[string]any{"openapi": "3.1.0", "info": map[string]string{"title": "Life Engine", "version": "0.1.0", "description": "A person's intentions, commitments, decisions, states, activities, tasks and events, and the alerts on them. One registry serves HTTP and MCP."},
 		"servers": []any{map[string]string{"url": "/life", "description": "Trusted identity router; direct engine uses /"}},
 		"paths":   paths, "components": map[string]any{"schemas": schemas, "securitySchemes": map[string]any{"routerBearer": map[string]string{
 			"type": "http", "scheme": "bearer", "bearerFormat": "JWT", "description": "Verified by the identity router; the private engine has no authentication or user identity handling.",

@@ -142,15 +142,15 @@ func TestTheWakeIsSentFromTheFiringAndRetriedUntilItIs(t *testing.T) {
 
 func TestCompletingATaskWakesTheWatchOnItWithItsResultAndReopeningFiresAgain(t *testing.T) {
 	s := integrationService(t)
-	task := execute[engine.Item](t, s, "tasks_create", map[string]any{"idempotency_key": key(), "title": "fpl-gameweek-planner", "subject": "agent"})
+	task := execute[engine.Task](t, s, "tasks_create", map[string]any{"idempotency_key": key(), "title": "fpl-gameweek-planner", "subject": "agent"})
 	arm(t, s, "plan-done", "task_done:"+task.ID, "Check the squad against the latest news.")
-	quiet := execute[engine.Item](t, s, "tasks_create", map[string]any{"idempotency_key": key(), "title": "unwatched", "subject": "agent"})
+	quiet := execute[engine.Task](t, s, "tasks_create", map[string]any{"idempotency_key": key(), "title": "unwatched", "subject": "agent"})
 
-	done := execute[engine.Item](t, s, "tasks_complete", map[string]any{"idempotency_key": key(), "id": task.ID, "expected_version": 1, "result": "completed: the plan is ready"})
+	done := execute[engine.Task](t, s, "tasks_complete", map[string]any{"idempotency_key": key(), "id": task.ID, "expected_version": 1, "result": "completed: the plan is ready"})
 	if done.Result != "completed: the plan is ready" || done.DoneAt == nil {
 		t.Fatalf("the result must be kept on an untimed task: %+v", done)
 	}
-	execute[engine.Item](t, s, "tasks_complete", map[string]any{"idempotency_key": key(), "id": quiet.ID, "expected_version": 1, "result": "x"})
+	execute[engine.Task](t, s, "tasks_complete", map[string]any{"idempotency_key": key(), "id": quiet.ID, "expected_version": 1, "result": "x"})
 
 	f := newFakeWaker()
 	s.UseWaker(f)
@@ -167,11 +167,11 @@ func TestCompletingATaskWakesTheWatchOnItWithItsResultAndReopeningFiresAgain(t *
 	}
 
 	// Reopened and completed again, it is a new completion.
-	reopened := execute[engine.Item](t, s, "tasks_complete", map[string]any{"idempotency_key": key(), "id": task.ID, "expected_version": done.Version, "done": false})
+	reopened := execute[engine.Task](t, s, "tasks_complete", map[string]any{"idempotency_key": key(), "id": task.ID, "expected_version": done.Version, "done": false})
 	if reopened.Result != "" || reopened.DoneAt != nil {
 		t.Fatalf("reopen clears the result: %+v", reopened)
 	}
-	execute[engine.Item](t, s, "tasks_complete", map[string]any{"idempotency_key": key(), "id": task.ID, "expected_version": reopened.Version, "result": "second time"})
+	execute[engine.Task](t, s, "tasks_complete", map[string]any{"idempotency_key": key(), "id": task.ID, "expected_version": reopened.Version, "result": "second time"})
 	f.wakes = map[string]engine.FireWake{}
 	if err := s.SendWatchWakes(context.Background()); err != nil || len(f.wakes) != 1 {
 		t.Fatalf("second completion: %v %+v", err, f.wakes)

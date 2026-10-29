@@ -25,7 +25,7 @@ func pendingNotices(t *testing.T, s *engine.Service) []engine.Event {
 func TestAPersonsAlertIsHandedBackForTheGatewayAndRecordsNothingHere(t *testing.T) {
 	s := integrationService(t)
 	at := time.Now().UTC().Add(time.Hour).Truncate(time.Second)
-	task := execute[engine.Item](t, s, "tasks_create", map[string]any{"idempotency_key": key(), "title": "Call Sam", "notes": "about the car", "at": at.Format(time.RFC3339), "alert_before_minutes": 10, "is_priority": true})
+	task := execute[engine.Task](t, s, "tasks_create", map[string]any{"idempotency_key": key(), "title": "Call Sam", "notes": "about the car", "at": at.Format(time.RFC3339), "alert_before_minutes": 10, "is_priority": true})
 	fired := at.Add(-10 * time.Minute)
 	var first engine.FireResult
 	for i := 0; i < 2; i++ { // a retried firing names the same occurrence
@@ -52,14 +52,14 @@ func TestAPersonsAlertIsHandedBackForTheGatewayAndRecordsNothingHere(t *testing.
 func TestAnAlertThatNoLongerMattersFiresNothing(t *testing.T) {
 	s := integrationService(t)
 	at := time.Now().UTC().Add(time.Hour).Truncate(time.Second)
-	mk := func(title string) engine.Item {
-		return execute[engine.Item](t, s, "tasks_create", map[string]any{"idempotency_key": key(), "title": title, "at": at.Format(time.RFC3339), "alert_before_minutes": 0})
+	mk := func(title string) engine.Task {
+		return execute[engine.Task](t, s, "tasks_create", map[string]any{"idempotency_key": key(), "title": title, "at": at.Format(time.RFC3339), "alert_before_minutes": 0})
 	}
 	done, gone, cleared := mk("done"), mk("gone"), mk("cleared")
-	execute[engine.Item](t, s, "tasks_complete", map[string]any{"idempotency_key": key(), "id": done.ID, "expected_version": 1})
-	execute[engine.Item](t, s, "tasks_delete", map[string]any{"idempotency_key": key(), "id": gone.ID, "expected_version": 1})
-	rep := execute[engine.Item](t, s, "tasks_create", map[string]any{"idempotency_key": key(), "title": "rep", "at": at.Format(time.RFC3339), "alert_before_minutes": 0, "recurrence": map[string]any{"freq": "daily"}})
-	execute[engine.Item](t, s, "tasks_complete", map[string]any{"idempotency_key": key(), "id": rep.ID, "expected_version": 1, "at": at.Format(time.RFC3339)})
+	execute[engine.Task](t, s, "tasks_complete", map[string]any{"idempotency_key": key(), "id": done.ID, "expected_version": 1})
+	execute[engine.Task](t, s, "tasks_delete", map[string]any{"idempotency_key": key(), "id": gone.ID, "expected_version": 1})
+	rep := execute[engine.Task](t, s, "tasks_create", map[string]any{"idempotency_key": key(), "title": "rep", "at": at.Format(time.RFC3339), "alert_before_minutes": 0, "recurrence": map[string]any{"freq": "daily"}})
+	execute[engine.Task](t, s, "tasks_complete", map[string]any{"idempotency_key": key(), "id": rep.ID, "expected_version": 1, "at": at.Format(time.RFC3339)})
 	_ = cleared
 	for name, id := range map[string]string{"done": done.ID, "deleted": gone.ID, "an occurrence already cleared": rep.ID, "missing": "99999999-9999-4999-8999-999999999999"} {
 		res, err := s.Fire(context.Background(), id, at)
@@ -81,7 +81,7 @@ func TestAnAgentsAlertNamesTheConversationToWake(t *testing.T) {
 	if err != nil {
 		t.Fatal(engine.PublicError(err))
 	}
-	var task engine.Item
+	var task engine.Task
 	mustUnmarshal(t, out, &task)
 	res, err := s.Fire(context.Background(), task.ID, at)
 	if err != nil || !res.Fired || res.Wake == nil {
@@ -145,8 +145,8 @@ func TestTheEngineKeepsItsSchedulesMatchedToTheRows(t *testing.T) {
 	s.UseWaker(w)
 	ctx := context.Background()
 	at := time.Now().UTC().Add(2 * time.Hour).Truncate(time.Second)
-	task := execute[engine.Item](t, s, "tasks_create", map[string]any{"idempotency_key": key(), "title": "x", "at": at.Format(time.RFC3339), "alert_before_minutes": 30})
-	execute[engine.Item](t, s, "tasks_create", map[string]any{"idempotency_key": key(), "title": "no alert", "at": at.Format(time.RFC3339)})
+	task := execute[engine.Task](t, s, "tasks_create", map[string]any{"idempotency_key": key(), "title": "x", "at": at.Format(time.RFC3339), "alert_before_minutes": 30})
+	execute[engine.Task](t, s, "tasks_create", map[string]any{"idempotency_key": key(), "title": "no alert", "at": at.Format(time.RFC3339)})
 
 	if err := s.SyncAlerts(ctx); err != nil {
 		t.Fatal(err)
@@ -166,7 +166,7 @@ func TestTheEngineKeepsItsSchedulesMatchedToTheRows(t *testing.T) {
 		t.Fatalf("not re-armed: %+v %v", w.applied, err)
 	}
 	// A change updates it in place; a snooze on a one-off moves it, not adds one.
-	execute[engine.Item](t, s, "tasks_snooze", map[string]any{"idempotency_key": key(), "id": task.ID, "expected_version": 1, "until": at.Add(time.Hour).Format(time.RFC3339)})
+	execute[engine.Task](t, s, "tasks_snooze", map[string]any{"idempotency_key": key(), "id": task.ID, "expected_version": 1, "until": at.Add(time.Hour).Format(time.RFC3339)})
 	if err := s.SyncAlerts(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -174,7 +174,7 @@ func TestTheEngineKeepsItsSchedulesMatchedToTheRows(t *testing.T) {
 		t.Fatalf("snoozed: %+v", w.applied)
 	}
 	// Completing, or deleting, takes the Schedule away.
-	execute[engine.Item](t, s, "tasks_complete", map[string]any{"idempotency_key": key(), "id": task.ID, "expected_version": 2})
+	execute[engine.Task](t, s, "tasks_complete", map[string]any{"idempotency_key": key(), "id": task.ID, "expected_version": 2})
 	if err := s.SyncAlerts(ctx); err != nil || len(w.applied) != 0 {
 		t.Fatalf("done task still armed: %+v %v", w.applied, err)
 	}

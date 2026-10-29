@@ -11,9 +11,9 @@ import (
 
 func TestARecordIsFoundByUniquePrefixAndAMissNamesTheClosest(t *testing.T) {
 	s := integrationService(t)
-	task := execute[engine.Item](t, s, "tasks_create", map[string]any{"idempotency_key": key(), "title": "Call Sam"})
+	task := execute[engine.Task](t, s, "tasks_create", map[string]any{"idempotency_key": key(), "title": "Call Sam"})
 
-	got := execute[engine.Item](t, s, "tasks_get", map[string]any{"id": task.ID[:8]})
+	got := execute[engine.Task](t, s, "tasks_get", map[string]any{"id": task.ID[:8]})
 	if got.ID != task.ID {
 		t.Fatalf("prefix resolved to %s, want %s", got.ID, task.ID)
 	}

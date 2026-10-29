@@ -11,7 +11,7 @@ import (
 	"github.com/google/jsonschema-go/jsonschema"
 )
 
-// The view kit. A view is a manifest the model composes for one goal from a finite kit of ways to draw things (blocks)
+// The view kit. A view is a manifest the model composes for one intention from a finite kit of ways to draw things (blocks)
 // and a finite set of calculations the client runs on live data (functions). Nothing here names a kind of goal: a spending
 // limit, a weigh-in and a habit are the same kit composed differently. The engine only checks that a manifest is well
 // formed and refers to things that exist; the client does the arithmetic, so no number is ever written by the model.

@@ -675,19 +675,19 @@
             ]
           },
           "tasks": {
-            "description": "open one-off or repeating tasks whose time has passed",
+            "description": "open tasks whose time has passed",
             "items": {
               "additionalProperties": false,
               "properties": {
                 "alert_before_minutes": {
-                  "description": "tell the owner this many minutes before at; 0 at the time itself; null for no alert",
+                  "description": "tell the owner this many minutes before at, or null",
                   "type": [
                     "null",
                     "integer"
                   ]
                 },
                 "at": {
-                  "description": "an event's start, or a task's deadline or cue; the first occurrence of a repeating item; null for a task with no time",
+                  "description": "a deadline or cue, or null for a task with no time",
                   "type": [
                     "null",
                     "string"
@@ -702,15 +702,14 @@
                     "string"
                   ]
                 },
-                "done_at": {
-                  "description": "when a one-off task was done; repeating items are done one occurrence at a time",
+                "derived_from": {
                   "type": [
-                    "null",
-                    "string"
+                    "object",
+                    "null"
                   ]
                 },
-                "goal_id": {
-                  "description": "the goal this serves, or null",
+                "done_at": {
+                  "description": "when a one-off task was done; a repeating task is done one occurrence at a time",
                   "type": [
                     "null",
                     "string"
@@ -722,10 +721,6 @@
                 "is_priority": {
                   "type": "boolean"
                 },
-                "kind": {
-                  "description": "task or event",
-                  "type": "string"
-                },
                 "minutes": {
                   "description": "how long it takes, or null",
                   "type": [
@@ -734,6 +729,10 @@
                   ]
                 },
                 "notes": {
+                  "type": "string"
+                },
+                "origin": {
+                  "description": "person or agent: who authored it",
                   "type": "string"
                 },
                 "recurrence": {
@@ -772,18 +771,17 @@
                   "type": "string"
                 },
                 "session_key": {
-                  "description": "for an agent's item, the conversation its alert wakes",
+                  "description": "for an agent's task, the conversation its alert wakes",
                   "type": "string"
                 },
                 "snoozed_until": {
-                  "description": "the alert is deferred to this time",
                   "type": [
                     "null",
                     "string"
                   ]
                 },
                 "subject": {
-                  "description": "person (the default) or agent: whose it is",
+                  "description": "person (the default) or agent",
                   "type": "string"
                 },
                 "time_zone": {
@@ -801,11 +799,9 @@
               },
               "required": [
                 "id",
-                "kind",
                 "subject",
                 "title",
                 "notes",
-                "goal_id",
                 "at",
                 "minutes",
                 "time_zone",
@@ -814,6 +810,7 @@
                 "is_priority",
                 "snoozed_until",
                 "done_at",
+                "origin",
                 "version",
                 "deleted_at",
                 "created_at",
@@ -850,7 +847,7 @@
                   "description": "that operation's own input; leave out idempotency_key, the batch sets it. Give each new record an id so later operations can refer to it"
                 },
                 "operation": {
-                  "description": "a create operation: intentions_create, commitments_create, states_create, activities_record, links_set, goals_create, tasks_create, calendar_events_create or views_create",
+                  "description": "a create operation: intentions_create, commitments_create, states_create, activities_record, links_set, tasks_create, calendar_events_create or views_create",
                   "type": "string"
                 }
               },
@@ -922,7 +919,7 @@
                   "description": "that operation's own input; leave out idempotency_key, the batch sets it. Give each new record an id so later operations can refer to it"
                 },
                 "operation": {
-                  "description": "a create operation: intentions_create, commitments_create, states_create, activities_record, links_set, goals_create, tasks_create, calendar_events_create or views_create",
+                  "description": "a create operation: intentions_create, commitments_create, states_create, activities_record, links_set, tasks_create, calendar_events_create or views_create",
                   "type": "string"
                 }
               },
@@ -1035,6 +1032,160 @@
         ],
         "type": "object"
       },
+      "calendar_events_cancel_input": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "description": "the version you last read; a stale version is rejected",
+            "type": "integer"
+          },
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "expected_version"
+        ],
+        "type": "object"
+      },
+      "calendar_events_cancel_output": {
+        "additionalProperties": false,
+        "properties": {
+          "alert_before_minutes": {
+            "description": "tell the owner this many minutes before at, or null",
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "at": {
+            "description": "when it starts",
+            "type": "string"
+          },
+          "cancelled_at": {
+            "description": "when it was cancelled, or null",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "derived_from": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "minutes": {
+            "description": "how long it lasts, or null",
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "notes": {
+            "type": "string"
+          },
+          "origin": {
+            "description": "person or agent: who authored it",
+            "type": "string"
+          },
+          "recurrence": {
+            "additionalProperties": false,
+            "description": "how it repeats, or null for a one-off",
+            "properties": {
+              "freq": {
+                "description": "daily, weekly or monthly",
+                "type": "string"
+              },
+              "interval": {
+                "description": "repeat every N days/weeks/months, 1-365, default 1",
+                "type": "integer"
+              },
+              "weekdays": {
+                "description": "weekly only: days of the week, 0 = Sunday to 6 = Saturday; empty repeats on the due date's weekday",
+                "items": {
+                  "type": "integer"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              }
+            },
+            "required": [
+              "freq"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
+          "session_key": {
+            "description": "for an agent's event, the conversation its alert wakes",
+            "type": "string"
+          },
+          "snoozed_until": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "subject": {
+            "description": "person (the default) or agent",
+            "type": "string"
+          },
+          "time_zone": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "subject",
+          "title",
+          "notes",
+          "at",
+          "minutes",
+          "time_zone",
+          "recurrence",
+          "alert_before_minutes",
+          "snoozed_until",
+          "cancelled_at",
+          "origin",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
       "calendar_events_create_input": {
         "additionalProperties": false,
         "properties": {
@@ -1046,26 +1197,22 @@
             ]
           },
           "at": {
-            "description": "RFC 3339 instant: an event's start, or a task's deadline or cue. Required for an event",
+            "description": "RFC 3339 instant: a task's deadline or cue, an event's start. An event requires it",
             "type": [
               "null",
               "string"
             ]
           },
-          "goal_id": {
-            "description": "UUID of the goal this serves; optional",
-            "type": "string"
+          "derived_from": {
+            "description": "when an agent promoted a memory candidate: {bank_id, record_id, snapshot}"
           },
           "id": {
-            "description": "optional client-generated UUID so a later operation in the same batch can refer to this record",
+            "description": "optional client-generated UUID so a later operation in the same batch can refer to it",
             "type": "string"
           },
           "idempotency_key": {
             "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
             "type": "string"
-          },
-          "is_priority": {
-            "type": "boolean"
           },
           "minutes": {
             "description": "how long it takes, 1-1440",
@@ -1076,6 +1223,10 @@
           },
           "notes": {
             "description": "short detail, up to 2000 characters",
+            "type": "string"
+          },
+          "origin": {
+            "description": "person (default) or agent: who authored it",
             "type": "string"
           },
           "recurrence": {
@@ -1110,11 +1261,11 @@
             ]
           },
           "subject": {
-            "description": "person (default), or agent for an item of your own, which the person's screens do not show; an agent's item with an alert wakes the conversation you create it from",
+            "description": "person (default), or agent for a record of your own, which the person's screens do not show; an agent's record with an alert wakes the conversation you create it from",
             "type": "string"
           },
           "time_zone": {
-            "description": "IANA zone the person lives in (for example Europe/London); a repeat keeps this zone's wall-clock time. Default UTC",
+            "description": "IANA zone the person lives in; a repeat keeps this zone's wall-clock time. Default UTC",
             "type": "string"
           },
           "title": {
@@ -1132,14 +1283,18 @@
         "additionalProperties": false,
         "properties": {
           "alert_before_minutes": {
-            "description": "tell the owner this many minutes before at; 0 at the time itself; null for no alert",
+            "description": "tell the owner this many minutes before at, or null",
             "type": [
               "null",
               "integer"
             ]
           },
           "at": {
-            "description": "an event's start, or a task's deadline or cue; the first occurrence of a repeating item; null for a task with no time",
+            "description": "when it starts",
+            "type": "string"
+          },
+          "cancelled_at": {
+            "description": "when it was cancelled, or null",
             "type": [
               "null",
               "string"
@@ -1154,38 +1309,27 @@
               "string"
             ]
           },
-          "done_at": {
-            "description": "when a one-off task was done; repeating items are done one occurrence at a time",
+          "derived_from": {
             "type": [
-              "null",
-              "string"
-            ]
-          },
-          "goal_id": {
-            "description": "the goal this serves, or null",
-            "type": [
-              "null",
-              "string"
+              "object",
+              "null"
             ]
           },
           "id": {
             "type": "string"
           },
-          "is_priority": {
-            "type": "boolean"
-          },
-          "kind": {
-            "description": "task or event",
-            "type": "string"
-          },
           "minutes": {
-            "description": "how long it takes, or null",
+            "description": "how long it lasts, or null",
             "type": [
               "null",
               "integer"
             ]
           },
           "notes": {
+            "type": "string"
+          },
+          "origin": {
+            "description": "person or agent: who authored it",
             "type": "string"
           },
           "recurrence": {
@@ -1219,23 +1363,18 @@
               "object"
             ]
           },
-          "result": {
-            "description": "for a done one-off task: the line its owner gave when completing it",
-            "type": "string"
-          },
           "session_key": {
-            "description": "for an agent's item, the conversation its alert wakes",
+            "description": "for an agent's event, the conversation its alert wakes",
             "type": "string"
           },
           "snoozed_until": {
-            "description": "the alert is deferred to this time",
             "type": [
               "null",
               "string"
             ]
           },
           "subject": {
-            "description": "person (the default) or agent: whose it is",
+            "description": "person (the default) or agent",
             "type": "string"
           },
           "time_zone": {
@@ -1253,19 +1392,17 @@
         },
         "required": [
           "id",
-          "kind",
           "subject",
           "title",
           "notes",
-          "goal_id",
           "at",
           "minutes",
           "time_zone",
           "recurrence",
           "alert_before_minutes",
-          "is_priority",
           "snoozed_until",
-          "done_at",
+          "cancelled_at",
+          "origin",
           "version",
           "deleted_at",
           "created_at",
@@ -1300,14 +1437,18 @@
         "additionalProperties": false,
         "properties": {
           "alert_before_minutes": {
-            "description": "tell the owner this many minutes before at; 0 at the time itself; null for no alert",
+            "description": "tell the owner this many minutes before at, or null",
             "type": [
               "null",
               "integer"
             ]
           },
           "at": {
-            "description": "an event's start, or a task's deadline or cue; the first occurrence of a repeating item; null for a task with no time",
+            "description": "when it starts",
+            "type": "string"
+          },
+          "cancelled_at": {
+            "description": "when it was cancelled, or null",
             "type": [
               "null",
               "string"
@@ -1322,38 +1463,27 @@
               "string"
             ]
           },
-          "done_at": {
-            "description": "when a one-off task was done; repeating items are done one occurrence at a time",
+          "derived_from": {
             "type": [
-              "null",
-              "string"
-            ]
-          },
-          "goal_id": {
-            "description": "the goal this serves, or null",
-            "type": [
-              "null",
-              "string"
+              "object",
+              "null"
             ]
           },
           "id": {
             "type": "string"
           },
-          "is_priority": {
-            "type": "boolean"
-          },
-          "kind": {
-            "description": "task or event",
-            "type": "string"
-          },
           "minutes": {
-            "description": "how long it takes, or null",
+            "description": "how long it lasts, or null",
             "type": [
               "null",
               "integer"
             ]
           },
           "notes": {
+            "type": "string"
+          },
+          "origin": {
+            "description": "person or agent: who authored it",
             "type": "string"
           },
           "recurrence": {
@@ -1387,23 +1517,18 @@
               "object"
             ]
           },
-          "result": {
-            "description": "for a done one-off task: the line its owner gave when completing it",
-            "type": "string"
-          },
           "session_key": {
-            "description": "for an agent's item, the conversation its alert wakes",
+            "description": "for an agent's event, the conversation its alert wakes",
             "type": "string"
           },
           "snoozed_until": {
-            "description": "the alert is deferred to this time",
             "type": [
               "null",
               "string"
             ]
           },
           "subject": {
-            "description": "person (the default) or agent: whose it is",
+            "description": "person (the default) or agent",
             "type": "string"
           },
           "time_zone": {
@@ -1421,19 +1546,17 @@
         },
         "required": [
           "id",
-          "kind",
           "subject",
           "title",
           "notes",
-          "goal_id",
           "at",
           "minutes",
           "time_zone",
           "recurrence",
           "alert_before_minutes",
-          "is_priority",
           "snoozed_until",
-          "done_at",
+          "cancelled_at",
+          "origin",
           "version",
           "deleted_at",
           "created_at",
@@ -1458,14 +1581,18 @@
         "additionalProperties": false,
         "properties": {
           "alert_before_minutes": {
-            "description": "tell the owner this many minutes before at; 0 at the time itself; null for no alert",
+            "description": "tell the owner this many minutes before at, or null",
             "type": [
               "null",
               "integer"
             ]
           },
           "at": {
-            "description": "an event's start, or a task's deadline or cue; the first occurrence of a repeating item; null for a task with no time",
+            "description": "when it starts",
+            "type": "string"
+          },
+          "cancelled_at": {
+            "description": "when it was cancelled, or null",
             "type": [
               "null",
               "string"
@@ -1480,38 +1607,27 @@
               "string"
             ]
           },
-          "done_at": {
-            "description": "when a one-off task was done; repeating items are done one occurrence at a time",
+          "derived_from": {
             "type": [
-              "null",
-              "string"
-            ]
-          },
-          "goal_id": {
-            "description": "the goal this serves, or null",
-            "type": [
-              "null",
-              "string"
+              "object",
+              "null"
             ]
           },
           "id": {
             "type": "string"
           },
-          "is_priority": {
-            "type": "boolean"
-          },
-          "kind": {
-            "description": "task or event",
-            "type": "string"
-          },
           "minutes": {
-            "description": "how long it takes, or null",
+            "description": "how long it lasts, or null",
             "type": [
               "null",
               "integer"
             ]
           },
           "notes": {
+            "type": "string"
+          },
+          "origin": {
+            "description": "person or agent: who authored it",
             "type": "string"
           },
           "recurrence": {
@@ -1545,23 +1661,18 @@
               "object"
             ]
           },
-          "result": {
-            "description": "for a done one-off task: the line its owner gave when completing it",
-            "type": "string"
-          },
           "session_key": {
-            "description": "for an agent's item, the conversation its alert wakes",
+            "description": "for an agent's event, the conversation its alert wakes",
             "type": "string"
           },
           "snoozed_until": {
-            "description": "the alert is deferred to this time",
             "type": [
               "null",
               "string"
             ]
           },
           "subject": {
-            "description": "person (the default) or agent: whose it is",
+            "description": "person (the default) or agent",
             "type": "string"
           },
           "time_zone": {
@@ -1579,19 +1690,17 @@
         },
         "required": [
           "id",
-          "kind",
           "subject",
           "title",
           "notes",
-          "goal_id",
           "at",
           "minutes",
           "time_zone",
           "recurrence",
           "alert_before_minutes",
-          "is_priority",
           "snoozed_until",
-          "done_at",
+          "cancelled_at",
+          "origin",
           "version",
           "deleted_at",
           "created_at",
@@ -1603,15 +1712,11 @@
         "additionalProperties": false,
         "properties": {
           "after": {
-            "description": "RFC 3339; only items at or after this time",
+            "description": "RFC 3339; only events at or after this time",
             "type": "string"
           },
           "before": {
-            "description": "RFC 3339; only items before this time",
-            "type": "string"
-          },
-          "goal_id": {
-            "description": "only items serving this goal",
+            "description": "RFC 3339; only events before this time",
             "type": "string"
           },
           "limit": {
@@ -1631,7 +1736,7 @@
             "type": "string"
           },
           "status": {
-            "description": "tasks only: open (default), done or all",
+            "description": "upcoming (default), past, cancelled or all",
             "type": "string"
           },
           "subject": {
@@ -1649,14 +1754,18 @@
               "additionalProperties": false,
               "properties": {
                 "alert_before_minutes": {
-                  "description": "tell the owner this many minutes before at; 0 at the time itself; null for no alert",
+                  "description": "tell the owner this many minutes before at, or null",
                   "type": [
                     "null",
                     "integer"
                   ]
                 },
                 "at": {
-                  "description": "an event's start, or a task's deadline or cue; the first occurrence of a repeating item; null for a task with no time",
+                  "description": "when it starts",
+                  "type": "string"
+                },
+                "cancelled_at": {
+                  "description": "when it was cancelled, or null",
                   "type": [
                     "null",
                     "string"
@@ -1671,38 +1780,27 @@
                     "string"
                   ]
                 },
-                "done_at": {
-                  "description": "when a one-off task was done; repeating items are done one occurrence at a time",
+                "derived_from": {
                   "type": [
-                    "null",
-                    "string"
-                  ]
-                },
-                "goal_id": {
-                  "description": "the goal this serves, or null",
-                  "type": [
-                    "null",
-                    "string"
+                    "object",
+                    "null"
                   ]
                 },
                 "id": {
                   "type": "string"
                 },
-                "is_priority": {
-                  "type": "boolean"
-                },
-                "kind": {
-                  "description": "task or event",
-                  "type": "string"
-                },
                 "minutes": {
-                  "description": "how long it takes, or null",
+                  "description": "how long it lasts, or null",
                   "type": [
                     "null",
                     "integer"
                   ]
                 },
                 "notes": {
+                  "type": "string"
+                },
+                "origin": {
+                  "description": "person or agent: who authored it",
                   "type": "string"
                 },
                 "recurrence": {
@@ -1736,23 +1834,18 @@
                     "object"
                   ]
                 },
-                "result": {
-                  "description": "for a done one-off task: the line its owner gave when completing it",
-                  "type": "string"
-                },
                 "session_key": {
-                  "description": "for an agent's item, the conversation its alert wakes",
+                  "description": "for an agent's event, the conversation its alert wakes",
                   "type": "string"
                 },
                 "snoozed_until": {
-                  "description": "the alert is deferred to this time",
                   "type": [
                     "null",
                     "string"
                   ]
                 },
                 "subject": {
-                  "description": "person (the default) or agent: whose it is",
+                  "description": "person (the default) or agent",
                   "type": "string"
                 },
                 "time_zone": {
@@ -1770,19 +1863,17 @@
               },
               "required": [
                 "id",
-                "kind",
                 "subject",
                 "title",
                 "notes",
-                "goal_id",
                 "at",
                 "minutes",
                 "time_zone",
                 "recurrence",
                 "alert_before_minutes",
-                "is_priority",
                 "snoozed_until",
-                "done_at",
+                "cancelled_at",
+                "origin",
                 "version",
                 "deleted_at",
                 "created_at",
@@ -1840,14 +1931,18 @@
         "additionalProperties": false,
         "properties": {
           "alert_before_minutes": {
-            "description": "tell the owner this many minutes before at; 0 at the time itself; null for no alert",
+            "description": "tell the owner this many minutes before at, or null",
             "type": [
               "null",
               "integer"
             ]
           },
           "at": {
-            "description": "an event's start, or a task's deadline or cue; the first occurrence of a repeating item; null for a task with no time",
+            "description": "when it starts",
+            "type": "string"
+          },
+          "cancelled_at": {
+            "description": "when it was cancelled, or null",
             "type": [
               "null",
               "string"
@@ -1862,38 +1957,27 @@
               "string"
             ]
           },
-          "done_at": {
-            "description": "when a one-off task was done; repeating items are done one occurrence at a time",
+          "derived_from": {
             "type": [
-              "null",
-              "string"
-            ]
-          },
-          "goal_id": {
-            "description": "the goal this serves, or null",
-            "type": [
-              "null",
-              "string"
+              "object",
+              "null"
             ]
           },
           "id": {
             "type": "string"
           },
-          "is_priority": {
-            "type": "boolean"
-          },
-          "kind": {
-            "description": "task or event",
-            "type": "string"
-          },
           "minutes": {
-            "description": "how long it takes, or null",
+            "description": "how long it lasts, or null",
             "type": [
               "null",
               "integer"
             ]
           },
           "notes": {
+            "type": "string"
+          },
+          "origin": {
+            "description": "person or agent: who authored it",
             "type": "string"
           },
           "recurrence": {
@@ -1927,23 +2011,18 @@
               "object"
             ]
           },
-          "result": {
-            "description": "for a done one-off task: the line its owner gave when completing it",
-            "type": "string"
-          },
           "session_key": {
-            "description": "for an agent's item, the conversation its alert wakes",
+            "description": "for an agent's event, the conversation its alert wakes",
             "type": "string"
           },
           "snoozed_until": {
-            "description": "the alert is deferred to this time",
             "type": [
               "null",
               "string"
             ]
           },
           "subject": {
-            "description": "person (the default) or agent: whose it is",
+            "description": "person (the default) or agent",
             "type": "string"
           },
           "time_zone": {
@@ -1961,19 +2040,17 @@
         },
         "required": [
           "id",
-          "kind",
           "subject",
           "title",
           "notes",
-          "goal_id",
           "at",
           "minutes",
           "time_zone",
           "recurrence",
           "alert_before_minutes",
-          "is_priority",
           "snoozed_until",
-          "done_at",
+          "cancelled_at",
+          "origin",
           "version",
           "deleted_at",
           "created_at",
@@ -2013,14 +2090,18 @@
         "additionalProperties": false,
         "properties": {
           "alert_before_minutes": {
-            "description": "tell the owner this many minutes before at; 0 at the time itself; null for no alert",
+            "description": "tell the owner this many minutes before at, or null",
             "type": [
               "null",
               "integer"
             ]
           },
           "at": {
-            "description": "an event's start, or a task's deadline or cue; the first occurrence of a repeating item; null for a task with no time",
+            "description": "when it starts",
+            "type": "string"
+          },
+          "cancelled_at": {
+            "description": "when it was cancelled, or null",
             "type": [
               "null",
               "string"
@@ -2035,38 +2116,27 @@
               "string"
             ]
           },
-          "done_at": {
-            "description": "when a one-off task was done; repeating items are done one occurrence at a time",
+          "derived_from": {
             "type": [
-              "null",
-              "string"
-            ]
-          },
-          "goal_id": {
-            "description": "the goal this serves, or null",
-            "type": [
-              "null",
-              "string"
+              "object",
+              "null"
             ]
           },
           "id": {
             "type": "string"
           },
-          "is_priority": {
-            "type": "boolean"
-          },
-          "kind": {
-            "description": "task or event",
-            "type": "string"
-          },
           "minutes": {
-            "description": "how long it takes, or null",
+            "description": "how long it lasts, or null",
             "type": [
               "null",
               "integer"
             ]
           },
           "notes": {
+            "type": "string"
+          },
+          "origin": {
+            "description": "person or agent: who authored it",
             "type": "string"
           },
           "recurrence": {
@@ -2100,23 +2170,18 @@
               "object"
             ]
           },
-          "result": {
-            "description": "for a done one-off task: the line its owner gave when completing it",
-            "type": "string"
-          },
           "session_key": {
-            "description": "for an agent's item, the conversation its alert wakes",
+            "description": "for an agent's event, the conversation its alert wakes",
             "type": "string"
           },
           "snoozed_until": {
-            "description": "the alert is deferred to this time",
             "type": [
               "null",
               "string"
             ]
           },
           "subject": {
-            "description": "person (the default) or agent: whose it is",
+            "description": "person (the default) or agent",
             "type": "string"
           },
           "time_zone": {
@@ -2134,19 +2199,171 @@
         },
         "required": [
           "id",
-          "kind",
           "subject",
           "title",
           "notes",
-          "goal_id",
           "at",
           "minutes",
           "time_zone",
           "recurrence",
           "alert_before_minutes",
-          "is_priority",
           "snoozed_until",
-          "done_at",
+          "cancelled_at",
+          "origin",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "calendar_events_uncancel_input": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "description": "the version you last read; a stale version is rejected",
+            "type": "integer"
+          },
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "expected_version"
+        ],
+        "type": "object"
+      },
+      "calendar_events_uncancel_output": {
+        "additionalProperties": false,
+        "properties": {
+          "alert_before_minutes": {
+            "description": "tell the owner this many minutes before at, or null",
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "at": {
+            "description": "when it starts",
+            "type": "string"
+          },
+          "cancelled_at": {
+            "description": "when it was cancelled, or null",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "derived_from": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "minutes": {
+            "description": "how long it lasts, or null",
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "notes": {
+            "type": "string"
+          },
+          "origin": {
+            "description": "person or agent: who authored it",
+            "type": "string"
+          },
+          "recurrence": {
+            "additionalProperties": false,
+            "description": "how it repeats, or null for a one-off",
+            "properties": {
+              "freq": {
+                "description": "daily, weekly or monthly",
+                "type": "string"
+              },
+              "interval": {
+                "description": "repeat every N days/weeks/months, 1-365, default 1",
+                "type": "integer"
+              },
+              "weekdays": {
+                "description": "weekly only: days of the week, 0 = Sunday to 6 = Saturday; empty repeats on the due date's weekday",
+                "items": {
+                  "type": "integer"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
+              }
+            },
+            "required": [
+              "freq"
+            ],
+            "type": [
+              "null",
+              "object"
+            ]
+          },
+          "session_key": {
+            "description": "for an agent's event, the conversation its alert wakes",
+            "type": "string"
+          },
+          "snoozed_until": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "subject": {
+            "description": "person (the default) or agent",
+            "type": "string"
+          },
+          "time_zone": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "subject",
+          "title",
+          "notes",
+          "at",
+          "minutes",
+          "time_zone",
+          "recurrence",
+          "alert_before_minutes",
+          "snoozed_until",
+          "cancelled_at",
+          "origin",
           "version",
           "deleted_at",
           "created_at",
@@ -2165,19 +2382,18 @@
             ]
           },
           "at": {
-            "description": "RFC 3339 instant: an event's start, or a task's deadline or cue. Required for an event",
+            "description": "RFC 3339 instant: a task's deadline or cue, an event's start. An event requires it",
             "type": [
               "null",
               "string"
             ]
           },
+          "derived_from": {
+            "description": "when an agent promoted a memory candidate: {bank_id, record_id, snapshot}"
+          },
           "expected_version": {
             "description": "the version you last read; a stale version is rejected",
             "type": "integer"
-          },
-          "goal_id": {
-            "description": "UUID of the goal this serves; optional",
-            "type": "string"
           },
           "id": {
             "description": "record UUID",
@@ -2186,9 +2402,6 @@
           "idempotency_key": {
             "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
             "type": "string"
-          },
-          "is_priority": {
-            "type": "boolean"
           },
           "minutes": {
             "description": "how long it takes, 1-1440",
@@ -2199,6 +2412,10 @@
           },
           "notes": {
             "description": "short detail, up to 2000 characters",
+            "type": "string"
+          },
+          "origin": {
+            "description": "person (default) or agent: who authored it",
             "type": "string"
           },
           "recurrence": {
@@ -2233,11 +2450,11 @@
             ]
           },
           "subject": {
-            "description": "person (default), or agent for an item of your own, which the person's screens do not show; an agent's item with an alert wakes the conversation you create it from",
+            "description": "person (default), or agent for a record of your own, which the person's screens do not show; an agent's record with an alert wakes the conversation you create it from",
             "type": "string"
           },
           "time_zone": {
-            "description": "IANA zone the person lives in (for example Europe/London); a repeat keeps this zone's wall-clock time. Default UTC",
+            "description": "IANA zone the person lives in; a repeat keeps this zone's wall-clock time. Default UTC",
             "type": "string"
           },
           "title": {
@@ -2257,14 +2474,18 @@
         "additionalProperties": false,
         "properties": {
           "alert_before_minutes": {
-            "description": "tell the owner this many minutes before at; 0 at the time itself; null for no alert",
+            "description": "tell the owner this many minutes before at, or null",
             "type": [
               "null",
               "integer"
             ]
           },
           "at": {
-            "description": "an event's start, or a task's deadline or cue; the first occurrence of a repeating item; null for a task with no time",
+            "description": "when it starts",
+            "type": "string"
+          },
+          "cancelled_at": {
+            "description": "when it was cancelled, or null",
             "type": [
               "null",
               "string"
@@ -2279,38 +2500,27 @@
               "string"
             ]
           },
-          "done_at": {
-            "description": "when a one-off task was done; repeating items are done one occurrence at a time",
+          "derived_from": {
             "type": [
-              "null",
-              "string"
-            ]
-          },
-          "goal_id": {
-            "description": "the goal this serves, or null",
-            "type": [
-              "null",
-              "string"
+              "object",
+              "null"
             ]
           },
           "id": {
             "type": "string"
           },
-          "is_priority": {
-            "type": "boolean"
-          },
-          "kind": {
-            "description": "task or event",
-            "type": "string"
-          },
           "minutes": {
-            "description": "how long it takes, or null",
+            "description": "how long it lasts, or null",
             "type": [
               "null",
               "integer"
             ]
           },
           "notes": {
+            "type": "string"
+          },
+          "origin": {
+            "description": "person or agent: who authored it",
             "type": "string"
           },
           "recurrence": {
@@ -2344,23 +2554,18 @@
               "object"
             ]
           },
-          "result": {
-            "description": "for a done one-off task: the line its owner gave when completing it",
-            "type": "string"
-          },
           "session_key": {
-            "description": "for an agent's item, the conversation its alert wakes",
+            "description": "for an agent's event, the conversation its alert wakes",
             "type": "string"
           },
           "snoozed_until": {
-            "description": "the alert is deferred to this time",
             "type": [
               "null",
               "string"
             ]
           },
           "subject": {
-            "description": "person (the default) or agent: whose it is",
+            "description": "person (the default) or agent",
             "type": "string"
           },
           "time_zone": {
@@ -2378,19 +2583,17 @@
         },
         "required": [
           "id",
-          "kind",
           "subject",
           "title",
           "notes",
-          "goal_id",
           "at",
           "minutes",
           "time_zone",
           "recurrence",
           "alert_before_minutes",
-          "is_priority",
           "snoozed_until",
-          "done_at",
+          "cancelled_at",
+          "origin",
           "version",
           "deleted_at",
           "created_at",
@@ -4159,18 +4362,23 @@
                   "description": "when this occurrence falls",
                   "type": "string"
                 },
-                "item": {
+                "event": {
                   "additionalProperties": false,
+                  "description": "set for an event entry",
                   "properties": {
                     "alert_before_minutes": {
-                      "description": "tell the owner this many minutes before at; 0 at the time itself; null for no alert",
+                      "description": "tell the owner this many minutes before at, or null",
                       "type": [
                         "null",
                         "integer"
                       ]
                     },
                     "at": {
-                      "description": "an event's start, or a task's deadline or cue; the first occurrence of a repeating item; null for a task with no time",
+                      "description": "when it starts",
+                      "type": "string"
+                    },
+                    "cancelled_at": {
+                      "description": "when it was cancelled, or null",
                       "type": [
                         "null",
                         "string"
@@ -4185,15 +4393,152 @@
                         "string"
                       ]
                     },
-                    "done_at": {
-                      "description": "when a one-off task was done; repeating items are done one occurrence at a time",
+                    "derived_from": {
+                      "type": [
+                        "object",
+                        "null"
+                      ]
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "minutes": {
+                      "description": "how long it lasts, or null",
+                      "type": [
+                        "null",
+                        "integer"
+                      ]
+                    },
+                    "notes": {
+                      "type": "string"
+                    },
+                    "origin": {
+                      "description": "person or agent: who authored it",
+                      "type": "string"
+                    },
+                    "recurrence": {
+                      "additionalProperties": false,
+                      "description": "how it repeats, or null for a one-off",
+                      "properties": {
+                        "freq": {
+                          "description": "daily, weekly or monthly",
+                          "type": "string"
+                        },
+                        "interval": {
+                          "description": "repeat every N days/weeks/months, 1-365, default 1",
+                          "type": "integer"
+                        },
+                        "weekdays": {
+                          "description": "weekly only: days of the week, 0 = Sunday to 6 = Saturday; empty repeats on the due date's weekday",
+                          "items": {
+                            "type": "integer"
+                          },
+                          "type": [
+                            "null",
+                            "array"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "freq"
+                      ],
+                      "type": [
+                        "null",
+                        "object"
+                      ]
+                    },
+                    "session_key": {
+                      "description": "for an agent's event, the conversation its alert wakes",
+                      "type": "string"
+                    },
+                    "snoozed_until": {
                       "type": [
                         "null",
                         "string"
                       ]
                     },
-                    "goal_id": {
-                      "description": "the goal this serves, or null",
+                    "subject": {
+                      "description": "person (the default) or agent",
+                      "type": "string"
+                    },
+                    "time_zone": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "updated_at": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "subject",
+                    "title",
+                    "notes",
+                    "at",
+                    "minutes",
+                    "time_zone",
+                    "recurrence",
+                    "alert_before_minutes",
+                    "snoozed_until",
+                    "cancelled_at",
+                    "origin",
+                    "version",
+                    "deleted_at",
+                    "created_at",
+                    "updated_at"
+                  ],
+                  "type": [
+                    "null",
+                    "object"
+                  ]
+                },
+                "overdue": {
+                  "type": "boolean"
+                },
+                "state": {
+                  "description": "tasks: open or done. Events: upcoming or past",
+                  "type": "string"
+                },
+                "task": {
+                  "additionalProperties": false,
+                  "description": "set for a task entry",
+                  "properties": {
+                    "alert_before_minutes": {
+                      "description": "tell the owner this many minutes before at, or null",
+                      "type": [
+                        "null",
+                        "integer"
+                      ]
+                    },
+                    "at": {
+                      "description": "a deadline or cue, or null for a task with no time",
+                      "type": [
+                        "null",
+                        "string"
+                      ]
+                    },
+                    "created_at": {
+                      "type": "string"
+                    },
+                    "deleted_at": {
+                      "type": [
+                        "null",
+                        "string"
+                      ]
+                    },
+                    "derived_from": {
+                      "type": [
+                        "object",
+                        "null"
+                      ]
+                    },
+                    "done_at": {
+                      "description": "when a one-off task was done; a repeating task is done one occurrence at a time",
                       "type": [
                         "null",
                         "string"
@@ -4205,10 +4550,6 @@
                     "is_priority": {
                       "type": "boolean"
                     },
-                    "kind": {
-                      "description": "task or event",
-                      "type": "string"
-                    },
                     "minutes": {
                       "description": "how long it takes, or null",
                       "type": [
@@ -4217,6 +4558,10 @@
                       ]
                     },
                     "notes": {
+                      "type": "string"
+                    },
+                    "origin": {
+                      "description": "person or agent: who authored it",
                       "type": "string"
                     },
                     "recurrence": {
@@ -4255,18 +4600,17 @@
                       "type": "string"
                     },
                     "session_key": {
-                      "description": "for an agent's item, the conversation its alert wakes",
+                      "description": "for an agent's task, the conversation its alert wakes",
                       "type": "string"
                     },
                     "snoozed_until": {
-                      "description": "the alert is deferred to this time",
                       "type": [
                         "null",
                         "string"
                       ]
                     },
                     "subject": {
-                      "description": "person (the default) or agent: whose it is",
+                      "description": "person (the default) or agent",
                       "type": "string"
                     },
                     "time_zone": {
@@ -4284,11 +4628,9 @@
                   },
                   "required": [
                     "id",
-                    "kind",
                     "subject",
                     "title",
                     "notes",
-                    "goal_id",
                     "at",
                     "minutes",
                     "time_zone",
@@ -4297,23 +4639,19 @@
                     "is_priority",
                     "snoozed_until",
                     "done_at",
+                    "origin",
                     "version",
                     "deleted_at",
                     "created_at",
                     "updated_at"
                   ],
-                  "type": "object"
-                },
-                "overdue": {
-                  "type": "boolean"
-                },
-                "state": {
-                  "description": "tasks: open or done. Events: upcoming or past",
-                  "type": "string"
+                  "type": [
+                    "null",
+                    "object"
+                  ]
                 }
               },
               "required": [
-                "item",
                 "at",
                 "state",
                 "overdue"
@@ -5646,7 +5984,7 @@
                       "description": "the record to open; clients map it to a deep link",
                       "properties": {
                         "entity": {
-                          "description": "goal, task or event",
+                          "description": "intention, task or event",
                           "type": "string"
                         },
                         "id": {
@@ -5698,1529 +6036,11 @@
         ],
         "type": "object"
       },
-      "goals_archive_input": {
-        "additionalProperties": false,
-        "properties": {
-          "expected_version": {
-            "description": "the version you last read; a stale version is rejected",
-            "type": "integer"
-          },
-          "id": {
-            "description": "record UUID",
-            "type": "string"
-          },
-          "idempotency_key": {
-            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
-            "type": "string"
-          }
-        },
-        "required": [
-          "idempotency_key",
-          "id",
-          "expected_version"
-        ],
-        "type": "object"
-      },
-      "goals_archive_output": {
-        "additionalProperties": false,
-        "properties": {
-          "created_at": {
-            "type": "string"
-          },
-          "deleted_at": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "ends_on": {
-            "description": "local date the goal finishes by; null for an open-ended goal",
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "id": {
-            "type": "string"
-          },
-          "next": {
-            "additionalProperties": false,
-            "description": "the linked open task that comes first, soonest time first, or null",
-            "properties": {
-              "alert_before_minutes": {
-                "description": "tell the owner this many minutes before at; 0 at the time itself; null for no alert",
-                "type": [
-                  "null",
-                  "integer"
-                ]
-              },
-              "at": {
-                "description": "an event's start, or a task's deadline or cue; the first occurrence of a repeating item; null for a task with no time",
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
-              "created_at": {
-                "type": "string"
-              },
-              "deleted_at": {
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
-              "done_at": {
-                "description": "when a one-off task was done; repeating items are done one occurrence at a time",
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
-              "goal_id": {
-                "description": "the goal this serves, or null",
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
-              "id": {
-                "type": "string"
-              },
-              "is_priority": {
-                "type": "boolean"
-              },
-              "kind": {
-                "description": "task or event",
-                "type": "string"
-              },
-              "minutes": {
-                "description": "how long it takes, or null",
-                "type": [
-                  "null",
-                  "integer"
-                ]
-              },
-              "notes": {
-                "type": "string"
-              },
-              "recurrence": {
-                "additionalProperties": false,
-                "description": "how it repeats, or null for a one-off",
-                "properties": {
-                  "freq": {
-                    "description": "daily, weekly or monthly",
-                    "type": "string"
-                  },
-                  "interval": {
-                    "description": "repeat every N days/weeks/months, 1-365, default 1",
-                    "type": "integer"
-                  },
-                  "weekdays": {
-                    "description": "weekly only: days of the week, 0 = Sunday to 6 = Saturday; empty repeats on the due date's weekday",
-                    "items": {
-                      "type": "integer"
-                    },
-                    "type": [
-                      "null",
-                      "array"
-                    ]
-                  }
-                },
-                "required": [
-                  "freq"
-                ],
-                "type": [
-                  "null",
-                  "object"
-                ]
-              },
-              "result": {
-                "description": "for a done one-off task: the line its owner gave when completing it",
-                "type": "string"
-              },
-              "session_key": {
-                "description": "for an agent's item, the conversation its alert wakes",
-                "type": "string"
-              },
-              "snoozed_until": {
-                "description": "the alert is deferred to this time",
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
-              "subject": {
-                "description": "person (the default) or agent: whose it is",
-                "type": "string"
-              },
-              "time_zone": {
-                "type": "string"
-              },
-              "title": {
-                "type": "string"
-              },
-              "updated_at": {
-                "type": "string"
-              },
-              "version": {
-                "type": "integer"
-              }
-            },
-            "required": [
-              "id",
-              "kind",
-              "subject",
-              "title",
-              "notes",
-              "goal_id",
-              "at",
-              "minutes",
-              "time_zone",
-              "recurrence",
-              "alert_before_minutes",
-              "is_priority",
-              "snoozed_until",
-              "done_at",
-              "version",
-              "deleted_at",
-              "created_at",
-              "updated_at"
-            ],
-            "type": [
-              "null",
-              "object"
-            ]
-          },
-          "notes": {
-            "description": "short free text kept with the goal, such as take the coolers or watch the weather",
-            "type": "string"
-          },
-          "progress": {
-            "additionalProperties": false,
-            "description": "read from the tasks linked to the goal",
-            "properties": {
-              "done": {
-                "type": "integer"
-              },
-              "total": {
-                "type": "integer"
-              }
-            },
-            "required": [
-              "done",
-              "total"
-            ],
-            "type": "object"
-          },
-          "subject": {
-            "description": "person (the default) or agent: whose goal it is",
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "updated_at": {
-            "type": "string"
-          },
-          "version": {
-            "type": "integer"
-          }
-        },
-        "required": [
-          "id",
-          "subject",
-          "title",
-          "notes",
-          "ends_on",
-          "progress",
-          "next",
-          "version",
-          "deleted_at",
-          "created_at",
-          "updated_at"
-        ],
-        "type": "object"
-      },
-      "goals_create_input": {
-        "additionalProperties": false,
-        "properties": {
-          "ends_on": {
-            "description": "YYYY-MM-DD the goal finishes by; omit for an open-ended goal",
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "id": {
-            "description": "optional client-generated UUID so a later operation in the same batch can refer to this goal",
-            "type": "string"
-          },
-          "idempotency_key": {
-            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
-            "type": "string"
-          },
-          "notes": {
-            "description": "short free text, up to 2000 characters",
-            "type": "string"
-          },
-          "subject": {
-            "description": "person (default) or agent; agent is for a goal of your own, which the person's screens do not show",
-            "type": "string"
-          },
-          "title": {
-            "description": "the outcome, 1-200 characters, in the person's words",
-            "type": "string"
-          }
-        },
-        "required": [
-          "idempotency_key",
-          "title"
-        ],
-        "type": "object"
-      },
-      "goals_create_output": {
-        "additionalProperties": false,
-        "properties": {
-          "created_at": {
-            "type": "string"
-          },
-          "deleted_at": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "ends_on": {
-            "description": "local date the goal finishes by; null for an open-ended goal",
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "id": {
-            "type": "string"
-          },
-          "next": {
-            "additionalProperties": false,
-            "description": "the linked open task that comes first, soonest time first, or null",
-            "properties": {
-              "alert_before_minutes": {
-                "description": "tell the owner this many minutes before at; 0 at the time itself; null for no alert",
-                "type": [
-                  "null",
-                  "integer"
-                ]
-              },
-              "at": {
-                "description": "an event's start, or a task's deadline or cue; the first occurrence of a repeating item; null for a task with no time",
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
-              "created_at": {
-                "type": "string"
-              },
-              "deleted_at": {
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
-              "done_at": {
-                "description": "when a one-off task was done; repeating items are done one occurrence at a time",
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
-              "goal_id": {
-                "description": "the goal this serves, or null",
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
-              "id": {
-                "type": "string"
-              },
-              "is_priority": {
-                "type": "boolean"
-              },
-              "kind": {
-                "description": "task or event",
-                "type": "string"
-              },
-              "minutes": {
-                "description": "how long it takes, or null",
-                "type": [
-                  "null",
-                  "integer"
-                ]
-              },
-              "notes": {
-                "type": "string"
-              },
-              "recurrence": {
-                "additionalProperties": false,
-                "description": "how it repeats, or null for a one-off",
-                "properties": {
-                  "freq": {
-                    "description": "daily, weekly or monthly",
-                    "type": "string"
-                  },
-                  "interval": {
-                    "description": "repeat every N days/weeks/months, 1-365, default 1",
-                    "type": "integer"
-                  },
-                  "weekdays": {
-                    "description": "weekly only: days of the week, 0 = Sunday to 6 = Saturday; empty repeats on the due date's weekday",
-                    "items": {
-                      "type": "integer"
-                    },
-                    "type": [
-                      "null",
-                      "array"
-                    ]
-                  }
-                },
-                "required": [
-                  "freq"
-                ],
-                "type": [
-                  "null",
-                  "object"
-                ]
-              },
-              "result": {
-                "description": "for a done one-off task: the line its owner gave when completing it",
-                "type": "string"
-              },
-              "session_key": {
-                "description": "for an agent's item, the conversation its alert wakes",
-                "type": "string"
-              },
-              "snoozed_until": {
-                "description": "the alert is deferred to this time",
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
-              "subject": {
-                "description": "person (the default) or agent: whose it is",
-                "type": "string"
-              },
-              "time_zone": {
-                "type": "string"
-              },
-              "title": {
-                "type": "string"
-              },
-              "updated_at": {
-                "type": "string"
-              },
-              "version": {
-                "type": "integer"
-              }
-            },
-            "required": [
-              "id",
-              "kind",
-              "subject",
-              "title",
-              "notes",
-              "goal_id",
-              "at",
-              "minutes",
-              "time_zone",
-              "recurrence",
-              "alert_before_minutes",
-              "is_priority",
-              "snoozed_until",
-              "done_at",
-              "version",
-              "deleted_at",
-              "created_at",
-              "updated_at"
-            ],
-            "type": [
-              "null",
-              "object"
-            ]
-          },
-          "notes": {
-            "description": "short free text kept with the goal, such as take the coolers or watch the weather",
-            "type": "string"
-          },
-          "progress": {
-            "additionalProperties": false,
-            "description": "read from the tasks linked to the goal",
-            "properties": {
-              "done": {
-                "type": "integer"
-              },
-              "total": {
-                "type": "integer"
-              }
-            },
-            "required": [
-              "done",
-              "total"
-            ],
-            "type": "object"
-          },
-          "subject": {
-            "description": "person (the default) or agent: whose goal it is",
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "updated_at": {
-            "type": "string"
-          },
-          "version": {
-            "type": "integer"
-          }
-        },
-        "required": [
-          "id",
-          "subject",
-          "title",
-          "notes",
-          "ends_on",
-          "progress",
-          "next",
-          "version",
-          "deleted_at",
-          "created_at",
-          "updated_at"
-        ],
-        "type": "object"
-      },
-      "goals_get_input": {
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "description": "record UUID",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id"
-        ],
-        "type": "object"
-      },
-      "goals_get_output": {
-        "additionalProperties": false,
-        "properties": {
-          "created_at": {
-            "type": "string"
-          },
-          "deleted_at": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "ends_on": {
-            "description": "local date the goal finishes by; null for an open-ended goal",
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "id": {
-            "type": "string"
-          },
-          "next": {
-            "additionalProperties": false,
-            "description": "the linked open task that comes first, soonest time first, or null",
-            "properties": {
-              "alert_before_minutes": {
-                "description": "tell the owner this many minutes before at; 0 at the time itself; null for no alert",
-                "type": [
-                  "null",
-                  "integer"
-                ]
-              },
-              "at": {
-                "description": "an event's start, or a task's deadline or cue; the first occurrence of a repeating item; null for a task with no time",
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
-              "created_at": {
-                "type": "string"
-              },
-              "deleted_at": {
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
-              "done_at": {
-                "description": "when a one-off task was done; repeating items are done one occurrence at a time",
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
-              "goal_id": {
-                "description": "the goal this serves, or null",
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
-              "id": {
-                "type": "string"
-              },
-              "is_priority": {
-                "type": "boolean"
-              },
-              "kind": {
-                "description": "task or event",
-                "type": "string"
-              },
-              "minutes": {
-                "description": "how long it takes, or null",
-                "type": [
-                  "null",
-                  "integer"
-                ]
-              },
-              "notes": {
-                "type": "string"
-              },
-              "recurrence": {
-                "additionalProperties": false,
-                "description": "how it repeats, or null for a one-off",
-                "properties": {
-                  "freq": {
-                    "description": "daily, weekly or monthly",
-                    "type": "string"
-                  },
-                  "interval": {
-                    "description": "repeat every N days/weeks/months, 1-365, default 1",
-                    "type": "integer"
-                  },
-                  "weekdays": {
-                    "description": "weekly only: days of the week, 0 = Sunday to 6 = Saturday; empty repeats on the due date's weekday",
-                    "items": {
-                      "type": "integer"
-                    },
-                    "type": [
-                      "null",
-                      "array"
-                    ]
-                  }
-                },
-                "required": [
-                  "freq"
-                ],
-                "type": [
-                  "null",
-                  "object"
-                ]
-              },
-              "result": {
-                "description": "for a done one-off task: the line its owner gave when completing it",
-                "type": "string"
-              },
-              "session_key": {
-                "description": "for an agent's item, the conversation its alert wakes",
-                "type": "string"
-              },
-              "snoozed_until": {
-                "description": "the alert is deferred to this time",
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
-              "subject": {
-                "description": "person (the default) or agent: whose it is",
-                "type": "string"
-              },
-              "time_zone": {
-                "type": "string"
-              },
-              "title": {
-                "type": "string"
-              },
-              "updated_at": {
-                "type": "string"
-              },
-              "version": {
-                "type": "integer"
-              }
-            },
-            "required": [
-              "id",
-              "kind",
-              "subject",
-              "title",
-              "notes",
-              "goal_id",
-              "at",
-              "minutes",
-              "time_zone",
-              "recurrence",
-              "alert_before_minutes",
-              "is_priority",
-              "snoozed_until",
-              "done_at",
-              "version",
-              "deleted_at",
-              "created_at",
-              "updated_at"
-            ],
-            "type": [
-              "null",
-              "object"
-            ]
-          },
-          "notes": {
-            "description": "short free text kept with the goal, such as take the coolers or watch the weather",
-            "type": "string"
-          },
-          "progress": {
-            "additionalProperties": false,
-            "description": "read from the tasks linked to the goal",
-            "properties": {
-              "done": {
-                "type": "integer"
-              },
-              "total": {
-                "type": "integer"
-              }
-            },
-            "required": [
-              "done",
-              "total"
-            ],
-            "type": "object"
-          },
-          "subject": {
-            "description": "person (the default) or agent: whose goal it is",
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "updated_at": {
-            "type": "string"
-          },
-          "version": {
-            "type": "integer"
-          }
-        },
-        "required": [
-          "id",
-          "subject",
-          "title",
-          "notes",
-          "ends_on",
-          "progress",
-          "next",
-          "version",
-          "deleted_at",
-          "created_at",
-          "updated_at"
-        ],
-        "type": "object"
-      },
-      "goals_list_input": {
-        "additionalProperties": false,
-        "properties": {
-          "limit": {
-            "description": "1-200, default 50",
-            "type": "integer"
-          },
-          "offset": {
-            "description": "0-1000000, default 0",
-            "type": "integer"
-          },
-          "search": {
-            "description": "literal text to find",
-            "type": "string"
-          },
-          "state": {
-            "description": "active (default), deleted or all",
-            "type": "string"
-          },
-          "subject": {
-            "description": "person (default) or agent",
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
-      "goals_list_output": {
-        "additionalProperties": false,
-        "properties": {
-          "items": {
-            "items": {
-              "additionalProperties": false,
-              "properties": {
-                "created_at": {
-                  "type": "string"
-                },
-                "deleted_at": {
-                  "type": [
-                    "null",
-                    "string"
-                  ]
-                },
-                "ends_on": {
-                  "description": "local date the goal finishes by; null for an open-ended goal",
-                  "type": [
-                    "null",
-                    "string"
-                  ]
-                },
-                "id": {
-                  "type": "string"
-                },
-                "next": {
-                  "additionalProperties": false,
-                  "description": "the linked open task that comes first, soonest time first, or null",
-                  "properties": {
-                    "alert_before_minutes": {
-                      "description": "tell the owner this many minutes before at; 0 at the time itself; null for no alert",
-                      "type": [
-                        "null",
-                        "integer"
-                      ]
-                    },
-                    "at": {
-                      "description": "an event's start, or a task's deadline or cue; the first occurrence of a repeating item; null for a task with no time",
-                      "type": [
-                        "null",
-                        "string"
-                      ]
-                    },
-                    "created_at": {
-                      "type": "string"
-                    },
-                    "deleted_at": {
-                      "type": [
-                        "null",
-                        "string"
-                      ]
-                    },
-                    "done_at": {
-                      "description": "when a one-off task was done; repeating items are done one occurrence at a time",
-                      "type": [
-                        "null",
-                        "string"
-                      ]
-                    },
-                    "goal_id": {
-                      "description": "the goal this serves, or null",
-                      "type": [
-                        "null",
-                        "string"
-                      ]
-                    },
-                    "id": {
-                      "type": "string"
-                    },
-                    "is_priority": {
-                      "type": "boolean"
-                    },
-                    "kind": {
-                      "description": "task or event",
-                      "type": "string"
-                    },
-                    "minutes": {
-                      "description": "how long it takes, or null",
-                      "type": [
-                        "null",
-                        "integer"
-                      ]
-                    },
-                    "notes": {
-                      "type": "string"
-                    },
-                    "recurrence": {
-                      "additionalProperties": false,
-                      "description": "how it repeats, or null for a one-off",
-                      "properties": {
-                        "freq": {
-                          "description": "daily, weekly or monthly",
-                          "type": "string"
-                        },
-                        "interval": {
-                          "description": "repeat every N days/weeks/months, 1-365, default 1",
-                          "type": "integer"
-                        },
-                        "weekdays": {
-                          "description": "weekly only: days of the week, 0 = Sunday to 6 = Saturday; empty repeats on the due date's weekday",
-                          "items": {
-                            "type": "integer"
-                          },
-                          "type": [
-                            "null",
-                            "array"
-                          ]
-                        }
-                      },
-                      "required": [
-                        "freq"
-                      ],
-                      "type": [
-                        "null",
-                        "object"
-                      ]
-                    },
-                    "result": {
-                      "description": "for a done one-off task: the line its owner gave when completing it",
-                      "type": "string"
-                    },
-                    "session_key": {
-                      "description": "for an agent's item, the conversation its alert wakes",
-                      "type": "string"
-                    },
-                    "snoozed_until": {
-                      "description": "the alert is deferred to this time",
-                      "type": [
-                        "null",
-                        "string"
-                      ]
-                    },
-                    "subject": {
-                      "description": "person (the default) or agent: whose it is",
-                      "type": "string"
-                    },
-                    "time_zone": {
-                      "type": "string"
-                    },
-                    "title": {
-                      "type": "string"
-                    },
-                    "updated_at": {
-                      "type": "string"
-                    },
-                    "version": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "id",
-                    "kind",
-                    "subject",
-                    "title",
-                    "notes",
-                    "goal_id",
-                    "at",
-                    "minutes",
-                    "time_zone",
-                    "recurrence",
-                    "alert_before_minutes",
-                    "is_priority",
-                    "snoozed_until",
-                    "done_at",
-                    "version",
-                    "deleted_at",
-                    "created_at",
-                    "updated_at"
-                  ],
-                  "type": [
-                    "null",
-                    "object"
-                  ]
-                },
-                "notes": {
-                  "description": "short free text kept with the goal, such as take the coolers or watch the weather",
-                  "type": "string"
-                },
-                "progress": {
-                  "additionalProperties": false,
-                  "description": "read from the tasks linked to the goal",
-                  "properties": {
-                    "done": {
-                      "type": "integer"
-                    },
-                    "total": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "done",
-                    "total"
-                  ],
-                  "type": "object"
-                },
-                "subject": {
-                  "description": "person (the default) or agent: whose goal it is",
-                  "type": "string"
-                },
-                "title": {
-                  "type": "string"
-                },
-                "updated_at": {
-                  "type": "string"
-                },
-                "version": {
-                  "type": "integer"
-                }
-              },
-              "required": [
-                "id",
-                "subject",
-                "title",
-                "notes",
-                "ends_on",
-                "progress",
-                "next",
-                "version",
-                "deleted_at",
-                "created_at",
-                "updated_at"
-              ],
-              "type": "object"
-            },
-            "type": [
-              "null",
-              "array"
-            ]
-          },
-          "next_offset": {
-            "description": "offset of the next page, or null at the end",
-            "type": [
-              "null",
-              "integer"
-            ]
-          },
-          "total": {
-            "type": "integer"
-          }
-        },
-        "required": [
-          "items",
-          "total",
-          "next_offset"
-        ],
-        "type": "object"
-      },
-      "goals_restore_input": {
-        "additionalProperties": false,
-        "properties": {
-          "expected_version": {
-            "description": "the version you last read; a stale version is rejected",
-            "type": "integer"
-          },
-          "id": {
-            "description": "record UUID",
-            "type": "string"
-          },
-          "idempotency_key": {
-            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
-            "type": "string"
-          }
-        },
-        "required": [
-          "idempotency_key",
-          "id",
-          "expected_version"
-        ],
-        "type": "object"
-      },
-      "goals_restore_output": {
-        "additionalProperties": false,
-        "properties": {
-          "created_at": {
-            "type": "string"
-          },
-          "deleted_at": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "ends_on": {
-            "description": "local date the goal finishes by; null for an open-ended goal",
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "id": {
-            "type": "string"
-          },
-          "next": {
-            "additionalProperties": false,
-            "description": "the linked open task that comes first, soonest time first, or null",
-            "properties": {
-              "alert_before_minutes": {
-                "description": "tell the owner this many minutes before at; 0 at the time itself; null for no alert",
-                "type": [
-                  "null",
-                  "integer"
-                ]
-              },
-              "at": {
-                "description": "an event's start, or a task's deadline or cue; the first occurrence of a repeating item; null for a task with no time",
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
-              "created_at": {
-                "type": "string"
-              },
-              "deleted_at": {
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
-              "done_at": {
-                "description": "when a one-off task was done; repeating items are done one occurrence at a time",
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
-              "goal_id": {
-                "description": "the goal this serves, or null",
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
-              "id": {
-                "type": "string"
-              },
-              "is_priority": {
-                "type": "boolean"
-              },
-              "kind": {
-                "description": "task or event",
-                "type": "string"
-              },
-              "minutes": {
-                "description": "how long it takes, or null",
-                "type": [
-                  "null",
-                  "integer"
-                ]
-              },
-              "notes": {
-                "type": "string"
-              },
-              "recurrence": {
-                "additionalProperties": false,
-                "description": "how it repeats, or null for a one-off",
-                "properties": {
-                  "freq": {
-                    "description": "daily, weekly or monthly",
-                    "type": "string"
-                  },
-                  "interval": {
-                    "description": "repeat every N days/weeks/months, 1-365, default 1",
-                    "type": "integer"
-                  },
-                  "weekdays": {
-                    "description": "weekly only: days of the week, 0 = Sunday to 6 = Saturday; empty repeats on the due date's weekday",
-                    "items": {
-                      "type": "integer"
-                    },
-                    "type": [
-                      "null",
-                      "array"
-                    ]
-                  }
-                },
-                "required": [
-                  "freq"
-                ],
-                "type": [
-                  "null",
-                  "object"
-                ]
-              },
-              "result": {
-                "description": "for a done one-off task: the line its owner gave when completing it",
-                "type": "string"
-              },
-              "session_key": {
-                "description": "for an agent's item, the conversation its alert wakes",
-                "type": "string"
-              },
-              "snoozed_until": {
-                "description": "the alert is deferred to this time",
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
-              "subject": {
-                "description": "person (the default) or agent: whose it is",
-                "type": "string"
-              },
-              "time_zone": {
-                "type": "string"
-              },
-              "title": {
-                "type": "string"
-              },
-              "updated_at": {
-                "type": "string"
-              },
-              "version": {
-                "type": "integer"
-              }
-            },
-            "required": [
-              "id",
-              "kind",
-              "subject",
-              "title",
-              "notes",
-              "goal_id",
-              "at",
-              "minutes",
-              "time_zone",
-              "recurrence",
-              "alert_before_minutes",
-              "is_priority",
-              "snoozed_until",
-              "done_at",
-              "version",
-              "deleted_at",
-              "created_at",
-              "updated_at"
-            ],
-            "type": [
-              "null",
-              "object"
-            ]
-          },
-          "notes": {
-            "description": "short free text kept with the goal, such as take the coolers or watch the weather",
-            "type": "string"
-          },
-          "progress": {
-            "additionalProperties": false,
-            "description": "read from the tasks linked to the goal",
-            "properties": {
-              "done": {
-                "type": "integer"
-              },
-              "total": {
-                "type": "integer"
-              }
-            },
-            "required": [
-              "done",
-              "total"
-            ],
-            "type": "object"
-          },
-          "subject": {
-            "description": "person (the default) or agent: whose goal it is",
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "updated_at": {
-            "type": "string"
-          },
-          "version": {
-            "type": "integer"
-          }
-        },
-        "required": [
-          "id",
-          "subject",
-          "title",
-          "notes",
-          "ends_on",
-          "progress",
-          "next",
-          "version",
-          "deleted_at",
-          "created_at",
-          "updated_at"
-        ],
-        "type": "object"
-      },
-      "goals_update_input": {
-        "additionalProperties": false,
-        "properties": {
-          "ends_on": {
-            "description": "YYYY-MM-DD the goal finishes by; omit for an open-ended goal",
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "expected_version": {
-            "description": "the version you last read; a stale version is rejected",
-            "type": "integer"
-          },
-          "id": {
-            "description": "record UUID",
-            "type": "string"
-          },
-          "idempotency_key": {
-            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
-            "type": "string"
-          },
-          "notes": {
-            "description": "short free text, up to 2000 characters",
-            "type": "string"
-          },
-          "subject": {
-            "description": "person (default) or agent; agent is for a goal of your own, which the person's screens do not show",
-            "type": "string"
-          },
-          "title": {
-            "description": "the outcome, 1-200 characters, in the person's words",
-            "type": "string"
-          }
-        },
-        "required": [
-          "idempotency_key",
-          "id",
-          "expected_version",
-          "title"
-        ],
-        "type": "object"
-      },
-      "goals_update_output": {
-        "additionalProperties": false,
-        "properties": {
-          "created_at": {
-            "type": "string"
-          },
-          "deleted_at": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "ends_on": {
-            "description": "local date the goal finishes by; null for an open-ended goal",
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "id": {
-            "type": "string"
-          },
-          "next": {
-            "additionalProperties": false,
-            "description": "the linked open task that comes first, soonest time first, or null",
-            "properties": {
-              "alert_before_minutes": {
-                "description": "tell the owner this many minutes before at; 0 at the time itself; null for no alert",
-                "type": [
-                  "null",
-                  "integer"
-                ]
-              },
-              "at": {
-                "description": "an event's start, or a task's deadline or cue; the first occurrence of a repeating item; null for a task with no time",
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
-              "created_at": {
-                "type": "string"
-              },
-              "deleted_at": {
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
-              "done_at": {
-                "description": "when a one-off task was done; repeating items are done one occurrence at a time",
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
-              "goal_id": {
-                "description": "the goal this serves, or null",
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
-              "id": {
-                "type": "string"
-              },
-              "is_priority": {
-                "type": "boolean"
-              },
-              "kind": {
-                "description": "task or event",
-                "type": "string"
-              },
-              "minutes": {
-                "description": "how long it takes, or null",
-                "type": [
-                  "null",
-                  "integer"
-                ]
-              },
-              "notes": {
-                "type": "string"
-              },
-              "recurrence": {
-                "additionalProperties": false,
-                "description": "how it repeats, or null for a one-off",
-                "properties": {
-                  "freq": {
-                    "description": "daily, weekly or monthly",
-                    "type": "string"
-                  },
-                  "interval": {
-                    "description": "repeat every N days/weeks/months, 1-365, default 1",
-                    "type": "integer"
-                  },
-                  "weekdays": {
-                    "description": "weekly only: days of the week, 0 = Sunday to 6 = Saturday; empty repeats on the due date's weekday",
-                    "items": {
-                      "type": "integer"
-                    },
-                    "type": [
-                      "null",
-                      "array"
-                    ]
-                  }
-                },
-                "required": [
-                  "freq"
-                ],
-                "type": [
-                  "null",
-                  "object"
-                ]
-              },
-              "result": {
-                "description": "for a done one-off task: the line its owner gave when completing it",
-                "type": "string"
-              },
-              "session_key": {
-                "description": "for an agent's item, the conversation its alert wakes",
-                "type": "string"
-              },
-              "snoozed_until": {
-                "description": "the alert is deferred to this time",
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
-              "subject": {
-                "description": "person (the default) or agent: whose it is",
-                "type": "string"
-              },
-              "time_zone": {
-                "type": "string"
-              },
-              "title": {
-                "type": "string"
-              },
-              "updated_at": {
-                "type": "string"
-              },
-              "version": {
-                "type": "integer"
-              }
-            },
-            "required": [
-              "id",
-              "kind",
-              "subject",
-              "title",
-              "notes",
-              "goal_id",
-              "at",
-              "minutes",
-              "time_zone",
-              "recurrence",
-              "alert_before_minutes",
-              "is_priority",
-              "snoozed_until",
-              "done_at",
-              "version",
-              "deleted_at",
-              "created_at",
-              "updated_at"
-            ],
-            "type": [
-              "null",
-              "object"
-            ]
-          },
-          "notes": {
-            "description": "short free text kept with the goal, such as take the coolers or watch the weather",
-            "type": "string"
-          },
-          "progress": {
-            "additionalProperties": false,
-            "description": "read from the tasks linked to the goal",
-            "properties": {
-              "done": {
-                "type": "integer"
-              },
-              "total": {
-                "type": "integer"
-              }
-            },
-            "required": [
-              "done",
-              "total"
-            ],
-            "type": "object"
-          },
-          "subject": {
-            "description": "person (the default) or agent: whose goal it is",
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "updated_at": {
-            "type": "string"
-          },
-          "version": {
-            "type": "integer"
-          }
-        },
-        "required": [
-          "id",
-          "subject",
-          "title",
-          "notes",
-          "ends_on",
-          "progress",
-          "next",
-          "version",
-          "deleted_at",
-          "created_at",
-          "updated_at"
-        ],
-        "type": "object"
-      },
       "history_list_input": {
         "additionalProperties": false,
         "properties": {
           "entity_type": {
-            "description": "goal, item, intention, commitment, decision, state, activity, view, measurement or settings",
+            "description": "intention, task, event, commitment, decision, state, activity, view, measurement or settings",
             "type": "string"
           },
           "id": {
@@ -8413,7 +7233,7 @@
             "type": "string"
           },
           "from_kind": {
-            "description": "intention, commitment, decision, state, activity, task, event, goal or item",
+            "description": "intention, commitment, decision, state, activity, task or event",
             "type": "string"
           },
           "idempotency_key": {
@@ -8428,7 +7248,7 @@
             "type": "string"
           },
           "to_kind": {
-            "description": "intention, commitment, decision, state, activity, task, event, goal or item",
+            "description": "intention, commitment, decision, state, activity, task or event",
             "type": "string"
           }
         },
@@ -8582,7 +7402,7 @@
             "type": "string"
           },
           "subject_kind": {
-            "description": "goal, task or event",
+            "description": "intention, task or event",
             "type": "string"
           },
           "value": {
@@ -9844,6 +8664,10 @@
       "tasks_complete_input": {
         "additionalProperties": false,
         "properties": {
+          "actor": {
+            "description": "person (default) or agent: who did it",
+            "type": "string"
+          },
           "at": {
             "description": "RFC 3339 occurrence being done, for a repeating task; default the one now due, else the next",
             "type": [
@@ -9871,7 +8695,7 @@
             "type": "string"
           },
           "result": {
-            "description": "for your own tasks: one line on what you found or did, up to 2000 characters",
+            "description": "one line on what you found or did, up to 2000 characters",
             "type": "string"
           }
         },
@@ -9886,14 +8710,14 @@
         "additionalProperties": false,
         "properties": {
           "alert_before_minutes": {
-            "description": "tell the owner this many minutes before at; 0 at the time itself; null for no alert",
+            "description": "tell the owner this many minutes before at, or null",
             "type": [
               "null",
               "integer"
             ]
           },
           "at": {
-            "description": "an event's start, or a task's deadline or cue; the first occurrence of a repeating item; null for a task with no time",
+            "description": "a deadline or cue, or null for a task with no time",
             "type": [
               "null",
               "string"
@@ -9908,15 +8732,14 @@
               "string"
             ]
           },
-          "done_at": {
-            "description": "when a one-off task was done; repeating items are done one occurrence at a time",
+          "derived_from": {
             "type": [
-              "null",
-              "string"
+              "object",
+              "null"
             ]
           },
-          "goal_id": {
-            "description": "the goal this serves, or null",
+          "done_at": {
+            "description": "when a one-off task was done; a repeating task is done one occurrence at a time",
             "type": [
               "null",
               "string"
@@ -9928,10 +8751,6 @@
           "is_priority": {
             "type": "boolean"
           },
-          "kind": {
-            "description": "task or event",
-            "type": "string"
-          },
           "minutes": {
             "description": "how long it takes, or null",
             "type": [
@@ -9940,6 +8759,10 @@
             ]
           },
           "notes": {
+            "type": "string"
+          },
+          "origin": {
+            "description": "person or agent: who authored it",
             "type": "string"
           },
           "recurrence": {
@@ -9978,18 +8801,17 @@
             "type": "string"
           },
           "session_key": {
-            "description": "for an agent's item, the conversation its alert wakes",
+            "description": "for an agent's task, the conversation its alert wakes",
             "type": "string"
           },
           "snoozed_until": {
-            "description": "the alert is deferred to this time",
             "type": [
               "null",
               "string"
             ]
           },
           "subject": {
-            "description": "person (the default) or agent: whose it is",
+            "description": "person (the default) or agent",
             "type": "string"
           },
           "time_zone": {
@@ -10007,11 +8829,9 @@
         },
         "required": [
           "id",
-          "kind",
           "subject",
           "title",
           "notes",
-          "goal_id",
           "at",
           "minutes",
           "time_zone",
@@ -10020,6 +8840,7 @@
           "is_priority",
           "snoozed_until",
           "done_at",
+          "origin",
           "version",
           "deleted_at",
           "created_at",
@@ -10038,18 +8859,17 @@
             ]
           },
           "at": {
-            "description": "RFC 3339 instant: an event's start, or a task's deadline or cue. Required for an event",
+            "description": "RFC 3339 instant: a task's deadline or cue, an event's start. An event requires it",
             "type": [
               "null",
               "string"
             ]
           },
-          "goal_id": {
-            "description": "UUID of the goal this serves; optional",
-            "type": "string"
+          "derived_from": {
+            "description": "when an agent promoted a memory candidate: {bank_id, record_id, snapshot}"
           },
           "id": {
-            "description": "optional client-generated UUID so a later operation in the same batch can refer to this record",
+            "description": "optional client-generated UUID so a later operation in the same batch can refer to it",
             "type": "string"
           },
           "idempotency_key": {
@@ -10068,6 +8888,10 @@
           },
           "notes": {
             "description": "short detail, up to 2000 characters",
+            "type": "string"
+          },
+          "origin": {
+            "description": "person (default) or agent: who authored it",
             "type": "string"
           },
           "recurrence": {
@@ -10102,11 +8926,11 @@
             ]
           },
           "subject": {
-            "description": "person (default), or agent for an item of your own, which the person's screens do not show; an agent's item with an alert wakes the conversation you create it from",
+            "description": "person (default), or agent for a record of your own, which the person's screens do not show; an agent's record with an alert wakes the conversation you create it from",
             "type": "string"
           },
           "time_zone": {
-            "description": "IANA zone the person lives in (for example Europe/London); a repeat keeps this zone's wall-clock time. Default UTC",
+            "description": "IANA zone the person lives in; a repeat keeps this zone's wall-clock time. Default UTC",
             "type": "string"
           },
           "title": {
@@ -10124,14 +8948,14 @@
         "additionalProperties": false,
         "properties": {
           "alert_before_minutes": {
-            "description": "tell the owner this many minutes before at; 0 at the time itself; null for no alert",
+            "description": "tell the owner this many minutes before at, or null",
             "type": [
               "null",
               "integer"
             ]
           },
           "at": {
-            "description": "an event's start, or a task's deadline or cue; the first occurrence of a repeating item; null for a task with no time",
+            "description": "a deadline or cue, or null for a task with no time",
             "type": [
               "null",
               "string"
@@ -10146,15 +8970,14 @@
               "string"
             ]
           },
-          "done_at": {
-            "description": "when a one-off task was done; repeating items are done one occurrence at a time",
+          "derived_from": {
             "type": [
-              "null",
-              "string"
+              "object",
+              "null"
             ]
           },
-          "goal_id": {
-            "description": "the goal this serves, or null",
+          "done_at": {
+            "description": "when a one-off task was done; a repeating task is done one occurrence at a time",
             "type": [
               "null",
               "string"
@@ -10166,10 +8989,6 @@
           "is_priority": {
             "type": "boolean"
           },
-          "kind": {
-            "description": "task or event",
-            "type": "string"
-          },
           "minutes": {
             "description": "how long it takes, or null",
             "type": [
@@ -10178,6 +8997,10 @@
             ]
           },
           "notes": {
+            "type": "string"
+          },
+          "origin": {
+            "description": "person or agent: who authored it",
             "type": "string"
           },
           "recurrence": {
@@ -10216,18 +9039,17 @@
             "type": "string"
           },
           "session_key": {
-            "description": "for an agent's item, the conversation its alert wakes",
+            "description": "for an agent's task, the conversation its alert wakes",
             "type": "string"
           },
           "snoozed_until": {
-            "description": "the alert is deferred to this time",
             "type": [
               "null",
               "string"
             ]
           },
           "subject": {
-            "description": "person (the default) or agent: whose it is",
+            "description": "person (the default) or agent",
             "type": "string"
           },
           "time_zone": {
@@ -10245,11 +9067,9 @@
         },
         "required": [
           "id",
-          "kind",
           "subject",
           "title",
           "notes",
-          "goal_id",
           "at",
           "minutes",
           "time_zone",
@@ -10258,6 +9078,7 @@
           "is_priority",
           "snoozed_until",
           "done_at",
+          "origin",
           "version",
           "deleted_at",
           "created_at",
@@ -10292,14 +9113,14 @@
         "additionalProperties": false,
         "properties": {
           "alert_before_minutes": {
-            "description": "tell the owner this many minutes before at; 0 at the time itself; null for no alert",
+            "description": "tell the owner this many minutes before at, or null",
             "type": [
               "null",
               "integer"
             ]
           },
           "at": {
-            "description": "an event's start, or a task's deadline or cue; the first occurrence of a repeating item; null for a task with no time",
+            "description": "a deadline or cue, or null for a task with no time",
             "type": [
               "null",
               "string"
@@ -10314,15 +9135,14 @@
               "string"
             ]
           },
-          "done_at": {
-            "description": "when a one-off task was done; repeating items are done one occurrence at a time",
+          "derived_from": {
             "type": [
-              "null",
-              "string"
+              "object",
+              "null"
             ]
           },
-          "goal_id": {
-            "description": "the goal this serves, or null",
+          "done_at": {
+            "description": "when a one-off task was done; a repeating task is done one occurrence at a time",
             "type": [
               "null",
               "string"
@@ -10334,10 +9154,6 @@
           "is_priority": {
             "type": "boolean"
           },
-          "kind": {
-            "description": "task or event",
-            "type": "string"
-          },
           "minutes": {
             "description": "how long it takes, or null",
             "type": [
@@ -10346,6 +9162,10 @@
             ]
           },
           "notes": {
+            "type": "string"
+          },
+          "origin": {
+            "description": "person or agent: who authored it",
             "type": "string"
           },
           "recurrence": {
@@ -10384,18 +9204,17 @@
             "type": "string"
           },
           "session_key": {
-            "description": "for an agent's item, the conversation its alert wakes",
+            "description": "for an agent's task, the conversation its alert wakes",
             "type": "string"
           },
           "snoozed_until": {
-            "description": "the alert is deferred to this time",
             "type": [
               "null",
               "string"
             ]
           },
           "subject": {
-            "description": "person (the default) or agent: whose it is",
+            "description": "person (the default) or agent",
             "type": "string"
           },
           "time_zone": {
@@ -10413,11 +9232,9 @@
         },
         "required": [
           "id",
-          "kind",
           "subject",
           "title",
           "notes",
-          "goal_id",
           "at",
           "minutes",
           "time_zone",
@@ -10426,6 +9243,7 @@
           "is_priority",
           "snoozed_until",
           "done_at",
+          "origin",
           "version",
           "deleted_at",
           "created_at",
@@ -10450,14 +9268,14 @@
         "additionalProperties": false,
         "properties": {
           "alert_before_minutes": {
-            "description": "tell the owner this many minutes before at; 0 at the time itself; null for no alert",
+            "description": "tell the owner this many minutes before at, or null",
             "type": [
               "null",
               "integer"
             ]
           },
           "at": {
-            "description": "an event's start, or a task's deadline or cue; the first occurrence of a repeating item; null for a task with no time",
+            "description": "a deadline or cue, or null for a task with no time",
             "type": [
               "null",
               "string"
@@ -10472,15 +9290,14 @@
               "string"
             ]
           },
-          "done_at": {
-            "description": "when a one-off task was done; repeating items are done one occurrence at a time",
+          "derived_from": {
             "type": [
-              "null",
-              "string"
+              "object",
+              "null"
             ]
           },
-          "goal_id": {
-            "description": "the goal this serves, or null",
+          "done_at": {
+            "description": "when a one-off task was done; a repeating task is done one occurrence at a time",
             "type": [
               "null",
               "string"
@@ -10492,10 +9309,6 @@
           "is_priority": {
             "type": "boolean"
           },
-          "kind": {
-            "description": "task or event",
-            "type": "string"
-          },
           "minutes": {
             "description": "how long it takes, or null",
             "type": [
@@ -10504,6 +9317,10 @@
             ]
           },
           "notes": {
+            "type": "string"
+          },
+          "origin": {
+            "description": "person or agent: who authored it",
             "type": "string"
           },
           "recurrence": {
@@ -10542,18 +9359,17 @@
             "type": "string"
           },
           "session_key": {
-            "description": "for an agent's item, the conversation its alert wakes",
+            "description": "for an agent's task, the conversation its alert wakes",
             "type": "string"
           },
           "snoozed_until": {
-            "description": "the alert is deferred to this time",
             "type": [
               "null",
               "string"
             ]
           },
           "subject": {
-            "description": "person (the default) or agent: whose it is",
+            "description": "person (the default) or agent",
             "type": "string"
           },
           "time_zone": {
@@ -10571,11 +9387,9 @@
         },
         "required": [
           "id",
-          "kind",
           "subject",
           "title",
           "notes",
-          "goal_id",
           "at",
           "minutes",
           "time_zone",
@@ -10584,6 +9398,7 @@
           "is_priority",
           "snoozed_until",
           "done_at",
+          "origin",
           "version",
           "deleted_at",
           "created_at",
@@ -10692,14 +9507,14 @@
             "additionalProperties": false,
             "properties": {
               "alert_before_minutes": {
-                "description": "tell the owner this many minutes before at; 0 at the time itself; null for no alert",
+                "description": "tell the owner this many minutes before at, or null",
                 "type": [
                   "null",
                   "integer"
                 ]
               },
               "at": {
-                "description": "an event's start, or a task's deadline or cue; the first occurrence of a repeating item; null for a task with no time",
+                "description": "a deadline or cue, or null for a task with no time",
                 "type": [
                   "null",
                   "string"
@@ -10714,15 +9529,14 @@
                   "string"
                 ]
               },
-              "done_at": {
-                "description": "when a one-off task was done; repeating items are done one occurrence at a time",
+              "derived_from": {
                 "type": [
-                  "null",
-                  "string"
+                  "object",
+                  "null"
                 ]
               },
-              "goal_id": {
-                "description": "the goal this serves, or null",
+              "done_at": {
+                "description": "when a one-off task was done; a repeating task is done one occurrence at a time",
                 "type": [
                   "null",
                   "string"
@@ -10734,10 +9548,6 @@
               "is_priority": {
                 "type": "boolean"
               },
-              "kind": {
-                "description": "task or event",
-                "type": "string"
-              },
               "minutes": {
                 "description": "how long it takes, or null",
                 "type": [
@@ -10746,6 +9556,10 @@
                 ]
               },
               "notes": {
+                "type": "string"
+              },
+              "origin": {
+                "description": "person or agent: who authored it",
                 "type": "string"
               },
               "recurrence": {
@@ -10784,18 +9598,17 @@
                 "type": "string"
               },
               "session_key": {
-                "description": "for an agent's item, the conversation its alert wakes",
+                "description": "for an agent's task, the conversation its alert wakes",
                 "type": "string"
               },
               "snoozed_until": {
-                "description": "the alert is deferred to this time",
                 "type": [
                   "null",
                   "string"
                 ]
               },
               "subject": {
-                "description": "person (the default) or agent: whose it is",
+                "description": "person (the default) or agent",
                 "type": "string"
               },
               "time_zone": {
@@ -10813,11 +9626,9 @@
             },
             "required": [
               "id",
-              "kind",
               "subject",
               "title",
               "notes",
-              "goal_id",
               "at",
               "minutes",
               "time_zone",
@@ -10826,6 +9637,7 @@
               "is_priority",
               "snoozed_until",
               "done_at",
+              "origin",
               "version",
               "deleted_at",
               "created_at",
@@ -10848,15 +9660,11 @@
         "additionalProperties": false,
         "properties": {
           "after": {
-            "description": "RFC 3339; only items at or after this time",
+            "description": "RFC 3339; only tasks at or after this time",
             "type": "string"
           },
           "before": {
-            "description": "RFC 3339; only items before this time",
-            "type": "string"
-          },
-          "goal_id": {
-            "description": "only items serving this goal",
+            "description": "RFC 3339; only tasks before this time",
             "type": "string"
           },
           "limit": {
@@ -10876,7 +9684,7 @@
             "type": "string"
           },
           "status": {
-            "description": "tasks only: open (default), done or all",
+            "description": "open (default), done or all",
             "type": "string"
           },
           "subject": {
@@ -10894,14 +9702,14 @@
               "additionalProperties": false,
               "properties": {
                 "alert_before_minutes": {
-                  "description": "tell the owner this many minutes before at; 0 at the time itself; null for no alert",
+                  "description": "tell the owner this many minutes before at, or null",
                   "type": [
                     "null",
                     "integer"
                   ]
                 },
                 "at": {
-                  "description": "an event's start, or a task's deadline or cue; the first occurrence of a repeating item; null for a task with no time",
+                  "description": "a deadline or cue, or null for a task with no time",
                   "type": [
                     "null",
                     "string"
@@ -10916,15 +9724,14 @@
                     "string"
                   ]
                 },
-                "done_at": {
-                  "description": "when a one-off task was done; repeating items are done one occurrence at a time",
+                "derived_from": {
                   "type": [
-                    "null",
-                    "string"
+                    "object",
+                    "null"
                   ]
                 },
-                "goal_id": {
-                  "description": "the goal this serves, or null",
+                "done_at": {
+                  "description": "when a one-off task was done; a repeating task is done one occurrence at a time",
                   "type": [
                     "null",
                     "string"
@@ -10936,10 +9743,6 @@
                 "is_priority": {
                   "type": "boolean"
                 },
-                "kind": {
-                  "description": "task or event",
-                  "type": "string"
-                },
                 "minutes": {
                   "description": "how long it takes, or null",
                   "type": [
@@ -10948,6 +9751,10 @@
                   ]
                 },
                 "notes": {
+                  "type": "string"
+                },
+                "origin": {
+                  "description": "person or agent: who authored it",
                   "type": "string"
                 },
                 "recurrence": {
@@ -10986,18 +9793,17 @@
                   "type": "string"
                 },
                 "session_key": {
-                  "description": "for an agent's item, the conversation its alert wakes",
+                  "description": "for an agent's task, the conversation its alert wakes",
                   "type": "string"
                 },
                 "snoozed_until": {
-                  "description": "the alert is deferred to this time",
                   "type": [
                     "null",
                     "string"
                   ]
                 },
                 "subject": {
-                  "description": "person (the default) or agent: whose it is",
+                  "description": "person (the default) or agent",
                   "type": "string"
                 },
                 "time_zone": {
@@ -11015,11 +9821,9 @@
               },
               "required": [
                 "id",
-                "kind",
                 "subject",
                 "title",
                 "notes",
-                "goal_id",
                 "at",
                 "minutes",
                 "time_zone",
@@ -11028,6 +9832,7 @@
                 "is_priority",
                 "snoozed_until",
                 "done_at",
+                "origin",
                 "version",
                 "deleted_at",
                 "created_at",
@@ -11085,14 +9890,14 @@
         "additionalProperties": false,
         "properties": {
           "alert_before_minutes": {
-            "description": "tell the owner this many minutes before at; 0 at the time itself; null for no alert",
+            "description": "tell the owner this many minutes before at, or null",
             "type": [
               "null",
               "integer"
             ]
           },
           "at": {
-            "description": "an event's start, or a task's deadline or cue; the first occurrence of a repeating item; null for a task with no time",
+            "description": "a deadline or cue, or null for a task with no time",
             "type": [
               "null",
               "string"
@@ -11107,15 +9912,14 @@
               "string"
             ]
           },
-          "done_at": {
-            "description": "when a one-off task was done; repeating items are done one occurrence at a time",
+          "derived_from": {
             "type": [
-              "null",
-              "string"
+              "object",
+              "null"
             ]
           },
-          "goal_id": {
-            "description": "the goal this serves, or null",
+          "done_at": {
+            "description": "when a one-off task was done; a repeating task is done one occurrence at a time",
             "type": [
               "null",
               "string"
@@ -11127,10 +9931,6 @@
           "is_priority": {
             "type": "boolean"
           },
-          "kind": {
-            "description": "task or event",
-            "type": "string"
-          },
           "minutes": {
             "description": "how long it takes, or null",
             "type": [
@@ -11139,6 +9939,10 @@
             ]
           },
           "notes": {
+            "type": "string"
+          },
+          "origin": {
+            "description": "person or agent: who authored it",
             "type": "string"
           },
           "recurrence": {
@@ -11177,18 +9981,17 @@
             "type": "string"
           },
           "session_key": {
-            "description": "for an agent's item, the conversation its alert wakes",
+            "description": "for an agent's task, the conversation its alert wakes",
             "type": "string"
           },
           "snoozed_until": {
-            "description": "the alert is deferred to this time",
             "type": [
               "null",
               "string"
             ]
           },
           "subject": {
-            "description": "person (the default) or agent: whose it is",
+            "description": "person (the default) or agent",
             "type": "string"
           },
           "time_zone": {
@@ -11206,11 +10009,9 @@
         },
         "required": [
           "id",
-          "kind",
           "subject",
           "title",
           "notes",
-          "goal_id",
           "at",
           "minutes",
           "time_zone",
@@ -11219,6 +10020,7 @@
           "is_priority",
           "snoozed_until",
           "done_at",
+          "origin",
           "version",
           "deleted_at",
           "created_at",
@@ -11258,14 +10060,14 @@
         "additionalProperties": false,
         "properties": {
           "alert_before_minutes": {
-            "description": "tell the owner this many minutes before at; 0 at the time itself; null for no alert",
+            "description": "tell the owner this many minutes before at, or null",
             "type": [
               "null",
               "integer"
             ]
           },
           "at": {
-            "description": "an event's start, or a task's deadline or cue; the first occurrence of a repeating item; null for a task with no time",
+            "description": "a deadline or cue, or null for a task with no time",
             "type": [
               "null",
               "string"
@@ -11280,15 +10082,14 @@
               "string"
             ]
           },
-          "done_at": {
-            "description": "when a one-off task was done; repeating items are done one occurrence at a time",
+          "derived_from": {
             "type": [
-              "null",
-              "string"
+              "object",
+              "null"
             ]
           },
-          "goal_id": {
-            "description": "the goal this serves, or null",
+          "done_at": {
+            "description": "when a one-off task was done; a repeating task is done one occurrence at a time",
             "type": [
               "null",
               "string"
@@ -11300,10 +10101,6 @@
           "is_priority": {
             "type": "boolean"
           },
-          "kind": {
-            "description": "task or event",
-            "type": "string"
-          },
           "minutes": {
             "description": "how long it takes, or null",
             "type": [
@@ -11312,6 +10109,10 @@
             ]
           },
           "notes": {
+            "type": "string"
+          },
+          "origin": {
+            "description": "person or agent: who authored it",
             "type": "string"
           },
           "recurrence": {
@@ -11350,18 +10151,17 @@
             "type": "string"
           },
           "session_key": {
-            "description": "for an agent's item, the conversation its alert wakes",
+            "description": "for an agent's task, the conversation its alert wakes",
             "type": "string"
           },
           "snoozed_until": {
-            "description": "the alert is deferred to this time",
             "type": [
               "null",
               "string"
             ]
           },
           "subject": {
-            "description": "person (the default) or agent: whose it is",
+            "description": "person (the default) or agent",
             "type": "string"
           },
           "time_zone": {
@@ -11379,11 +10179,9 @@
         },
         "required": [
           "id",
-          "kind",
           "subject",
           "title",
           "notes",
-          "goal_id",
           "at",
           "minutes",
           "time_zone",
@@ -11392,6 +10190,7 @@
           "is_priority",
           "snoozed_until",
           "done_at",
+          "origin",
           "version",
           "deleted_at",
           "created_at",
@@ -11410,19 +10209,18 @@
             ]
           },
           "at": {
-            "description": "RFC 3339 instant: an event's start, or a task's deadline or cue. Required for an event",
+            "description": "RFC 3339 instant: a task's deadline or cue, an event's start. An event requires it",
             "type": [
               "null",
               "string"
             ]
           },
+          "derived_from": {
+            "description": "when an agent promoted a memory candidate: {bank_id, record_id, snapshot}"
+          },
           "expected_version": {
             "description": "the version you last read; a stale version is rejected",
             "type": "integer"
-          },
-          "goal_id": {
-            "description": "UUID of the goal this serves; optional",
-            "type": "string"
           },
           "id": {
             "description": "record UUID",
@@ -11444,6 +10242,10 @@
           },
           "notes": {
             "description": "short detail, up to 2000 characters",
+            "type": "string"
+          },
+          "origin": {
+            "description": "person (default) or agent: who authored it",
             "type": "string"
           },
           "recurrence": {
@@ -11478,11 +10280,11 @@
             ]
           },
           "subject": {
-            "description": "person (default), or agent for an item of your own, which the person's screens do not show; an agent's item with an alert wakes the conversation you create it from",
+            "description": "person (default), or agent for a record of your own, which the person's screens do not show; an agent's record with an alert wakes the conversation you create it from",
             "type": "string"
           },
           "time_zone": {
-            "description": "IANA zone the person lives in (for example Europe/London); a repeat keeps this zone's wall-clock time. Default UTC",
+            "description": "IANA zone the person lives in; a repeat keeps this zone's wall-clock time. Default UTC",
             "type": "string"
           },
           "title": {
@@ -11502,14 +10304,14 @@
         "additionalProperties": false,
         "properties": {
           "alert_before_minutes": {
-            "description": "tell the owner this many minutes before at; 0 at the time itself; null for no alert",
+            "description": "tell the owner this many minutes before at, or null",
             "type": [
               "null",
               "integer"
             ]
           },
           "at": {
-            "description": "an event's start, or a task's deadline or cue; the first occurrence of a repeating item; null for a task with no time",
+            "description": "a deadline or cue, or null for a task with no time",
             "type": [
               "null",
               "string"
@@ -11524,15 +10326,14 @@
               "string"
             ]
           },
-          "done_at": {
-            "description": "when a one-off task was done; repeating items are done one occurrence at a time",
+          "derived_from": {
             "type": [
-              "null",
-              "string"
+              "object",
+              "null"
             ]
           },
-          "goal_id": {
-            "description": "the goal this serves, or null",
+          "done_at": {
+            "description": "when a one-off task was done; a repeating task is done one occurrence at a time",
             "type": [
               "null",
               "string"
@@ -11544,10 +10345,6 @@
           "is_priority": {
             "type": "boolean"
           },
-          "kind": {
-            "description": "task or event",
-            "type": "string"
-          },
           "minutes": {
             "description": "how long it takes, or null",
             "type": [
@@ -11556,6 +10353,10 @@
             ]
           },
           "notes": {
+            "type": "string"
+          },
+          "origin": {
+            "description": "person or agent: who authored it",
             "type": "string"
           },
           "recurrence": {
@@ -11594,18 +10395,17 @@
             "type": "string"
           },
           "session_key": {
-            "description": "for an agent's item, the conversation its alert wakes",
+            "description": "for an agent's task, the conversation its alert wakes",
             "type": "string"
           },
           "snoozed_until": {
-            "description": "the alert is deferred to this time",
             "type": [
               "null",
               "string"
             ]
           },
           "subject": {
-            "description": "person (the default) or agent: whose it is",
+            "description": "person (the default) or agent",
             "type": "string"
           },
           "time_zone": {
@@ -11623,11 +10423,9 @@
         },
         "required": [
           "id",
-          "kind",
           "subject",
           "title",
           "notes",
-          "goal_id",
           "at",
           "minutes",
           "time_zone",
@@ -11636,6 +10434,7 @@
           "is_priority",
           "snoozed_until",
           "done_at",
+          "origin",
           "version",
           "deleted_at",
           "created_at",
@@ -12612,7 +11411,7 @@
                         "type": "string"
                       },
                       "title": {
-                        "description": "what this part of the goal is about, 1-60 characters",
+                        "description": "what this part of the intention is about, 1-60 characters",
                         "type": "string"
                       }
                     },
@@ -12649,7 +11448,7 @@
             "type": "string"
           },
           "subject_kind": {
-            "description": "what the view is of: goal, task or event",
+            "description": "what the view is of: intention, task or event",
             "type": "string"
           }
         },
@@ -13498,7 +12297,7 @@
                         "type": "string"
                       },
                       "title": {
-                        "description": "what this part of the goal is about, 1-60 characters",
+                        "description": "what this part of the intention is about, 1-60 characters",
                         "type": "string"
                       }
                     },
@@ -13535,7 +12334,7 @@
             "type": "string"
           },
           "subject_kind": {
-            "description": "what the view is of: goal, task or event",
+            "description": "what the view is of: intention, task or event",
             "type": "string"
           },
           "updated_at": {
@@ -14416,7 +13215,7 @@
                         "type": "string"
                       },
                       "title": {
-                        "description": "what this part of the goal is about, 1-60 characters",
+                        "description": "what this part of the intention is about, 1-60 characters",
                         "type": "string"
                       }
                     },
@@ -14453,7 +13252,7 @@
             "type": "string"
           },
           "subject_kind": {
-            "description": "what the view is of: goal, task or event",
+            "description": "what the view is of: intention, task or event",
             "type": "string"
           },
           "updated_at": {
@@ -15324,7 +14123,7 @@
                         "type": "string"
                       },
                       "title": {
-                        "description": "what this part of the goal is about, 1-60 characters",
+                        "description": "what this part of the intention is about, 1-60 characters",
                         "type": "string"
                       }
                     },
@@ -15361,7 +14160,7 @@
             "type": "string"
           },
           "subject_kind": {
-            "description": "what the view is of: goal, task or event",
+            "description": "what the view is of: intention, task or event",
             "type": "string"
           },
           "updated_at": {
@@ -15395,7 +14194,7 @@
             "type": "string"
           },
           "subject_kind": {
-            "description": "goal, task or event",
+            "description": "intention, task or event",
             "type": "string"
           }
         },
@@ -16244,7 +15043,7 @@
                               "type": "string"
                             },
                             "title": {
-                              "description": "what this part of the goal is about, 1-60 characters",
+                              "description": "what this part of the intention is about, 1-60 characters",
                               "type": "string"
                             }
                           },
@@ -16281,7 +15080,7 @@
                   "type": "string"
                 },
                 "subject_kind": {
-                  "description": "what the view is of: goal, task or event",
+                  "description": "what the view is of: intention, task or event",
                   "type": "string"
                 },
                 "updated_at": {
@@ -16326,7 +15125,7 @@
             "type": "string"
           },
           "subject_kind": {
-            "description": "goal, task or event",
+            "description": "intention, task or event",
             "type": "string"
           }
         },
@@ -17251,7 +16050,7 @@
                             "type": "string"
                           },
                           "title": {
-                            "description": "what this part of the goal is about, 1-60 characters",
+                            "description": "what this part of the intention is about, 1-60 characters",
                             "type": "string"
                           }
                         },
@@ -17288,7 +16087,7 @@
                 "type": "string"
               },
               "subject_kind": {
-                "description": "what the view is of: goal, task or event",
+                "description": "what the view is of: intention, task or event",
                 "type": "string"
               },
               "updated_at": {
@@ -18161,7 +16960,7 @@
                         "type": "string"
                       },
                       "title": {
-                        "description": "what this part of the goal is about, 1-60 characters",
+                        "description": "what this part of the intention is about, 1-60 characters",
                         "type": "string"
                       }
                     },
@@ -19038,7 +17837,7 @@
                         "type": "string"
                       },
                       "title": {
-                        "description": "what this part of the goal is about, 1-60 characters",
+                        "description": "what this part of the intention is about, 1-60 characters",
                         "type": "string"
                       }
                     },
@@ -19075,7 +17874,7 @@
             "type": "string"
           },
           "subject_kind": {
-            "description": "what the view is of: goal, task or event",
+            "description": "what the view is of: intention, task or event",
             "type": "string"
           },
           "updated_at": {
@@ -19109,12 +17908,12 @@
             "description": "RFC 3339 instant after which the watch stops firing; optional",
             "type": "string"
           },
-          "goal_id": {
-            "description": "UUID of the goal this watch serves; optional",
-            "type": "string"
-          },
           "idempotency_key": {
             "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          },
+          "intention_id": {
+            "description": "UUID of the intention this watch serves; optional",
             "type": "string"
           },
           "name": {
@@ -19157,15 +17956,15 @@
               "string"
             ]
           },
-          "goal_id": {
-            "description": "the goal this watch serves, or null",
+          "id": {
+            "type": "string"
+          },
+          "intention_id": {
+            "description": "the intention this watch serves, or null",
             "type": [
               "null",
               "string"
             ]
-          },
-          "id": {
-            "type": "string"
           },
           "name": {
             "description": "the watch's identity within the conversation",
@@ -19192,7 +17991,7 @@
           "session_key",
           "event_key",
           "objective",
-          "goal_id",
+          "intention_id",
           "expires_at",
           "version",
           "deleted_at",
@@ -19247,15 +18046,15 @@
               "string"
             ]
           },
-          "goal_id": {
-            "description": "the goal this watch serves, or null",
+          "id": {
+            "type": "string"
+          },
+          "intention_id": {
+            "description": "the intention this watch serves, or null",
             "type": [
               "null",
               "string"
             ]
-          },
-          "id": {
-            "type": "string"
           },
           "name": {
             "description": "the watch's identity within the conversation",
@@ -19282,7 +18081,7 @@
           "session_key",
           "event_key",
           "objective",
-          "goal_id",
+          "intention_id",
           "expires_at",
           "version",
           "deleted_at",
@@ -19327,15 +18126,15 @@
               "string"
             ]
           },
-          "goal_id": {
-            "description": "the goal this watch serves, or null",
+          "id": {
+            "type": "string"
+          },
+          "intention_id": {
+            "description": "the intention this watch serves, or null",
             "type": [
               "null",
               "string"
             ]
-          },
-          "id": {
-            "type": "string"
           },
           "name": {
             "description": "the watch's identity within the conversation",
@@ -19362,7 +18161,7 @@
           "session_key",
           "event_key",
           "objective",
-          "goal_id",
+          "intention_id",
           "expires_at",
           "version",
           "deleted_at",
@@ -19420,15 +18219,15 @@
                     "string"
                   ]
                 },
-                "goal_id": {
-                  "description": "the goal this watch serves, or null",
+                "id": {
+                  "type": "string"
+                },
+                "intention_id": {
+                  "description": "the intention this watch serves, or null",
                   "type": [
                     "null",
                     "string"
                   ]
-                },
-                "id": {
-                  "type": "string"
                 },
                 "name": {
                   "description": "the watch's identity within the conversation",
@@ -19455,7 +18254,7 @@
                 "session_key",
                 "event_key",
                 "objective",
-                "goal_id",
+                "intention_id",
                 "expires_at",
                 "version",
                 "deleted_at",
@@ -19545,15 +18344,15 @@
               "string"
             ]
           },
-          "goal_id": {
-            "description": "the goal this watch serves, or null",
+          "id": {
+            "type": "string"
+          },
+          "intention_id": {
+            "description": "the intention this watch serves, or null",
             "type": [
               "null",
               "string"
             ]
-          },
-          "id": {
-            "type": "string"
           },
           "name": {
             "description": "the watch's identity within the conversation",
@@ -19580,7 +18379,7 @@
           "session_key",
           "event_key",
           "objective",
-          "goal_id",
+          "intention_id",
           "expires_at",
           "version",
           "deleted_at",
@@ -19600,7 +18399,7 @@
     }
   },
   "info": {
-    "description": "A person's goals, tasks and events, and the alerts on them. One registry serves HTTP and MCP.",
+    "description": "A person's intentions, commitments, decisions, states, activities, tasks and events, and the alerts on them. One registry serves HTTP and MCP.",
     "title": "Life Engine",
     "version": "0.1.0"
   },
@@ -20133,7 +18932,7 @@
     },
     "/api/v1/operations/batch_apply": {
       "post": {
-        "description": "Create a plan's records together, all or nothing: goals, tasks and events. Operations run in order, and each new record carries an id you chose so a later operation can refer to it (a task's goal_id). Use it for a composed use case such as a trip: the goal, then the tasks and events that serve it. Pass an idempotency_key; retrying with it is safe.",
+        "description": "Create a plan's records together, all or nothing: intentions, commitments, states, activities, links, tasks, events and views. Operations run in order, and each new record carries an id you chose so a later operation can refer to it (a link names an intention by that id). Use it for a composed use case such as a trip: the intention, then the tasks, events and links that serve it. Pass an idempotency_key; retrying with it is safe.",
         "operationId": "batch_apply",
         "requestBody": {
           "content": {
@@ -20343,7 +19142,7 @@
     },
     "/api/v1/operations/batch_undo": {
       "post": {
-        "description": "Undo a batch_apply plan as a whole: archives the goals and deletes the tasks and events it created, newest first, in one transaction. Pass the idempotency_key the batch_apply used. Records already removed are skipped.",
+        "description": "Undo a batch_apply plan as a whole: archives intentions and deletes the other records it created, newest first, in one transaction. Pass the idempotency_key the batch_apply used. Records already removed are skipped.",
         "operationId": "batch_undo",
         "requestBody": {
           "content": {
@@ -20446,9 +19245,114 @@
         "x-read-only": false
       }
     },
+    "/api/v1/operations/calendar_events_cancel": {
+      "post": {
+        "description": "Cancel an event that will not happen. It stays in the record.",
+        "operationId": "calendar_events_cancel",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/calendar_events_cancel_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/calendar_events_cancel_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "calendar_events_cancel",
+        "x-read-only": false
+      }
+    },
     "/api/v1/operations/calendar_events_create": {
       "post": {
-        "description": "Create an event: something that HAPPENS at a time whether or not anyone acts, and the person shows up (a meeting, a flight, a dinner). It has a start time and optionally a length; it is not something to complete. Give alert_before_minutes to be told ahead of it, and recurrence to repeat it. Link it to a goal with goal_id when it serves one. For something to DO, use tasks_create.",
+        "description": "Create an event: something that HAPPENS at a time whether or not anyone acts, and the person shows up (a meeting, a flight, a dinner). It has a start time and optionally a length; it is not something to complete. Give alert_before_minutes to be told ahead of it, and recurrence to repeat it. For something to DO, use tasks_create.",
         "operationId": "calendar_events_create",
         "requestBody": {
           "content": {
@@ -20763,7 +19667,7 @@
     },
     "/api/v1/operations/calendar_events_list": {
       "post": {
-        "description": "List events, soonest first; optionally for one goal, within a time range or matching text.",
+        "description": "List events, soonest first; by default upcoming and not cancelled.",
         "operationId": "calendar_events_list",
         "requestBody": {
           "content": {
@@ -21073,6 +19977,111 @@
           }
         ],
         "x-mcp-tool": "calendar_events_snooze",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/calendar_events_uncancel": {
+      "post": {
+        "description": "Bring back a cancelled event.",
+        "operationId": "calendar_events_uncancel",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/calendar_events_uncancel_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/calendar_events_uncancel_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "calendar_events_uncancel",
         "x-read-only": false
       }
     },
@@ -23384,636 +22393,6 @@
         ],
         "x-mcp-tool": "events_pending",
         "x-read-only": true
-      }
-    },
-    "/api/v1/operations/goals_archive": {
-      "post": {
-        "description": "Archive a goal (it can be restored). What is linked to it stays.",
-        "operationId": "goals_archive",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/goals_archive_input"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/goals_archive_output"
-                }
-              }
-            },
-            "description": "Operation result"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Invalid input"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Authentication required by router"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Record not found"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Stale version, conflicting identity, or record in use"
-          },
-          "413": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Request body exceeds 1 MiB"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Internal error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Temporarily unavailable; retry with the same request key"
-          }
-        },
-        "security": [
-          {
-            "routerBearer": []
-          }
-        ],
-        "x-mcp-tool": "goals_archive",
-        "x-read-only": false
-      }
-    },
-    "/api/v1/operations/goals_create": {
-      "post": {
-        "description": "Create a goal: an OUTCOME the person wants (\"run a 10k by March\", \"Lisbon trip, June 3-10\"). Give it an end date if it finishes, leave it open if it does not. A goal is also the container for a composed use case: for a trip, a dinner or a move, create the goal first, then create the tasks and events that serve it with this goal's id. Do not copy a task or event into a goal; link it with goal_id.",
-        "operationId": "goals_create",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/goals_create_input"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/goals_create_output"
-                }
-              }
-            },
-            "description": "Operation result"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Invalid input"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Authentication required by router"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Record not found"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Stale version, conflicting identity, or record in use"
-          },
-          "413": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Request body exceeds 1 MiB"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Internal error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Temporarily unavailable; retry with the same request key"
-          }
-        },
-        "security": [
-          {
-            "routerBearer": []
-          }
-        ],
-        "x-mcp-tool": "goals_create",
-        "x-read-only": false
-      }
-    },
-    "/api/v1/operations/goals_get": {
-      "post": {
-        "description": "Read a goal with its progress (done and total tasks linked to it) and its next open task.",
-        "operationId": "goals_get",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/goals_get_input"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/goals_get_output"
-                }
-              }
-            },
-            "description": "Operation result"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Invalid input"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Authentication required by router"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Record not found"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Stale version, conflicting identity, or record in use"
-          },
-          "413": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Request body exceeds 1 MiB"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Internal error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Temporarily unavailable; retry with the same request key"
-          }
-        },
-        "security": [
-          {
-            "routerBearer": []
-          }
-        ],
-        "x-mcp-tool": "goals_get",
-        "x-read-only": true
-      }
-    },
-    "/api/v1/operations/goals_list": {
-      "post": {
-        "description": "List the person's goals with their progress and next task, soonest end date first. State deleted means archived.",
-        "operationId": "goals_list",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/goals_list_input"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/goals_list_output"
-                }
-              }
-            },
-            "description": "Operation result"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Invalid input"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Authentication required by router"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Record not found"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Stale version, conflicting identity, or record in use"
-          },
-          "413": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Request body exceeds 1 MiB"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Internal error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Temporarily unavailable; retry with the same request key"
-          }
-        },
-        "security": [
-          {
-            "routerBearer": []
-          }
-        ],
-        "x-mcp-tool": "goals_list",
-        "x-read-only": true
-      }
-    },
-    "/api/v1/operations/goals_restore": {
-      "post": {
-        "description": "Restore an archived goal.",
-        "operationId": "goals_restore",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/goals_restore_input"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/goals_restore_output"
-                }
-              }
-            },
-            "description": "Operation result"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Invalid input"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Authentication required by router"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Record not found"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Stale version, conflicting identity, or record in use"
-          },
-          "413": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Request body exceeds 1 MiB"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Internal error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Temporarily unavailable; retry with the same request key"
-          }
-        },
-        "security": [
-          {
-            "routerBearer": []
-          }
-        ],
-        "x-mcp-tool": "goals_restore",
-        "x-read-only": false
-      }
-    },
-    "/api/v1/operations/goals_update": {
-      "post": {
-        "description": "Replace a goal's title, notes, end date and subject using the version you last read.",
-        "operationId": "goals_update",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/goals_update_input"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/goals_update_output"
-                }
-              }
-            },
-            "description": "Operation result"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Invalid input"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Authentication required by router"
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Record not found"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Stale version, conflicting identity, or record in use"
-          },
-          "413": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Request body exceeds 1 MiB"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Internal error"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            },
-            "description": "Temporarily unavailable; retry with the same request key"
-          }
-        },
-        "security": [
-          {
-            "routerBearer": []
-          }
-        ],
-        "x-mcp-tool": "goals_update",
-        "x-read-only": false
       }
     },
     "/api/v1/operations/history_list": {
@@ -26328,7 +24707,7 @@
     },
     "/api/v1/operations/tasks_complete": {
       "post": {
-        "description": "Mark a task done. A repeating task carries on: only that occurrence is done (name it with at, else the one now due). For your own tasks, pass result: one line on what you found or did. Pass done false to reopen a task that was marked done.",
+        "description": "Mark a task done. A repeating task carries on: only that occurrence is done (name it with at, else the one now due), and the completion is recorded as an activity linked to the task. Pass done false to reopen an occurrence or a one-off task.",
         "operationId": "tasks_complete",
         "requestBody": {
           "content": {
@@ -26433,7 +24812,7 @@
     },
     "/api/v1/operations/tasks_create": {
       "post": {
-        "description": "Create a task: something that waits for someone to DO it. A time on it is a deadline or a cue (\"call Sam at 5\"), not an appointment. To be reminded, give it a time and alert_before_minutes (0 = at that time); a reminder is just a task with an alert. To make it repeat, give it recurrence; a habit or routine is a task that repeats. Link it to a goal with goal_id when it serves one. For something that happens at a time whether or not anyone acts (a meeting, a flight), use calendar_events_create instead.",
+        "description": "Create a task: something that waits for someone to DO it. A time on it is a deadline or a cue (\"call Sam at 5\"), not an appointment. Give it recurrence to make it a routine, and alert_before_minutes to make it a reminder. Link it to an intention with links_set when it serves one. For something that happens at a time whether or not anyone acts, use calendar_events_create.",
         "operationId": "tasks_create",
         "requestBody": {
           "content": {
@@ -26853,7 +25232,7 @@
     },
     "/api/v1/operations/tasks_list": {
       "post": {
-        "description": "List tasks: open by default, or done or all; optionally for one goal, within a time range or matching text. Soonest first, untimed last. Your own tasks are subject agent.",
+        "description": "List tasks: open by default, or done or all; optionally within a time range or matching text. Soonest first, untimed last. Your own tasks are subject agent.",
         "operationId": "tasks_list",
         "requestBody": {
           "content": {
@@ -27273,7 +25652,7 @@
     },
     "/api/v1/operations/tracker_catalog_get": {
       "post": {
-        "description": "Read the view kit a client supports: the blocks it can draw, the calculations it can run on live data, and how to compose them. Read it before composing a view of a goal, task or event; it names the exact catalog_id to use. The kit is finite and says nothing about kinds of goal: you compose it for the subject in front of you.",
+        "description": "Read the view kit a client supports: the blocks it can draw, the calculations it can run on live data, and how to compose them. Read it before composing a view of an intention, task or event; it names the exact catalog_id to use. The kit is finite and says nothing about kinds of intention: you compose it for the subject in front of you.",
         "operationId": "tracker_catalog_get",
         "requestBody": {
           "content": {
@@ -27378,7 +25757,7 @@
     },
     "/api/v1/operations/views_create": {
       "post": {
-        "description": "Create a view of a goal, task or event, composed from the client's view kit: metrics (data sources: a provider series, a repeating task's done occurrences, or numbers the person logs) and pages of titled sections of blocks (sentence, bar, series, grid, steps, timeline, tasks, events, log, text, link) that draw them and calculate over them. Give each section one purpose and a short intro; use several pages only when the subject has genuinely separate concerns. Read tracker_catalog_get first and use the requesting client's exact catalog_id. A view holds no data and no markup, and you never write a figure: bind to a metric and use a function. Create it as the last step of a batch_apply plan, after the subject it is a view of.",
+        "description": "Create a view of an intention, task or event, composed from the client's view kit: metrics (data sources: a provider series, a repeating task's done occurrences, or numbers the person logs) and pages of titled sections of blocks (sentence, bar, series, grid, steps, timeline, tasks, events, log, text, link) that draw them and calculate over them. Give each section one purpose and a short intro; use several pages only when the subject has genuinely separate concerns. Read tracker_catalog_get first and use the requesting client's exact catalog_id. A view holds no data and no markup, and you never write a figure: bind to a metric and use a function. Create it as the last step of a batch_apply plan, after the subject it is a view of.",
         "operationId": "views_create",
         "requestBody": {
           "content": {
@@ -27693,7 +26072,7 @@
     },
     "/api/v1/operations/views_list": {
       "post": {
-        "description": "List the views of a goal, task or event, optionally only the one for a client catalog.",
+        "description": "List the views of an intention, task or event, optionally only the one for a client catalog.",
         "operationId": "views_list",
         "requestBody": {
           "content": {

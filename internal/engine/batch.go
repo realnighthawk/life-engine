@@ -6,11 +6,11 @@ import (
 	"fmt"
 )
 
-// batchable are the operations a batch may run: the creates a plan is made of. A task or event links to a goal in the same
-// batch by that goal's chosen id; a link names records an earlier step created.
+// batchable are the operations a batch may run: the creates a plan is made of. A link names records an earlier step created,
+// so an intention, a task and an event can be composed in one transaction.
 var batchable = map[string]bool{
 	"intentions_create": true, "commitments_create": true, "states_create": true, "activities_record": true,
-	"links_set": true, "goals_create": true, "tasks_create": true, "calendar_events_create": true, "views_create": true,
+	"links_set": true, "tasks_create": true, "calendar_events_create": true, "views_create": true,
 }
 
 // checkBatch validates a plan without running it, so a decision's effect is refused at creation if it could never apply.
@@ -20,14 +20,14 @@ func checkBatch(plan BatchPlan) error {
 	}
 	for i, o := range plan.Operations {
 		if !batchable[o.Operation] {
-			return invalid(fmt.Sprintf("operations[%d]: %q cannot be part of a batch. A batch runs create operations only (intentions_create, commitments_create, states_create, activities_record, links_set, goals_create, tasks_create, calendar_events_create, views_create); call any other tool on its own, outside the batch", i, o.Operation))
+			return invalid(fmt.Sprintf("operations[%d]: %q cannot be part of a batch. A batch runs create operations only (intentions_create, commitments_create, states_create, activities_record, links_set, tasks_create, calendar_events_create, views_create); call any other tool on its own, outside the batch", i, o.Operation))
 		}
 	}
 	return nil
 }
 
 type BatchOp struct {
-	Operation string          `json:"operation" jsonschema:"a create operation: intentions_create, commitments_create, states_create, activities_record, links_set, goals_create, tasks_create, calendar_events_create or views_create"`
+	Operation string          `json:"operation" jsonschema:"a create operation: intentions_create, commitments_create, states_create, activities_record, links_set, tasks_create, calendar_events_create or views_create"`
 	Input     json.RawMessage `json:"input" jsonschema:"that operation's own input; leave out idempotency_key, the batch sets it. Give each new record an id so later operations can refer to it"`
 }
 type BatchPlan struct {
@@ -123,9 +123,8 @@ var inverse = map[string]struct{ op, table, removed string }{
 	"intentions_create":      {"intentions_archive", "intentions", "deleted_at"},
 	"commitments_create":     {"commitments_delete", "commitments", "deleted_at"},
 	"states_create":          {"states_delete", "states", "deleted_at"},
-	"tasks_create":           {"tasks_delete", "items", "deleted_at"},
-	"calendar_events_create": {"calendar_events_delete", "items", "deleted_at"},
-	"goals_create":           {"goals_archive", "goals", "deleted_at"},
+	"tasks_create":           {"tasks_delete", "tasks", "deleted_at"},
+	"calendar_events_create": {"calendar_events_delete", "events", "deleted_at"},
 	"views_create":           {"views_delete", "views", "deleted_at"},
 }
 

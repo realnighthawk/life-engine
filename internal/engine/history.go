@@ -3,7 +3,8 @@ package engine
 import "context"
 
 // historyTables maps an auditable entity type to its table; add an entry with each new entity.
-var historyTables = map[string]string{"goal": "goals", "item": "items", "settings": "settings", "view": "views", "measurement": "measurements"}
+var historyTables = map[string]string{"intention": "intentions", "task": "tasks", "event": "events", "commitment": "commitments",
+	"decision": "decisions", "state": "states", "activity": "activities", "settings": "settings", "view": "views", "measurement": "measurements"}
 
 func history(ctx context.Context, u *unit, in HistoryInput) (Page[Change], error) {
 	result := Page[Change]{Items: []Change{}}

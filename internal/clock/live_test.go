@@ -40,7 +40,7 @@ func liveEnvWithGateway(t *testing.T) (*engine.Service, *Clock, *pgxpool.Pool, c
 	require.NoError(t, err)
 	t.Cleanup(pool.Close)
 	require.NoError(t, postgres.Migrate(ctx, pool))
-	_, err = pool.Exec(ctx, "TRUNCATE life.requests, life.changes, life.acked_events, life.occurrences, life.items, life.goals, life.views, life.measurements")
+	_, err = pool.Exec(ctx, "TRUNCATE life.requests, life.changes, life.acked_events, life.links, life.activities, life.states, life.decisions, life.commitments, life.intentions, life.tasks, life.events, life.views, life.measurements")
 	require.NoError(t, err)
 	queue := "life-engine-live-" + strconv.FormatInt(time.Now().UnixNano(), 36)
 	received := make(chan map[string]any, 8)
@@ -74,7 +74,7 @@ func run(t *testing.T, ctx context.Context, s *engine.Service, op string, body m
 func TestLiveAPersonsAlertIsPostedToTheGateway(t *testing.T) {
 	svc, _, _, ctx, received := liveEnvWithGateway(t)
 	at := time.Now().UTC().Add(8 * time.Second).Truncate(time.Second)
-	var task engine.Item
+	var task engine.Task
 	require.NoError(t, json.Unmarshal(run(t, ctx, svc, "tasks_create", map[string]any{"title": "Call Sam", "at": at.Format(time.RFC3339), "alert_before_minutes": 0}), &task))
 
 	select {
@@ -116,7 +116,7 @@ func TestLiveARepeatKeepsLocalWallClockTime(t *testing.T) {
 	svc, k, _, ctx := liveEnv(t)
 	london, _ := time.LoadLocation("Europe/London")
 	anchor := time.Date(2026, 1, 5, 9, 0, 0, 0, london) // 09:00 in winter; the alert is 30 minutes before
-	var task engine.Item
+	var task engine.Task
 	require.NoError(t, json.Unmarshal(run(t, ctx, svc, "tasks_create", map[string]any{"title": "Standup", "at": anchor.UTC().Format(time.RFC3339),
 		"time_zone": "Europe/London", "alert_before_minutes": 30, "recurrence": map[string]any{"freq": "daily"}}), &task), "create")
 
