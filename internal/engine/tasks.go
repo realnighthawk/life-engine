@@ -218,7 +218,7 @@ func completeTask(ctx context.Context, u *unit, in CompleteTaskInput) (Task, err
 		if old.DoneAt != nil {
 			return old, conflict("Task is already done")
 		}
-		occurrence := now
+		occurrence := now.UTC().Truncate(time.Second)
 		if old.At != nil {
 			occurrence = old.At.UTC().Truncate(time.Second)
 		}
@@ -327,7 +327,11 @@ func reopenTask(ctx context.Context, u *unit, old Task, in CompleteTaskInput, no
 			return old, e
 		}
 	}
-	return old, u.audit(ctx, "task", old.ID, nil, map[string]any{"occurrence": occurrence, "state": "reopened"})
+	updated, err := u.getTask(ctx, old.ID, false)
+	if err != nil {
+		return updated, err
+	}
+	return updated, u.audit(ctx, "task", updated.ID, old, updated)
 }
 
 // latestOccurrenceAtOrBefore is the occurrence now due: the last one not after now, or the first if the series has not

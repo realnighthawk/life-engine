@@ -23,9 +23,9 @@ func TestAViewCanBeOfAGoalATaskOrAnEvent(t *testing.T) {
 	s := integrationService(t)
 	goal := execute[engine.Intention](t, s, "intentions_create", map[string]any{"idempotency_key": key(), "title": "Run a 5K"})
 	task := execute[engine.Task](t, s, "tasks_create", map[string]any{"idempotency_key": key(), "title": "Long run", "at": ts(24 * time.Hour)})
-	event := execute[engine.Task](t, s, "calendar_events_create", map[string]any{"idempotency_key": key(), "title": "Race day", "at": ts(48 * time.Hour)})
+	event := execute[engine.CalendarEvent](t, s, "calendar_events_create", map[string]any{"idempotency_key": key(), "title": "Race day", "at": ts(48 * time.Hour)})
 
-	for kind, id := range map[string]string{"goal": goal.ID, "task": task.ID, "event": event.ID} {
+	for kind, id := range map[string]string{"intention": goal.ID, "task": task.ID, "event": event.ID} {
 		v := execute[engine.View](t, s, "views_create", viewOf(kind, id, todoBlock, logBlock))
 		if v.SubjectKind != kind || v.SubjectID != id || v.Version != 1 {
 			t.Fatalf("%s view: %+v", kind, v)
@@ -36,11 +36,11 @@ func TestAViewCanBeOfAGoalATaskOrAnEvent(t *testing.T) {
 		}
 	}
 	// One live view per subject and catalog; an unknown subject, kind or catalog is refused; a subject that is not there too.
-	errorCode(t, s, "views_create", viewOf("goal", goal.ID, todoBlock), "conflict")
+	errorCode(t, s, "views_create", viewOf("intention", goal.ID, todoBlock), "conflict")
 	errorCode(t, s, "views_create", viewOf("routine", goal.ID, todoBlock), "invalid_input")
-	errorCode(t, s, "views_create", viewOf("goal", uuid.NewString(), todoBlock), "invalid_input")
+	errorCode(t, s, "views_create", viewOf("intention", uuid.NewString(), todoBlock), "invalid_input")
 	errorCode(t, s, "views_create", viewOf("task", goal.ID, todoBlock), "invalid_input") // a goal's id is not a task
-	bad := viewOf("goal", uuid.NewString(), todoBlock)
+	bad := viewOf("intention", uuid.NewString(), todoBlock)
 	bad["catalog_id"] = "nope"
 	errorCode(t, s, "views_create", bad, "invalid_input")
 	errorCode(t, s, "views_state", map[string]any{"subject_kind": "task", "subject_id": uuid.NewString(), "catalog_id": engine.TrackerCatalogKit}, "invalid_input")
@@ -49,10 +49,10 @@ func TestAViewCanBeOfAGoalATaskOrAnEvent(t *testing.T) {
 func TestObservationsAreKeptPerSubjectAndMetric(t *testing.T) {
 	s := integrationService(t)
 	goal := execute[engine.Intention](t, s, "intentions_create", map[string]any{"idempotency_key": key(), "title": "Run a 5K"})
-	v := execute[engine.View](t, s, "views_create", viewOf("goal", goal.ID, logBlock))
+	v := execute[engine.View](t, s, "views_create", viewOf("intention", goal.ID, logBlock))
 	rec := map[string]any{"idempotency_key": key(), "subject_kind": "intention", "subject_id": goal.ID, "metric_id": "distance", "value": 2.5}
 	m := execute[engine.Measurement](t, s, "measurements_record", rec)
-	if m.Unit != "km" || m.Value != 2.5 || m.SubjectKind != "goal" || m.SubjectID != goal.ID {
+	if m.Unit != "km" || m.Value != 2.5 || m.SubjectKind != "intention" || m.SubjectID != goal.ID {
 		t.Fatalf("recorded: %+v", m)
 	}
 	rec["idempotency_key"] = key()
@@ -68,12 +68,12 @@ func TestObservationsAreKeptPerSubjectAndMetric(t *testing.T) {
 		t.Fatalf("updated: %+v", upd)
 	}
 	// A metric that has observations stays, in its unit.
-	changed := map[string]any{"idempotency_key": key(), "id": v.ID, "expected_version": 1, "pages": viewOf("goal", goal.ID, logBlock)["pages"],
+	changed := map[string]any{"idempotency_key": key(), "id": v.ID, "expected_version": 1, "pages": viewOf("intention", goal.ID, logBlock)["pages"],
 		"metrics": []map[string]any{{"id": "distance", "label": "Distance", "unit": "mi"}}}
 	errorCode(t, s, "views_update", changed, "conflict")
 	changed["idempotency_key"] = key()
 	changed["metrics"] = []map[string]any{}
-	changed["pages"] = viewOf("goal", goal.ID, map[string]any{"id": "t", "kind": "text", "body": "x"})["pages"]
+	changed["pages"] = viewOf("intention", goal.ID, map[string]any{"id": "t", "kind": "text", "body": "x"})["pages"]
 	errorCode(t, s, "views_update", changed, "conflict")
 	state := execute[engine.ViewState](t, s, "views_state", map[string]any{"subject_kind": "intention", "subject_id": goal.ID, "catalog_id": engine.TrackerCatalogKit})
 	if len(state.Measurements) != 1 || state.Measurements[0].Value != 3 {
@@ -95,8 +95,9 @@ func TestAViewIsPartOfABatchAndUndoesWithIt(t *testing.T) {
 	gid := uuid.NewString()
 	ops := []any{
 		map[string]any{"operation": "intentions_create", "input": map[string]any{"id": gid, "title": "Lisbon trip"}},
-		map[string]any{"operation": "tasks_create", "input": map[string]any{"title": "Book flights", "goal_id": gid}},
-		map[string]any{"operation": "views_create", "input": viewOf("goal", gid, todoBlock)},
+		map[string]any{"operation": "tasks_create", "input": map[string]any{"id": "44444444-4444-4444-8444-444444444444", "title": "Book flights"}},
+		map[string]any{"operation": "links_set", "input": map[string]any{"from_kind": "task", "from_id": "44444444-4444-4444-8444-444444444444", "relation": "serves", "to_kind": "intention", "to_id": gid}},
+		map[string]any{"operation": "views_create", "input": viewOf("intention", gid, todoBlock)},
 	}
 	k := key()
 	execute[engine.BatchResult](t, s, "batch_apply", map[string]any{"idempotency_key": k, "operations": ops})
@@ -104,7 +105,7 @@ func TestAViewIsPartOfABatchAndUndoesWithIt(t *testing.T) {
 		t.Fatal("the batch's view is missing")
 	}
 	undo := execute[engine.BatchUndoResult](t, s, "batch_undo", map[string]any{"idempotency_key": key(), "batch_key": k})
-	if len(undo.Steps) != 3 {
+	if len(undo.Steps) != 4 {
 		t.Fatalf("undo: %+v", undo)
 	}
 }

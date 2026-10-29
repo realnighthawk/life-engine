@@ -52,14 +52,15 @@ func TestWriteClientFixtures(t *testing.T) {
 	at := func(h int) string { return today.Add(time.Duration(h) * time.Hour).Format(time.RFC3339) }
 
 	call("settings_get", "settings_get", map[string]any{})
-	goal := call("goal", "intentions_create", map[string]any{"idempotency_key": key(), "title": "Lisbon trip", "ends_on": "2027-06-10", "notes": "take the coolers"})
-	task := call("task", "tasks_create", map[string]any{"idempotency_key": key(), "title": "Book flights", "goal_id": goal["id"], "at": at(23), "minutes": 30, "alert_before_minutes": 15, "is_priority": true})
+	goal := call("intention", "intentions_create", map[string]any{"idempotency_key": key(), "title": "Lisbon trip", "ends_on": "2027-06-10", "notes": "take the coolers"})
+	task := call("task", "tasks_create", map[string]any{"idempotency_key": key(), "title": "Book flights", "at": at(23), "minutes": 30, "alert_before_minutes": 15, "is_priority": true})
+	call("link", "links_set", map[string]any{"idempotency_key": key(), "from_kind": "task", "from_id": task["id"], "relation": "serves", "to_kind": "intention", "to_id": goal["id"]})
 	repeating := call("task_repeating", "tasks_create", map[string]any{"idempotency_key": key(), "title": "Drink water", "at": at(8), "time_zone": "Europe/London", "recurrence": map[string]any{"freq": "daily"}, "alert_before_minutes": 0})
 	call("event", "calendar_events_create", map[string]any{"idempotency_key": key(), "title": "Standup", "at": at(9), "minutes": 15})
 	call("tasks_page", "tasks_list", map[string]any{})
 	call("events_page", "calendar_events_list", map[string]any{})
-	call("goal_with_progress", "intentions_get", map[string]any{"id": goal["id"]})
-	call("goals_page", "intentions_list", map[string]any{})
+	call("intention_with_progress", "intentions_get", map[string]any{"id": goal["id"]})
+	call("intentions_page", "intentions_list", map[string]any{})
 	call("day", "day_get", map[string]any{})
 	call("task_snoozed", "tasks_snooze", map[string]any{"idempotency_key": key(), "id": task["id"], "expected_version": 1, "until": time.Now().Add(2 * time.Hour).UTC().Format(time.RFC3339)})
 	call("task_done", "tasks_complete", map[string]any{"idempotency_key": key(), "id": task["id"], "expected_version": 2})
@@ -73,7 +74,7 @@ func TestWriteClientFixtures(t *testing.T) {
 	call("view_state", "views_state", map[string]any{"subject_kind": "intention", "subject_id": goal["id"], "catalog_id": engine.TrackerCatalogKit})
 	call("task_history", "tasks_history", map[string]any{"id": repeating["id"], "days": 14})
 	call("events_pending", "events_pending", map[string]any{})
-	call("history", "history_list", map[string]any{"entity_type": "item", "id": task["id"]})
+	call("history", "history_list", map[string]any{"entity_type": "task", "id": task["id"]})
 	call("batch_dry_run", "batch_dry_run", map[string]any{"operations": []any{map[string]any{"operation": "intentions_create", "input": map[string]any{"title": "Dinner party"}}}})
 	for name, body := range map[string]map[string]any{
 		"error_stale_version": {"idempotency_key": key(), "id": task["id"], "expected_version": 1, "title": "x"},
