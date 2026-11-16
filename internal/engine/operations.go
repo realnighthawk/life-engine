@@ -125,6 +125,11 @@ func (s *Service) registerOperations() {
 
 	register(s, "attention_get", "What needs the person now: open commitments due today or earlier, open decisions that are not expired, and tasks whose time has passed. A deterministic read; delivery is the gateway's.", false, attentionGet)
 
+	register(s, "feed_get", "The ranked-feed input for the client's Today: what needs the person, then what happened and what is coming today. A read model over attention and the day; importance comes from the kind of record and agent_id is empty until the gateway fills it.", false, feedGet)
+	register(s, "feed_act", "Answer a feed item. Placeholder: it always declines. Complete a task with tasks_complete and answer a decision with decisions_resolve.", true, feedAct)
+	register(s, "beliefs_list", "What the system holds to be true about the person, with where each came from: confirmed states (world and persona) and active intentions (goals).", false, beliefsList)
+	register(s, "beliefs_review", "Confirm or correct a state-backed belief using the version you last read. Both record it as the person's own word.", true, beliefsReview)
+
 	register(s, "settings_get", "Read the person's settings: their time zone (which decides what 'today' means) and working hours.", false, func(c context.Context, u *unit, _ struct{}) (Settings, error) { return u.getSettings(c) })
 	register(s, "settings_set", "Set the person's time zone and working hours (versioned). Set the time zone first: what today is depends on it.", true, setSettings)
 	register(s, "history_list", "Read the audit trail of changes to a record, newest first.", false, history)

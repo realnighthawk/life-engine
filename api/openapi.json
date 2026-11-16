@@ -1032,6 +1032,232 @@
         ],
         "type": "object"
       },
+      "beliefs_list_input": {
+        "additionalProperties": false,
+        "type": "object"
+      },
+      "beliefs_list_output": {
+        "additionalProperties": false,
+        "properties": {
+          "beliefs": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "confidence": {
+                  "description": "low, fair or high",
+                  "type": "string"
+                },
+                "detail": {
+                  "type": "string"
+                },
+                "id": {
+                  "description": "state:id or intention:id",
+                  "type": "string"
+                },
+                "lens": {
+                  "description": "world, persona or goals",
+                  "type": "string"
+                },
+                "sources": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "at": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string"
+                      },
+                      "label": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "label",
+                      "at"
+                    ],
+                    "type": "object"
+                  },
+                  "type": [
+                    "null",
+                    "array"
+                  ]
+                },
+                "summary": {
+                  "type": "string"
+                },
+                "topic": {
+                  "type": "string"
+                },
+                "used_by": {
+                  "description": "agent ids that rely on it; empty until the engine can say",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": [
+                    "null",
+                    "array"
+                  ]
+                },
+                "version": {
+                  "description": "for a later correction",
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "lens",
+                "topic",
+                "summary",
+                "detail",
+                "confidence",
+                "sources",
+                "used_by",
+                "version"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          }
+        },
+        "required": [
+          "beliefs"
+        ],
+        "type": "object"
+      },
+      "beliefs_review_input": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "confirm or correct",
+            "type": "string"
+          },
+          "detail": {
+            "description": "the corrected value, for correct",
+            "type": "string"
+          },
+          "expected_version": {
+            "type": "integer"
+          },
+          "id": {
+            "description": "state:id",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "expected_version",
+          "action"
+        ],
+        "type": "object"
+      },
+      "beliefs_review_output": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "type": "string"
+          },
+          "deleted_at": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "derived_from": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "description": "fact, preference, constraint or need",
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "origin": {
+            "type": "string"
+          },
+          "predicate": {
+            "description": "what is true of it, such as current distance",
+            "type": "string"
+          },
+          "source": {
+            "description": "person, agent or observation",
+            "type": "string"
+          },
+          "status": {
+            "description": "confirmed, retracted or superseded",
+            "type": "string"
+          },
+          "subject": {
+            "description": "person (the default) or agent",
+            "type": "string"
+          },
+          "topic": {
+            "description": "what it is about, such as running or passport",
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "valid_from": {
+            "description": "when it became true, or null",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "valid_to": {
+            "description": "when it stopped being true, or null",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "value": {
+            "description": "the value, as any JSON: a string, number, boolean or object",
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "subject",
+          "kind",
+          "topic",
+          "predicate",
+          "notes",
+          "valid_from",
+          "valid_to",
+          "source",
+          "status",
+          "origin",
+          "version",
+          "deleted_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
       "calendar_events_cancel_input": {
         "additionalProperties": false,
         "properties": {
@@ -6022,6 +6248,161 @@
                 "event_id",
                 "detail",
                 "notice"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "feed_act_input": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "the action id the item offered",
+            "type": "string"
+          },
+          "id": {
+            "description": "the feed item id",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "description": "1-128 characters, unique per intended write; resend the same key to retry safely",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idempotency_key",
+          "id",
+          "action"
+        ],
+        "type": "object"
+      },
+      "feed_act_output": {
+        "additionalProperties": false,
+        "properties": {
+          "accepted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "accepted"
+        ],
+        "type": "object"
+      },
+      "feed_get_input": {
+        "additionalProperties": false,
+        "type": "object"
+      },
+      "feed_get_output": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "description": "what needs the person, then what happened and what is coming today",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "actions": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "label": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "label"
+                    ],
+                    "type": "object"
+                  },
+                  "type": [
+                    "null",
+                    "array"
+                  ]
+                },
+                "agent_id": {
+                  "description": "the agent that raised it, or an empty string when the engine does not know",
+                  "type": "string"
+                },
+                "at": {
+                  "description": "when it happened or will happen, for the timeline, or null",
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "deadline": {
+                  "description": "when it stops mattering, or null",
+                  "type": [
+                    "null",
+                    "string"
+                  ]
+                },
+                "detail": {
+                  "type": "string"
+                },
+                "id": {
+                  "description": "stable: kind:record id",
+                  "type": "string"
+                },
+                "importance": {
+                  "description": "1 to 3, from the kind of record until agents can set it",
+                  "type": "integer"
+                },
+                "link": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "entity": {
+                      "description": "commitment, decision, task or event",
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "entity",
+                    "id"
+                  ],
+                  "type": [
+                    "null",
+                    "object"
+                  ]
+                },
+                "since": {
+                  "description": "when it was raised",
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "type": {
+                  "description": "need, done, noticed or soon",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "type",
+                "importance",
+                "agent_id",
+                "title",
+                "detail",
+                "deadline",
+                "since",
+                "at",
+                "actions"
               ],
               "type": "object"
             },
@@ -19245,6 +19626,216 @@
         "x-read-only": false
       }
     },
+    "/api/v1/operations/beliefs_list": {
+      "post": {
+        "description": "What the system holds to be true about the person, with where each came from: confirmed states (world and persona) and active intentions (goals).",
+        "operationId": "beliefs_list",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/beliefs_list_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/beliefs_list_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "beliefs_list",
+        "x-read-only": true
+      }
+    },
+    "/api/v1/operations/beliefs_review": {
+      "post": {
+        "description": "Confirm or correct a state-backed belief using the version you last read. Both record it as the person's own word.",
+        "operationId": "beliefs_review",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/beliefs_review_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/beliefs_review_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "beliefs_review",
+        "x-read-only": false
+      }
+    },
     "/api/v1/operations/calendar_events_cancel": {
       "post": {
         "description": "Cancel an event that will not happen. It stays in the record.",
@@ -22392,6 +22983,216 @@
           }
         ],
         "x-mcp-tool": "events_pending",
+        "x-read-only": true
+      }
+    },
+    "/api/v1/operations/feed_act": {
+      "post": {
+        "description": "Answer a feed item. Placeholder: it always declines. Complete a task with tasks_complete and answer a decision with decisions_resolve.",
+        "operationId": "feed_act",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/feed_act_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/feed_act_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "feed_act",
+        "x-read-only": false
+      }
+    },
+    "/api/v1/operations/feed_get": {
+      "post": {
+        "description": "The ranked-feed input for the client's Today: what needs the person, then what happened and what is coming today. A read model over attention and the day; importance comes from the kind of record and agent_id is empty until the gateway fills it.",
+        "operationId": "feed_get",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/feed_get_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/feed_get_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "feed_get",
         "x-read-only": true
       }
     },
