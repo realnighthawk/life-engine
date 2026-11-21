@@ -1191,6 +1191,16 @@
               "array"
             ]
           },
+          "tags": {
+            "description": "optional topical tags; trimmed, lowercased and deduplicated",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
           "title": {
             "type": "string"
           }
@@ -1207,6 +1217,9 @@
       "artifacts_create_output": {
         "additionalProperties": false,
         "properties": {
+          "agent_id": {
+            "type": "string"
+          },
           "catalog_id": {
             "type": "string"
           },
@@ -1214,7 +1227,6 @@
             "type": "string"
           },
           "mode": {
-            "description": "document or deck; each page of a deck is a slide",
             "type": "string"
           },
           "pages": {
@@ -1995,7 +2007,19 @@
               "array"
             ]
           },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
           "title": {
+            "type": "string"
+          },
+          "updated_at": {
             "type": "string"
           },
           "version": {
@@ -2007,8 +2031,10 @@
           "title",
           "mode",
           "catalog_id",
-          "pages",
-          "version"
+          "version",
+          "tags",
+          "updated_at",
+          "pages"
         ],
         "type": "object"
       },
@@ -2028,6 +2054,9 @@
       "artifacts_get_output": {
         "additionalProperties": false,
         "properties": {
+          "agent_id": {
+            "type": "string"
+          },
           "catalog_id": {
             "type": "string"
           },
@@ -2035,7 +2064,6 @@
             "type": "string"
           },
           "mode": {
-            "description": "document or deck; each page of a deck is a slide",
             "type": "string"
           },
           "pages": {
@@ -2816,7 +2844,19 @@
               "array"
             ]
           },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
           "title": {
+            "type": "string"
+          },
+          "updated_at": {
             "type": "string"
           },
           "version": {
@@ -2828,8 +2868,100 @@
           "title",
           "mode",
           "catalog_id",
-          "pages",
-          "version"
+          "version",
+          "tags",
+          "updated_at",
+          "pages"
+        ],
+        "type": "object"
+      },
+      "artifacts_list_input": {
+        "additionalProperties": false,
+        "properties": {
+          "agent_id": {
+            "description": "only artifacts created by this agent ID; omit for all artifacts",
+            "type": "string"
+          },
+          "limit": {
+            "description": "1-200, default 50",
+            "type": "integer"
+          },
+          "offset": {
+            "description": "0-1000000, default 0",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "artifacts_list_output": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "agent_id": {
+                  "type": "string"
+                },
+                "catalog_id": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "mode": {
+                  "type": "string"
+                },
+                "tags": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": [
+                    "null",
+                    "array"
+                  ]
+                },
+                "title": {
+                  "type": "string"
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "title",
+                "mode",
+                "catalog_id",
+                "version",
+                "tags",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "next_offset": {
+            "description": "offset of the next page, or null at the end",
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "next_offset"
         ],
         "type": "object"
       },
@@ -3633,6 +3765,16 @@
               "array"
             ]
           },
+          "tags": {
+            "description": "replace the tags; omit to keep them or send [] to clear them",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
           "title": {
             "type": "string"
           }
@@ -3651,6 +3793,9 @@
       "artifacts_update_output": {
         "additionalProperties": false,
         "properties": {
+          "agent_id": {
+            "type": "string"
+          },
           "catalog_id": {
             "type": "string"
           },
@@ -3658,7 +3803,6 @@
             "type": "string"
           },
           "mode": {
-            "description": "document or deck; each page of a deck is a slide",
             "type": "string"
           },
           "pages": {
@@ -4439,7 +4583,19 @@
               "array"
             ]
           },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
           "title": {
+            "type": "string"
+          },
+          "updated_at": {
             "type": "string"
           },
           "version": {
@@ -4451,8 +4607,10 @@
           "title",
           "mode",
           "catalog_id",
-          "pages",
-          "version"
+          "version",
+          "tags",
+          "updated_at",
+          "pages"
         ],
         "type": "object"
       },
@@ -23297,7 +23455,7 @@
     },
     "/api/v1/operations/artifacts_create": {
       "post": {
-        "description": "Create a standalone ViewKit document or deck. Use Markdown for authored content and one page per slide in deck mode. Read tracker_catalog_get for the catalog and block shapes.",
+        "description": "Create a standalone ViewKit document or deck, optionally with topical tags. Use Markdown for authored content and one page per slide in deck mode. Read tracker_catalog_get for the catalog and block shapes.",
         "operationId": "artifacts_create",
         "requestBody": {
           "content": {
@@ -23505,9 +23663,114 @@
         "x-read-only": true
       }
     },
+    "/api/v1/operations/artifacts_list": {
+      "post": {
+        "description": "List standalone artifact summaries, newest update first. Optionally filter by creator agent ID.",
+        "operationId": "artifacts_list",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/artifacts_list_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/artifacts_list_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "artifacts_list",
+        "x-read-only": true
+      }
+    },
     "/api/v1/operations/artifacts_update": {
       "post": {
-        "description": "Revise a standalone artifact using the version last read. Send the full manifest, preserving page, section and block IDs for unchanged content.",
+        "description": "Revise a standalone artifact using the version last read. Send the full manifest, preserving page, section and block IDs for unchanged content. Omit tags to keep them or send an empty list to clear them.",
         "operationId": "artifacts_update",
         "requestBody": {
           "content": {

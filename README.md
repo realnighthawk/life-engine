@@ -29,6 +29,7 @@ DATABASE_URL=$TEST_DATABASE_URL make run   # serves on 127.0.0.1:8093
 - Errors are `{"error":{"code","message"}}`: `invalid_input` 400, `not_found` 404, `conflict`/`duplicate` 409, `too_large` 413, `busy` 503, `internal` 500.
 - One person per database; the engine has no authentication or user handling. The router verifies Clerk and the tenant's network policy is the boundary, so never expose this service directly.
 - Timestamps are RFC 3339 UTC. A repeating item repeats on its own IANA zone's wall-clock time.
+- `artifacts_list` returns paged document and deck summaries, optionally filtered by creator agent ID. Artifact creator is immutable provenance, not authorization: MCP uses the forwarded session key, or the direct plugin's runtime-supplied `X-Agent-ID` when no valid session key is available. Legacy and non-agent writes may have no creator. Artifact updates retain tags when omitted and clear them when sent as `[]`.
 - The engine owns the clock (Temporal Schedules, see Status). A person's alert is posted straight to the gateway by `FireWorkflow`; `events_pending` is empty: the engine emits no events, and the agent reaches the person with `notify_user`.
 - Add a numbered migration; never edit an applied one.
 - "Today" is computed in the time zone from `settings_get`; set it first.

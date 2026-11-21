@@ -23,6 +23,9 @@ func New(service *engine.Service, health http.Handler, trustedOrigins []string) 
 			if key, ok := req.Params.GetMeta()[engine.SessionMetaKey].(string); ok {
 				ctx = engine.WithSession(ctx, key) // the hub passes on which agent session is calling
 			}
+			if req.Extra != nil {
+				ctx = engine.WithMCPAgent(ctx, req.Extra.Header.Get("X-Agent-ID"))
+			}
 			data, err := service.Execute(ctx, op.Name, req.Params.Arguments)
 			if err != nil {
 				public := engine.PublicError(err)
