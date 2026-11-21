@@ -39,6 +39,7 @@ WITH items AS (
   SELECT id::text AS id, 'artifact'::text AS kind, title, mode, catalog_id, version,
          COALESCE(agent_id, '') AS agent_id, tags, ''::text AS subject_kind, ''::text AS subject_id, updated_at
   FROM life.artifacts
+  WHERE deleted_at IS NULL
   UNION ALL
   SELECT v.id::text, 'view'::text,
          COALESCE(CASE v.subject_kind

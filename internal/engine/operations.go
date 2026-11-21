@@ -53,6 +53,7 @@ func (s *Service) registerOperations() {
 	register(s, "library_list", "List everything in the Library, newest update first: standalone artifacts and views attached to intentions, tasks or events, with creator, tags and subject. Optionally filter by creator agent ID or kind.", false, listLibrary)
 	register(s, "library_get", "Open one Library item by id, whether it is a standalone artifact or a subject-linked view; the answer carries its pages either way.", false, getLibrary)
 	register(s, "artifacts_update", "Revise a standalone artifact using the version last read. Send the full manifest, preserving page, section and block IDs for unchanged content. Omit tags to keep them or send an empty list to clear them.", true, updateArtifact)
+	register(s, "artifacts_delete", "Remove a standalone artifact from the Library using the version last read. Its audit history remains.", true, deleteArtifact)
 	register(s, "views_list", "List the views of an intention, task or event, optionally only the one for a client catalog.", false, listViews)
 	register(s, "measurements_record", "Record an actual numeric observation for a view's defined metric, with its observed time and notes. Never invent values or treat completing a task as an outcome measurement.", true, recordMeasurement)
 	register(s, "measurements_update", "Correct a recorded observation using the version last read; preserves its time unless supplied.", true, updateMeasurement)

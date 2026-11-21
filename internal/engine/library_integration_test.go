@@ -51,5 +51,13 @@ func TestTheLibraryListsArtifactsAndSubjectViews(t *testing.T) {
 	if artifactDetail.Kind != "artifact" || artifactDetail.Mode != "document" || len(artifactDetail.Pages) != 1 {
 		t.Fatalf("artifact detail: %+v", artifactDetail)
 	}
+	execute[engine.Artifact](t, s, "artifacts_delete", map[string]any{
+		"idempotency_key": key(), "id": artifact.ID, "expected_version": artifact.Version,
+	})
+	afterDelete := execute[engine.Page[engine.LibraryItem]](t, s, "library_list", map[string]any{})
+	if afterDelete.Total != 1 || afterDelete.Items[0].ID != view.ID {
+		t.Fatalf("library after delete: %+v", afterDelete)
+	}
+	errorCode(t, s, "library_get", map[string]any{"id": artifact.ID}, "not_found")
 	errorCode(t, s, "library_get", map[string]any{"id": "not-a-uuid"}, "invalid_input")
 }

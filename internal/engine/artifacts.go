@@ -95,20 +95,20 @@ func listArtifacts(ctx context.Context, u *unit, in ListArtifactsInput) (Page[Ar
 	if err != nil {
 		return result, err
 	}
-	where := ""
+	where := " WHERE deleted_at IS NULL"
 	var args []any
 	if in.AgentID != "" {
-		where = " WHERE agent_id=$1"
+		where += " AND agent_id=$1"
 		args = append(args, in.AgentID)
 	}
 	if err = u.tx.QueryRow(ctx, `SELECT count(*) FROM life.artifacts`+where, args...).Scan(&result.Total); err != nil {
 		return result, err
 	}
 	// Put the paging parameters first in the query arguments regardless of filtering.
-	where = ""
+	where = " WHERE deleted_at IS NULL"
 	args = []any{limit, offset}
 	if in.AgentID != "" {
-		where = " WHERE agent_id=$3"
+		where += " AND agent_id=$3"
 		args = append(args, in.AgentID)
 	}
 	rows, err := u.tx.Query(ctx, `SELECT `+artifactColumns+` FROM life.artifacts`+where+` ORDER BY updated_at DESC,id DESC LIMIT $1 OFFSET $2`, args...)
@@ -135,7 +135,7 @@ func getArtifact(ctx context.Context, u *unit, in GetInput) (Artifact, error) {
 		return a, err
 	}
 	var pages []byte
-	err = u.tx.QueryRow(ctx, `SELECT `+artifactColumns+`,pages FROM life.artifacts WHERE id=$1`, key).
+	err = u.tx.QueryRow(ctx, `SELECT `+artifactColumns+`,pages FROM life.artifacts WHERE id=$1 AND deleted_at IS NULL`, key).
 		Scan(&a.ID, &a.Title, &a.Mode, &a.CatalogID, &a.Version, &a.AgentID, &a.Tags, &a.UpdatedAt, &pages)
 	if err != nil {
 		return a, err
@@ -203,4 +203,40 @@ func updateArtifact(ctx context.Context, u *unit, in UpdateArtifactInput) (Artif
 	}
 	a.UpdatedAt = a.UpdatedAt.UTC()
 	return a, u.audit(ctx, "artifact", a.ID, old, a)
+}
+
+func deleteArtifact(ctx context.Context, u *unit, in EditInput) (Artifact, error) {
+	k, e := id(in.ID)
+	if e != nil {
+		return Artifact{}, e
+	}
+	var deleted bool
+	if e = u.tx.QueryRow(ctx, `SELECT deleted_at IS NOT NULL FROM life.artifacts WHERE id=$1 FOR UPDATE`, k).Scan(&deleted); e != nil {
+		return Artifact{}, e
+	}
+	if deleted {
+		return Artifact{}, conflict("The artifact was already removed")
+	}
+	old, e := getArtifact(ctx, u, GetInput{ID: k})
+	if e != nil {
+		return old, e
+	}
+	if e = version(in.ExpectedVersion, old.Version); e != nil {
+		return old, e
+	}
+	if _, e = u.tx.Exec(ctx, `UPDATE life.artifacts SET deleted_at=now(),version=version+1,updated_at=now() WHERE id=$1`, old.ID); e != nil {
+		return old, e
+	}
+	// The live read hides it now; read the row directly for the audit trail.
+	var pages []byte
+	after := old
+	if e = u.tx.QueryRow(ctx, `SELECT `+artifactColumns+`,pages FROM life.artifacts WHERE id=$1`, old.ID).
+		Scan(&after.ID, &after.Title, &after.Mode, &after.CatalogID, &after.Version, &after.AgentID, &after.Tags, &after.UpdatedAt, &pages); e != nil {
+		return after, e
+	}
+	if e = json.Unmarshal(pages, &after.Pages); e != nil {
+		return after, e
+	}
+	after.UpdatedAt = after.UpdatedAt.UTC()
+	return after, u.audit(ctx, "artifact", after.ID, old, after)
 }
