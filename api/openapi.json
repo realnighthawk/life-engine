@@ -9111,6 +9111,367 @@
         ],
         "type": "object"
       },
+      "days_get_input": {
+        "additionalProperties": false,
+        "properties": {
+          "from": {
+            "description": "first local date YYYY-MM-DD",
+            "type": "string"
+          },
+          "subject": {
+            "description": "person (default) or agent",
+            "type": "string"
+          },
+          "to": {
+            "description": "last local date YYYY-MM-DD; at most 42 days after from",
+            "type": "string"
+          }
+        },
+        "required": [
+          "from",
+          "to"
+        ],
+        "type": "object"
+      },
+      "days_get_output": {
+        "additionalProperties": false,
+        "properties": {
+          "days": {
+            "description": "oldest first",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "day": {
+                  "type": "string"
+                },
+                "entries": {
+                  "description": "tasks and events timed on this day, earliest first, then the overdue ones",
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "at": {
+                        "description": "when this occurrence falls",
+                        "type": "string"
+                      },
+                      "event": {
+                        "additionalProperties": false,
+                        "description": "set for an event entry",
+                        "properties": {
+                          "alert_before_minutes": {
+                            "description": "tell the owner this many minutes before at, or null",
+                            "type": [
+                              "null",
+                              "integer"
+                            ]
+                          },
+                          "at": {
+                            "description": "when it starts",
+                            "type": "string"
+                          },
+                          "cancelled_at": {
+                            "description": "when it was cancelled, or null",
+                            "type": [
+                              "null",
+                              "string"
+                            ]
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "deleted_at": {
+                            "type": [
+                              "null",
+                              "string"
+                            ]
+                          },
+                          "derived_from": {
+                            "type": [
+                              "object",
+                              "null"
+                            ]
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "minutes": {
+                            "description": "how long it lasts, or null",
+                            "type": [
+                              "null",
+                              "integer"
+                            ]
+                          },
+                          "notes": {
+                            "type": "string"
+                          },
+                          "origin": {
+                            "description": "person or agent: who authored it",
+                            "type": "string"
+                          },
+                          "recurrence": {
+                            "additionalProperties": false,
+                            "description": "how it repeats, or null for a one-off",
+                            "properties": {
+                              "freq": {
+                                "description": "daily, weekly or monthly",
+                                "type": "string"
+                              },
+                              "interval": {
+                                "description": "repeat every N days/weeks/months, 1-365, default 1",
+                                "type": "integer"
+                              },
+                              "weekdays": {
+                                "description": "weekly only: days of the week, 0 = Sunday to 6 = Saturday; empty repeats on the due date's weekday",
+                                "items": {
+                                  "type": "integer"
+                                },
+                                "type": [
+                                  "null",
+                                  "array"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "freq"
+                            ],
+                            "type": [
+                              "null",
+                              "object"
+                            ]
+                          },
+                          "session_key": {
+                            "description": "for an agent's event, the conversation its alert wakes",
+                            "type": "string"
+                          },
+                          "snoozed_until": {
+                            "type": [
+                              "null",
+                              "string"
+                            ]
+                          },
+                          "subject": {
+                            "description": "person (the default) or agent",
+                            "type": "string"
+                          },
+                          "time_zone": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "updated_at": {
+                            "type": "string"
+                          },
+                          "version": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "subject",
+                          "title",
+                          "notes",
+                          "at",
+                          "minutes",
+                          "time_zone",
+                          "recurrence",
+                          "alert_before_minutes",
+                          "snoozed_until",
+                          "cancelled_at",
+                          "origin",
+                          "version",
+                          "deleted_at",
+                          "created_at",
+                          "updated_at"
+                        ],
+                        "type": [
+                          "null",
+                          "object"
+                        ]
+                      },
+                      "overdue": {
+                        "type": "boolean"
+                      },
+                      "state": {
+                        "description": "tasks: open or done. Events: upcoming or past",
+                        "type": "string"
+                      },
+                      "task": {
+                        "additionalProperties": false,
+                        "description": "set for a task entry",
+                        "properties": {
+                          "alert_before_minutes": {
+                            "description": "tell the owner this many minutes before at, or null",
+                            "type": [
+                              "null",
+                              "integer"
+                            ]
+                          },
+                          "at": {
+                            "description": "a deadline or cue, or null for a task with no time",
+                            "type": [
+                              "null",
+                              "string"
+                            ]
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "deleted_at": {
+                            "type": [
+                              "null",
+                              "string"
+                            ]
+                          },
+                          "derived_from": {
+                            "type": [
+                              "object",
+                              "null"
+                            ]
+                          },
+                          "done_at": {
+                            "description": "when a one-off task was done; a repeating task is done one occurrence at a time",
+                            "type": [
+                              "null",
+                              "string"
+                            ]
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "is_priority": {
+                            "type": "boolean"
+                          },
+                          "minutes": {
+                            "description": "how long it takes, or null",
+                            "type": [
+                              "null",
+                              "integer"
+                            ]
+                          },
+                          "notes": {
+                            "type": "string"
+                          },
+                          "origin": {
+                            "description": "person or agent: who authored it",
+                            "type": "string"
+                          },
+                          "recurrence": {
+                            "additionalProperties": false,
+                            "description": "how it repeats, or null for a one-off",
+                            "properties": {
+                              "freq": {
+                                "description": "daily, weekly or monthly",
+                                "type": "string"
+                              },
+                              "interval": {
+                                "description": "repeat every N days/weeks/months, 1-365, default 1",
+                                "type": "integer"
+                              },
+                              "weekdays": {
+                                "description": "weekly only: days of the week, 0 = Sunday to 6 = Saturday; empty repeats on the due date's weekday",
+                                "items": {
+                                  "type": "integer"
+                                },
+                                "type": [
+                                  "null",
+                                  "array"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "freq"
+                            ],
+                            "type": [
+                              "null",
+                              "object"
+                            ]
+                          },
+                          "result": {
+                            "description": "for a done one-off task: the line its owner gave when completing it",
+                            "type": "string"
+                          },
+                          "session_key": {
+                            "description": "for an agent's task, the conversation its alert wakes",
+                            "type": "string"
+                          },
+                          "snoozed_until": {
+                            "type": [
+                              "null",
+                              "string"
+                            ]
+                          },
+                          "subject": {
+                            "description": "person (the default) or agent",
+                            "type": "string"
+                          },
+                          "time_zone": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "updated_at": {
+                            "type": "string"
+                          },
+                          "version": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "subject",
+                          "title",
+                          "notes",
+                          "at",
+                          "minutes",
+                          "time_zone",
+                          "recurrence",
+                          "alert_before_minutes",
+                          "is_priority",
+                          "snoozed_until",
+                          "done_at",
+                          "origin",
+                          "version",
+                          "deleted_at",
+                          "created_at",
+                          "updated_at"
+                        ],
+                        "type": [
+                          "null",
+                          "object"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "at",
+                      "state",
+                      "overdue"
+                    ],
+                    "type": "object"
+                  },
+                  "type": [
+                    "null",
+                    "array"
+                  ]
+                }
+              },
+              "required": [
+                "day",
+                "entries"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          }
+        },
+        "required": [
+          "days"
+        ],
+        "type": "object"
+      },
       "decisions_create_input": {
         "additionalProperties": false,
         "properties": {
@@ -26600,6 +26961,111 @@
           }
         ],
         "x-mcp-tool": "day_get",
+        "x-read-only": true
+      }
+    },
+    "/api/v1/operations/days_get": {
+      "post": {
+        "description": "The same read as day_get over a date range, oldest first, for a week or month view. At most 42 days.",
+        "operationId": "days_get",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/days_get_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/days_get_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "days_get",
         "x-read-only": true
       }
     },

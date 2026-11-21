@@ -138,3 +138,27 @@ func TestABatchLandsWholeOrNotAtAll(t *testing.T) {
 		t.Fatalf("tasks after undo: %d", got.Total)
 	}
 }
+
+func TestADateRangeReturnsEachDayInOrder(t *testing.T) {
+	s := integrationService(t)
+	today := time.Now().UTC().Truncate(24 * time.Hour)
+	at := func(d, h int) string {
+		return today.AddDate(0, 0, d).Add(time.Duration(h) * time.Hour).Format(time.RFC3339)
+	}
+	execute[engine.Task](t, s, "tasks_create", map[string]any{"idempotency_key": key(), "title": "Yesterday", "at": at(-1, 9)})
+	execute[engine.CalendarEvent](t, s, "calendar_events_create", map[string]any{"idempotency_key": key(), "title": "Tomorrow", "at": at(1, 9), "minutes": 30})
+	from := today.AddDate(0, 0, -1).Format("2006-01-02")
+	to := today.AddDate(0, 0, 1).Format("2006-01-02")
+	got := execute[engine.Days](t, s, "days_get", map[string]any{"from": from, "to": to})
+	if len(got.Days) != 3 || got.Days[0].Day != from || got.Days[2].Day != to {
+		t.Fatalf("days: %+v", got.Days)
+	}
+	if len(got.Days[0].Entries) != 1 || got.Days[0].Entries[0].Task == nil || got.Days[0].Entries[0].Task.Title != "Yesterday" {
+		t.Fatalf("first day: %+v", got.Days[0].Entries)
+	}
+	if len(got.Days[2].Entries) != 1 || got.Days[2].Entries[0].Event == nil || got.Days[2].Entries[0].Event.Title != "Tomorrow" {
+		t.Fatalf("last day: %+v", got.Days[2].Entries)
+	}
+	errorCode(t, s, "days_get", map[string]any{"from": to, "to": from}, "invalid_input")
+	errorCode(t, s, "days_get", map[string]any{"from": from, "to": today.AddDate(0, 0, 60).Format("2006-01-02")}, "invalid_input")
+}
