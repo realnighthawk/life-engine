@@ -79,6 +79,7 @@ type ViewData struct {
 	CatalogID   string       `json:"catalog_id" jsonschema:"exact versioned catalog id from tracker_catalog_get; names the app and platform that renders it"`
 	Metrics     []ViewMetric `json:"metrics" jsonschema:"0-6 measurements the blocks refer to; observations are recorded separately, never generated here"`
 	Pages       []ViewPage   `json:"pages" jsonschema:"1-4 pages; one page shows no tabs"`
+	Tags        []string     `json:"tags,omitempty" jsonschema:"optional topical tags; trimmed, lowercased and deduplicated"`
 }
 type CreateViewInput struct {
 	Meta
@@ -88,6 +89,7 @@ type CreateViewInput struct {
 type View struct {
 	ID string `json:"id"`
 	ViewData
+	AgentID   string    `json:"agent_id,omitempty" jsonschema:"the agent that created the view, when one did"`
 	Version   int64     `json:"version"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -96,6 +98,7 @@ type UpdateViewInput struct {
 	EditInput
 	Metrics []ViewMetric `json:"metrics" jsonschema:"the whole list, replacing the current one"`
 	Pages   []ViewPage   `json:"pages" jsonschema:"the whole structure, replacing the current one"`
+	Tags    *[]string    `json:"tags,omitempty" jsonschema:"replace the tags; omit to keep them or send [] to clear them"`
 }
 type ViewsListInput struct {
 	SubjectKind string `json:"subject_kind" jsonschema:"intention, task or event"`
@@ -195,12 +198,12 @@ func validatePages(pages []ViewPage, metrics map[string]ViewMetric) error {
 	return nil
 }
 
-const viewCols = `id::text,subject_kind,subject_id::text,catalog_id,metrics,pages,version,created_at,updated_at`
+const viewCols = `id::text,subject_kind,subject_id::text,catalog_id,metrics,pages,COALESCE(agent_id,''),tags,version,created_at,updated_at`
 
 func scanView(row scanner) (View, error) {
 	var v View
 	var metrics, pages []byte
-	if e := row.Scan(&v.ID, &v.SubjectKind, &v.SubjectID, &v.CatalogID, &metrics, &pages, &v.Version, &v.CreatedAt, &v.UpdatedAt); e != nil {
+	if e := row.Scan(&v.ID, &v.SubjectKind, &v.SubjectID, &v.CatalogID, &metrics, &pages, &v.AgentID, &v.Tags, &v.Version, &v.CreatedAt, &v.UpdatedAt); e != nil {
 		return v, e
 	}
 	v.Metrics, v.Pages = []ViewMetric{}, []ViewPage{}
@@ -239,8 +242,8 @@ func createView(ctx context.Context, u *unit, in CreateViewInput) (View, error) 
 	}
 	metrics, _ := json.Marshal(in.Metrics)
 	pages, _ := json.Marshal(in.Pages)
-	if _, e = u.tx.Exec(ctx, `INSERT INTO life.views(id,subject_kind,subject_id,catalog_id,metrics,pages) VALUES($1,$2,$3,$4,$5,$6)`,
-		key, in.SubjectKind, in.SubjectID, in.CatalogID, metrics, pages); e != nil {
+	if _, e = u.tx.Exec(ctx, `INSERT INTO life.views(id,subject_kind,subject_id,catalog_id,metrics,pages,agent_id,tags) VALUES($1,$2,$3,$4,$5,$6,NULLIF($7,''),$8)`,
+		key, in.SubjectKind, in.SubjectID, in.CatalogID, metrics, pages, artifactCreator(ctx), normalizeArtifactTags(in.Tags)); e != nil {
 		return View{}, e
 	}
 	v, e := u.getView(ctx, key)
@@ -300,6 +303,9 @@ func updateView(ctx context.Context, u *unit, in UpdateViewInput) (View, error) 
 	}
 	next := old.ViewData
 	next.Metrics, next.Pages = in.Metrics, in.Pages
+	if in.Tags != nil {
+		next.Tags = normalizeArtifactTags(*in.Tags)
+	}
 	if e = validateView(next); e != nil {
 		return old, e
 	}
@@ -308,7 +314,8 @@ func updateView(ctx context.Context, u *unit, in UpdateViewInput) (View, error) 
 	}
 	metrics, _ := json.Marshal(in.Metrics)
 	pages, _ := json.Marshal(in.Pages)
-	if _, e = u.tx.Exec(ctx, `UPDATE life.views SET metrics=$2,pages=$3,version=version+1,updated_at=now() WHERE id=$1`, old.ID, metrics, pages); e != nil {
+	if _, e = u.tx.Exec(ctx, `UPDATE life.views SET metrics=$2,pages=$3,tags=$4,version=version+1,updated_at=now() WHERE id=$1`,
+		old.ID, metrics, pages, next.Tags); e != nil {
 		return old, e
 	}
 	after, e := u.getView(ctx, old.ID)

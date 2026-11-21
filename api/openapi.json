@@ -12060,6 +12060,965 @@
         ],
         "type": "object"
       },
+      "library_get_input": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "record UUID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "library_get_output": {
+        "additionalProperties": false,
+        "properties": {
+          "agent_id": {
+            "type": "string"
+          },
+          "catalog_id": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "description": "artifact or view",
+            "type": "string"
+          },
+          "mode": {
+            "description": "document, deck or view",
+            "type": "string"
+          },
+          "pages": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "description": "stable lowercase identifier, unique within the view",
+                  "type": "string"
+                },
+                "sections": {
+                  "description": "1-6 sections in display order",
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "blocks": {
+                        "description": "1-8 blocks in display order",
+                        "items": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "aggregate": {
+                              "description": "series: how a group becomes one value: sum, mean or last",
+                              "type": "string"
+                            },
+                            "band": {
+                              "additionalProperties": false,
+                              "description": "series: a shaded range (a target zone)",
+                              "properties": {
+                                "from": {
+                                  "description": "A calculation the client runs on live data: fn is a function from tracker_catalog_get, plus only the parameters that function takes. args hold more calculations (five levels at most).",
+                                  "properties": {
+                                    "args": {
+                                      "items": {
+                                        "type": [
+                                          "object"
+                                        ]
+                                      },
+                                      "type": [
+                                        "array"
+                                      ]
+                                    },
+                                    "date": {
+                                      "type": [
+                                        "string"
+                                      ]
+                                    },
+                                    "fn": {
+                                      "type": [
+                                        "string"
+                                      ]
+                                    },
+                                    "metric": {
+                                      "type": [
+                                        "string"
+                                      ]
+                                    },
+                                    "per": {
+                                      "type": [
+                                        "string"
+                                      ]
+                                    },
+                                    "period": {
+                                      "type": [
+                                        "string"
+                                      ]
+                                    },
+                                    "value": {
+                                      "type": [
+                                        "number"
+                                      ]
+                                    },
+                                    "window": {
+                                      "type": [
+                                        "object"
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "fn"
+                                  ],
+                                  "type": [
+                                    "object"
+                                  ]
+                                },
+                                "label": {
+                                  "description": "1-24 characters",
+                                  "type": "string"
+                                },
+                                "to": {
+                                  "description": "A calculation the client runs on live data: fn is a function from tracker_catalog_get, plus only the parameters that function takes. args hold more calculations (five levels at most).",
+                                  "properties": {
+                                    "args": {
+                                      "items": {
+                                        "type": [
+                                          "object"
+                                        ]
+                                      },
+                                      "type": [
+                                        "array"
+                                      ]
+                                    },
+                                    "date": {
+                                      "type": [
+                                        "string"
+                                      ]
+                                    },
+                                    "fn": {
+                                      "type": [
+                                        "string"
+                                      ]
+                                    },
+                                    "metric": {
+                                      "type": [
+                                        "string"
+                                      ]
+                                    },
+                                    "per": {
+                                      "type": [
+                                        "string"
+                                      ]
+                                    },
+                                    "period": {
+                                      "type": [
+                                        "string"
+                                      ]
+                                    },
+                                    "value": {
+                                      "type": [
+                                        "number"
+                                      ]
+                                    },
+                                    "window": {
+                                      "type": [
+                                        "object"
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "fn"
+                                  ],
+                                  "type": [
+                                    "object"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "from",
+                                "to",
+                                "label"
+                              ],
+                              "type": [
+                                "null",
+                                "object"
+                              ]
+                            },
+                            "body": {
+                              "description": "text: plain words, up to 280 characters",
+                              "type": "string"
+                            },
+                            "bucket": {
+                              "description": "series: group values by day, week or month",
+                              "type": "string"
+                            },
+                            "decimals": {
+                              "description": "0-3",
+                              "type": [
+                                "null",
+                                "integer"
+                              ]
+                            },
+                            "emphasis": {
+                              "description": "hero, normal or compact: how much room the client gives it",
+                              "type": "string"
+                            },
+                            "format": {
+                              "description": "number, money, percent, date or days",
+                              "type": "string"
+                            },
+                            "id": {
+                              "description": "stable lowercase identifier, unique within the view",
+                              "type": "string"
+                            },
+                            "kind": {
+                              "description": "sentence, bar, series, grid, steps, timeline, tasks, events, log, text, markdown or link",
+                              "type": "string"
+                            },
+                            "layout": {
+                              "description": "grid: week_row or month_grid",
+                              "type": "string"
+                            },
+                            "lines": {
+                              "description": "series: up to three horizontal reference lines (a limit, a target)",
+                              "items": {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "at": {
+                                    "description": "where the marker sits: a number for bar and series, a date for timeline",
+                                    "properties": {
+                                      "args": {
+                                        "items": {
+                                          "type": [
+                                            "object"
+                                          ]
+                                        },
+                                        "type": [
+                                          "array"
+                                        ]
+                                      },
+                                      "date": {
+                                        "type": [
+                                          "string"
+                                        ]
+                                      },
+                                      "fn": {
+                                        "type": [
+                                          "string"
+                                        ]
+                                      },
+                                      "metric": {
+                                        "type": [
+                                          "string"
+                                        ]
+                                      },
+                                      "per": {
+                                        "type": [
+                                          "string"
+                                        ]
+                                      },
+                                      "period": {
+                                        "type": [
+                                          "string"
+                                        ]
+                                      },
+                                      "value": {
+                                        "type": [
+                                          "number"
+                                        ]
+                                      },
+                                      "window": {
+                                        "type": [
+                                          "object"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "fn"
+                                    ],
+                                    "type": [
+                                      "object"
+                                    ]
+                                  },
+                                  "label": {
+                                    "description": "1-24 characters",
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "at",
+                                  "label"
+                                ],
+                                "type": "object"
+                              },
+                              "type": [
+                                "null",
+                                "array"
+                              ]
+                            },
+                            "markdown": {
+                              "description": "markdown: authored Markdown, 1-16384 bytes; render without raw HTML",
+                              "type": "string"
+                            },
+                            "markers": {
+                              "description": "bar: up to three marks on the scale; timeline: 1-4 dated marks",
+                              "items": {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "at": {
+                                    "description": "where the marker sits: a number for bar and series, a date for timeline",
+                                    "properties": {
+                                      "args": {
+                                        "items": {
+                                          "type": [
+                                            "object"
+                                          ]
+                                        },
+                                        "type": [
+                                          "array"
+                                        ]
+                                      },
+                                      "date": {
+                                        "type": [
+                                          "string"
+                                        ]
+                                      },
+                                      "fn": {
+                                        "type": [
+                                          "string"
+                                        ]
+                                      },
+                                      "metric": {
+                                        "type": [
+                                          "string"
+                                        ]
+                                      },
+                                      "per": {
+                                        "type": [
+                                          "string"
+                                        ]
+                                      },
+                                      "period": {
+                                        "type": [
+                                          "string"
+                                        ]
+                                      },
+                                      "value": {
+                                        "type": [
+                                          "number"
+                                        ]
+                                      },
+                                      "window": {
+                                        "type": [
+                                          "object"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "fn"
+                                    ],
+                                    "type": [
+                                      "object"
+                                    ]
+                                  },
+                                  "label": {
+                                    "description": "1-24 characters",
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "at",
+                                  "label"
+                                ],
+                                "type": "object"
+                              },
+                              "type": [
+                                "null",
+                                "array"
+                              ]
+                            },
+                            "metric": {
+                              "description": "series, grid, log: the metric the block draws or records",
+                              "type": "string"
+                            },
+                            "of": {
+                              "description": "bar: the full scale (a limit or a target)",
+                              "properties": {
+                                "args": {
+                                  "items": {
+                                    "type": [
+                                      "object"
+                                    ]
+                                  },
+                                  "type": [
+                                    "array"
+                                  ]
+                                },
+                                "date": {
+                                  "type": [
+                                    "string"
+                                  ]
+                                },
+                                "fn": {
+                                  "type": [
+                                    "string"
+                                  ]
+                                },
+                                "metric": {
+                                  "type": [
+                                    "string"
+                                  ]
+                                },
+                                "per": {
+                                  "type": [
+                                    "string"
+                                  ]
+                                },
+                                "period": {
+                                  "type": [
+                                    "string"
+                                  ]
+                                },
+                                "value": {
+                                  "type": [
+                                    "number"
+                                  ]
+                                },
+                                "window": {
+                                  "type": [
+                                    "object"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "fn"
+                              ],
+                              "type": [
+                                "null",
+                                "object"
+                              ]
+                            },
+                            "points": {
+                              "description": "text: up to five short points, each up to 120 characters",
+                              "items": {
+                                "type": "string"
+                              },
+                              "type": [
+                                "null",
+                                "array"
+                              ]
+                            },
+                            "projection": {
+                              "description": "bar: where the value is heading, drawn as a lighter extension",
+                              "properties": {
+                                "args": {
+                                  "items": {
+                                    "type": [
+                                      "object"
+                                    ]
+                                  },
+                                  "type": [
+                                    "array"
+                                  ]
+                                },
+                                "date": {
+                                  "type": [
+                                    "string"
+                                  ]
+                                },
+                                "fn": {
+                                  "type": [
+                                    "string"
+                                  ]
+                                },
+                                "metric": {
+                                  "type": [
+                                    "string"
+                                  ]
+                                },
+                                "per": {
+                                  "type": [
+                                    "string"
+                                  ]
+                                },
+                                "period": {
+                                  "type": [
+                                    "string"
+                                  ]
+                                },
+                                "value": {
+                                  "type": [
+                                    "number"
+                                  ]
+                                },
+                                "window": {
+                                  "type": [
+                                    "object"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "fn"
+                              ],
+                              "type": [
+                                "null",
+                                "object"
+                              ]
+                            },
+                            "slots": {
+                              "additionalProperties": {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "calc": {
+                                    "description": "A calculation the client runs on live data: fn is a function from tracker_catalog_get, plus only the parameters that function takes. args hold more calculations (five levels at most).",
+                                    "properties": {
+                                      "args": {
+                                        "items": {
+                                          "type": [
+                                            "object"
+                                          ]
+                                        },
+                                        "type": [
+                                          "array"
+                                        ]
+                                      },
+                                      "date": {
+                                        "type": [
+                                          "string"
+                                        ]
+                                      },
+                                      "fn": {
+                                        "type": [
+                                          "string"
+                                        ]
+                                      },
+                                      "metric": {
+                                        "type": [
+                                          "string"
+                                        ]
+                                      },
+                                      "per": {
+                                        "type": [
+                                          "string"
+                                        ]
+                                      },
+                                      "period": {
+                                        "type": [
+                                          "string"
+                                        ]
+                                      },
+                                      "value": {
+                                        "type": [
+                                          "number"
+                                        ]
+                                      },
+                                      "window": {
+                                        "type": [
+                                          "object"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "fn"
+                                    ],
+                                    "type": [
+                                      "object"
+                                    ]
+                                  },
+                                  "decimals": {
+                                    "description": "0-3 digits after the point; omitted lets the client choose",
+                                    "type": [
+                                      "null",
+                                      "integer"
+                                    ]
+                                  },
+                                  "format": {
+                                    "description": "number, money, percent, date or days",
+                                    "type": "string"
+                                  },
+                                  "unit": {
+                                    "description": "a unit to print after a number (kg, km), or the currency for money (USD); at most 24 characters",
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "calc",
+                                  "format"
+                                ],
+                                "type": "object"
+                              },
+                              "description": "sentence: for each {name}, the calculation that fills it and how to print it",
+                              "type": "object"
+                            },
+                            "style": {
+                              "description": "series: line, bars or dots",
+                              "type": "string"
+                            },
+                            "text": {
+                              "description": "sentence: the words, with {name} where a number goes, up to 160 characters",
+                              "type": "string"
+                            },
+                            "thresholds": {
+                              "description": "steps: 2-8 numbers, smallest first, drawn as a ladder the value climbs",
+                              "items": {
+                                "type": "number"
+                              },
+                              "type": [
+                                "null",
+                                "array"
+                              ]
+                            },
+                            "title": {
+                              "description": "optional short heading, up to 80 characters",
+                              "type": "string"
+                            },
+                            "trend_to": {
+                              "description": "series: draw the current rate as a dashed line until it reaches this value",
+                              "properties": {
+                                "args": {
+                                  "items": {
+                                    "type": [
+                                      "object"
+                                    ]
+                                  },
+                                  "type": [
+                                    "array"
+                                  ]
+                                },
+                                "date": {
+                                  "type": [
+                                    "string"
+                                  ]
+                                },
+                                "fn": {
+                                  "type": [
+                                    "string"
+                                  ]
+                                },
+                                "metric": {
+                                  "type": [
+                                    "string"
+                                  ]
+                                },
+                                "per": {
+                                  "type": [
+                                    "string"
+                                  ]
+                                },
+                                "period": {
+                                  "type": [
+                                    "string"
+                                  ]
+                                },
+                                "value": {
+                                  "type": [
+                                    "number"
+                                  ]
+                                },
+                                "window": {
+                                  "type": [
+                                    "object"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "fn"
+                              ],
+                              "type": [
+                                "null",
+                                "object"
+                              ]
+                            },
+                            "unit": {
+                              "description": "a unit or currency to print, up to 24 characters",
+                              "type": "string"
+                            },
+                            "url": {
+                              "description": "link: an http or https address to open",
+                              "type": "string"
+                            },
+                            "value": {
+                              "description": "bar: how far along; steps with thresholds: the number compared with them",
+                              "properties": {
+                                "args": {
+                                  "items": {
+                                    "type": [
+                                      "object"
+                                    ]
+                                  },
+                                  "type": [
+                                    "array"
+                                  ]
+                                },
+                                "date": {
+                                  "type": [
+                                    "string"
+                                  ]
+                                },
+                                "fn": {
+                                  "type": [
+                                    "string"
+                                  ]
+                                },
+                                "metric": {
+                                  "type": [
+                                    "string"
+                                  ]
+                                },
+                                "per": {
+                                  "type": [
+                                    "string"
+                                  ]
+                                },
+                                "period": {
+                                  "type": [
+                                    "string"
+                                  ]
+                                },
+                                "value": {
+                                  "type": [
+                                    "number"
+                                  ]
+                                },
+                                "window": {
+                                  "type": [
+                                    "object"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "fn"
+                              ],
+                              "type": [
+                                "null",
+                                "object"
+                              ]
+                            },
+                            "weeks": {
+                              "description": "grid: how many weeks, 1-12",
+                              "type": "integer"
+                            },
+                            "window": {
+                              "additionalProperties": false,
+                              "description": "series: the part of the data to show",
+                              "properties": {
+                                "days": {
+                                  "description": "the last N days, 1-366",
+                                  "type": "integer"
+                                },
+                                "period": {
+                                  "description": "week or month: the current calendar week or month",
+                                  "type": "string"
+                                }
+                              },
+                              "type": [
+                                "null",
+                                "object"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "kind"
+                          ],
+                          "type": "object"
+                        },
+                        "type": [
+                          "null",
+                          "array"
+                        ]
+                      },
+                      "id": {
+                        "description": "stable lowercase identifier, unique within the view",
+                        "type": "string"
+                      },
+                      "intro": {
+                        "description": "optional one or two plain sentences that say why it matters or how to read it, up to 240 characters; never a figure",
+                        "type": "string"
+                      },
+                      "title": {
+                        "description": "what this part of the intention is about, 1-60 characters",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "title",
+                      "blocks"
+                    ],
+                    "type": "object"
+                  },
+                  "type": [
+                    "null",
+                    "array"
+                  ]
+                },
+                "title": {
+                  "description": "tab name, 1-24 characters; required when the view has more than one page",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "sections"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "subject_id": {
+            "description": "for a view: the subject's UUID",
+            "type": "string"
+          },
+          "subject_kind": {
+            "description": "for a view: intention, task or event",
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "title",
+          "mode",
+          "catalog_id",
+          "version",
+          "tags",
+          "updated_at",
+          "pages"
+        ],
+        "type": "object"
+      },
+      "library_list_input": {
+        "additionalProperties": false,
+        "properties": {
+          "agent_id": {
+            "description": "only items created by this agent ID",
+            "type": "string"
+          },
+          "kind": {
+            "description": "artifact, view, or omitted for both",
+            "type": "string"
+          },
+          "limit": {
+            "description": "1-200, default 50",
+            "type": "integer"
+          },
+          "offset": {
+            "description": "0-1000000, default 0",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "library_list_output": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "agent_id": {
+                  "type": "string"
+                },
+                "catalog_id": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "kind": {
+                  "description": "artifact or view",
+                  "type": "string"
+                },
+                "mode": {
+                  "description": "document, deck or view",
+                  "type": "string"
+                },
+                "subject_id": {
+                  "description": "for a view: the subject's UUID",
+                  "type": "string"
+                },
+                "subject_kind": {
+                  "description": "for a view: intention, task or event",
+                  "type": "string"
+                },
+                "tags": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": [
+                    "null",
+                    "array"
+                  ]
+                },
+                "title": {
+                  "type": "string"
+                },
+                "updated_at": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "kind",
+                "title",
+                "mode",
+                "catalog_id",
+                "version",
+                "tags",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "next_offset": {
+            "description": "offset of the next page, or null at the end",
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "next_offset"
+        ],
+        "type": "object"
+      },
       "links_list_input": {
         "additionalProperties": false,
         "properties": {
@@ -16411,6 +17370,16 @@
           "subject_kind": {
             "description": "what the view is of: intention, task or event",
             "type": "string"
+          },
+          "tags": {
+            "description": "optional topical tags; trimmed, lowercased and deduplicated",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
           }
         },
         "required": [
@@ -16426,6 +17395,10 @@
       "views_create_output": {
         "additionalProperties": false,
         "properties": {
+          "agent_id": {
+            "description": "the agent that created the view, when one did",
+            "type": "string"
+          },
           "catalog_id": {
             "description": "exact versioned catalog id from tracker_catalog_get; names the app and platform that renders it",
             "type": "string"
@@ -17301,6 +18274,16 @@
           "subject_kind": {
             "description": "what the view is of: intention, task or event",
             "type": "string"
+          },
+          "tags": {
+            "description": "optional topical tags; trimmed, lowercased and deduplicated",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
           },
           "updated_at": {
             "type": "string"
@@ -17348,6 +18331,10 @@
       "views_delete_output": {
         "additionalProperties": false,
         "properties": {
+          "agent_id": {
+            "description": "the agent that created the view, when one did",
+            "type": "string"
+          },
           "catalog_id": {
             "description": "exact versioned catalog id from tracker_catalog_get; names the app and platform that renders it",
             "type": "string"
@@ -18223,6 +19210,16 @@
           "subject_kind": {
             "description": "what the view is of: intention, task or event",
             "type": "string"
+          },
+          "tags": {
+            "description": "optional topical tags; trimmed, lowercased and deduplicated",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
           },
           "updated_at": {
             "type": "string"
@@ -18260,6 +19257,10 @@
       "views_get_output": {
         "additionalProperties": false,
         "properties": {
+          "agent_id": {
+            "description": "the agent that created the view, when one did",
+            "type": "string"
+          },
           "catalog_id": {
             "description": "exact versioned catalog id from tracker_catalog_get; names the app and platform that renders it",
             "type": "string"
@@ -19135,6 +20136,16 @@
           "subject_kind": {
             "description": "what the view is of: intention, task or event",
             "type": "string"
+          },
+          "tags": {
+            "description": "optional topical tags; trimmed, lowercased and deduplicated",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
           },
           "updated_at": {
             "type": "string"
@@ -19184,6 +20195,10 @@
             "items": {
               "additionalProperties": false,
               "properties": {
+                "agent_id": {
+                  "description": "the agent that created the view, when one did",
+                  "type": "string"
+                },
                 "catalog_id": {
                   "description": "exact versioned catalog id from tracker_catalog_get; names the app and platform that renders it",
                   "type": "string"
@@ -20060,6 +21075,16 @@
                   "description": "what the view is of: intention, task or event",
                   "type": "string"
                 },
+                "tags": {
+                  "description": "optional topical tags; trimmed, lowercased and deduplicated",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": [
+                    "null",
+                    "array"
+                  ]
+                },
                 "updated_at": {
                   "type": "string"
                 },
@@ -20195,6 +21220,10 @@
             "additionalProperties": false,
             "description": "the subject's view for this catalog, or null; never silently use another app's catalog",
             "properties": {
+              "agent_id": {
+                "description": "the agent that created the view, when one did",
+                "type": "string"
+              },
               "catalog_id": {
                 "description": "exact versioned catalog id from tracker_catalog_get; names the app and platform that renders it",
                 "type": "string"
@@ -21070,6 +22099,16 @@
               "subject_kind": {
                 "description": "what the view is of: intention, task or event",
                 "type": "string"
+              },
+              "tags": {
+                "description": "optional topical tags; trimmed, lowercased and deduplicated",
+                "items": {
+                  "type": "string"
+                },
+                "type": [
+                  "null",
+                  "array"
+                ]
               },
               "updated_at": {
                 "type": "string"
@@ -21976,6 +23015,16 @@
               "null",
               "array"
             ]
+          },
+          "tags": {
+            "description": "replace the tags; omit to keep them or send [] to clear them",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
           }
         },
         "required": [
@@ -21990,6 +23039,10 @@
       "views_update_output": {
         "additionalProperties": false,
         "properties": {
+          "agent_id": {
+            "description": "the agent that created the view, when one did",
+            "type": "string"
+          },
           "catalog_id": {
             "description": "exact versioned catalog id from tracker_catalog_get; names the app and platform that renders it",
             "type": "string"
@@ -22865,6 +23918,16 @@
           "subject_kind": {
             "description": "what the view is of: intention, task or event",
             "type": "string"
+          },
+          "tags": {
+            "description": "optional topical tags; trimmed, lowercased and deduplicated",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
           },
           "updated_at": {
             "type": "string"
@@ -29062,6 +30125,216 @@
         ],
         "x-mcp-tool": "intentions_update",
         "x-read-only": false
+      }
+    },
+    "/api/v1/operations/library_get": {
+      "post": {
+        "description": "Open one Library item by id, whether it is a standalone artifact or a subject-linked view; the answer carries its pages either way.",
+        "operationId": "library_get",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/library_get_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/library_get_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "library_get",
+        "x-read-only": true
+      }
+    },
+    "/api/v1/operations/library_list": {
+      "post": {
+        "description": "List everything in the Library, newest update first: standalone artifacts and views attached to intentions, tasks or events, with creator, tags and subject. Optionally filter by creator agent ID or kind.",
+        "operationId": "library_list",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/library_list_input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/library_list_output"
+                }
+              }
+            },
+            "description": "Operation result"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid input"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required by router"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Record not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Stale version, conflicting identity, or record in use"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Request body exceeds 1 MiB"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Temporarily unavailable; retry with the same request key"
+          }
+        },
+        "security": [
+          {
+            "routerBearer": []
+          }
+        ],
+        "x-mcp-tool": "library_list",
+        "x-read-only": true
       }
     },
     "/api/v1/operations/links_list": {
