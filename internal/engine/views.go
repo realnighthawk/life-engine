@@ -26,7 +26,7 @@ type ViewMetric struct {
 // is refused. The fields are flat so the schema stays one shape, not a list of goal kinds.
 type ViewBlock struct {
 	ID       string `json:"id" jsonschema:"stable lowercase identifier, unique within the view"`
-	Kind     string `json:"kind" jsonschema:"sentence, bar, series, grid, steps, timeline, tasks, events, log, text or link"`
+	Kind     string `json:"kind" jsonschema:"sentence, bar, series, grid, steps, timeline, tasks, events, log, text, markdown or link"`
 	Title    string `json:"title,omitempty" jsonschema:"optional short heading, up to 80 characters"`
 	Emphasis string `json:"emphasis,omitempty" jsonschema:"hero, normal or compact: how much room the client gives it"`
 	// sentence
@@ -54,10 +54,11 @@ type ViewBlock struct {
 	Format   string `json:"format,omitempty" jsonschema:"number, money, percent, date or days"`
 	Unit     string `json:"unit,omitempty" jsonschema:"a unit or currency to print, up to 24 characters"`
 	Decimals *int   `json:"decimals,omitempty" jsonschema:"0-3"`
-	// text, link
-	Body   string   `json:"body,omitempty" jsonschema:"text: plain words, up to 280 characters"`
-	Points []string `json:"points,omitempty" jsonschema:"text: up to five short points, each up to 120 characters"`
-	URL    string   `json:"url,omitempty" jsonschema:"link: an http or https address to open"`
+	// text, markdown, link
+	Body     string   `json:"body,omitempty" jsonschema:"text: plain words, up to 280 characters"`
+	Points   []string `json:"points,omitempty" jsonschema:"text: up to five short points, each up to 120 characters"`
+	Markdown string   `json:"markdown,omitempty" jsonschema:"markdown: authored Markdown, 1-16384 bytes; render without raw HTML"`
+	URL      string   `json:"url,omitempty" jsonschema:"link: an http or https address to open"`
 }
 
 // A view is organised as pages of sections of blocks. The structure is mandatory; what goes in it is the composer's call.

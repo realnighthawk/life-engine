@@ -77,6 +77,7 @@ var (
 		"events":   {},
 		"log":      {"metric"},
 		"text":     {"body", "points"},
+		"markdown": {"markdown"},
 		"link":     {"url"},
 	}
 )
@@ -367,6 +368,10 @@ func validateBlock(b ViewBlock, metrics map[string]ViewMetric, nodes *int) error
 		}
 	case "tasks", "events":
 		// The subject's own tasks or events: nothing to configure, so nothing to validate.
+	case "markdown":
+		if strings.TrimSpace(b.Markdown) == "" || len(b.Markdown) > 16<<10 {
+			return invalid("Markdown must contain text and be at most 16384 bytes")
+		}
 	case "text":
 		if strings.TrimSpace(b.Body) == "" || len(b.Body) > 280 {
 			return invalid("Text is 1-280 characters")

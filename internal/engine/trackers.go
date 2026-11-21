@@ -77,6 +77,7 @@ var kitBlocks = []KitBlock{
 	{"log", "A quick way for the person to record one number for a metric they log by hand.", []string{"metric"},
 		`{"id":"log","kind":"log","metric":"weight"}`},
 	{"text", "A few plain words that no data can supply, with up to five short points. Words only, never a figure: numbers belong in a sentence block.", []string{"body", "points"}, `{"id":"why","kind":"text","body":"Ten minutes before coffee.","points":["Same time every day","Stop at the timer"]}`},
+	{"markdown", "Authored prose, lists, tables and code. Render Markdown without raw HTML; use other blocks for live data and actions.", []string{"markdown"}, `{"id":"draft","kind":"markdown","markdown":"## Tradeoffs\n\n- Keep the current design.\n- Compare alternatives before replacing it."}`},
 	{"link", "A web page the person can open, for data the engine cannot chart.", []string{"url"}, `{"id":"src","kind":"link","url":"https://example.com"}`},
 }
 
