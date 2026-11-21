@@ -57,6 +57,7 @@ func (s *Service) registerOperations() {
 	register(s, "measurements_delete", "Remove an erroneous observation; its audit history remains.", true, deleteMeasurement)
 
 	register(s, "day_get", "A day's tasks and events, one entry per occurrence, earliest first, followed by the open tasks from earlier days that are still waiting (when the day is today). This is the person's Today screen; there is no stored plan. Defaults to today in the person's time zone.", false, dayView)
+	register(s, "days_get", "The same read as day_get over a date range, oldest first, for a week or month view. At most 42 days.", false, daysView)
 
 	register(s, "batch_apply", "Create a plan's records together, all or nothing: intentions, commitments, states, activities, links, tasks, events and views. Operations run in order, and each new record carries an id you chose so a later operation can refer to it (a link names an intention by that id). Use it for a composed use case such as a trip: the intention, then the tasks, events and links that serve it. Pass an idempotency_key; retrying with it is safe.", true, s.batchApply)
 	register(s, "batch_undo", "Undo a batch_apply plan as a whole: archives intentions and deletes the other records it created, newest first, in one transaction. Pass the idempotency_key the batch_apply used. Records already removed are skipped.", true, s.batchUndo)

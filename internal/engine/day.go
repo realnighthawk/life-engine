@@ -151,3 +151,41 @@ func dayView(ctx context.Context, u *unit, in DayInput) (Day, error) {
 	})
 	return out, nil
 }
+
+type DaysInput struct {
+	From    string `json:"from" jsonschema:"first local date YYYY-MM-DD"`
+	To      string `json:"to" jsonschema:"last local date YYYY-MM-DD; at most 42 days after from"`
+	Subject string `json:"subject,omitempty" jsonschema:"person (default) or agent"`
+}
+type Days struct {
+	Days []Day `json:"days" jsonschema:"oldest first"`
+}
+
+// daysView is the same read as day_get over a range, so a week or month costs one call instead of one per day.
+func daysView(ctx context.Context, u *unit, in DaysInput) (Days, error) {
+	out := Days{Days: []Day{}}
+	from, e := day("from", in.From)
+	if e != nil {
+		return out, e
+	}
+	to, e := day("to", in.To)
+	if e != nil {
+		return out, e
+	}
+	start, _ := time.Parse("2006-01-02", from)
+	end, _ := time.Parse("2006-01-02", to)
+	if end.Before(start) {
+		return out, invalid("to must be on or after from")
+	}
+	if end.Sub(start) > 42*24*time.Hour {
+		return out, invalid("A range is at most 42 days")
+	}
+	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
+		view, e := dayView(ctx, u, DayInput{Day: d.Format("2006-01-02"), Subject: in.Subject})
+		if e != nil {
+			return out, e
+		}
+		out.Days = append(out.Days, view)
+	}
+	return out, nil
+}
