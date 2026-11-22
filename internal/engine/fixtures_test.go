@@ -69,6 +69,7 @@ func TestWriteClientFixtures(t *testing.T) {
 		"sources": []map[string]any{{"id": "packing", "url": "life-app://packing/list"}},
 		"params": map[string]any{"pages": []map[string]any{{"id": "main", "sections": []map[string]any{{"id": "plan", "title": "Plan", "blocks": []map[string]any{
 			{"id": "notes", "kind": "markdown", "markdown": "## Before we go\n- Book flights"}}}}}}}})
+	call("artifacts_page", "artifacts_list", map[string]any{})
 	call("task_history", "tasks_history", map[string]any{"id": repeating["id"], "days": 14})
 	call("events_pending", "events_pending", map[string]any{})
 	call("history", "history_list", map[string]any{"entity_type": "task", "id": task["id"]})
