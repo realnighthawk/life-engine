@@ -2,7 +2,9 @@ package engine
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -36,7 +38,7 @@ type ListLibraryInput struct {
 
 const libraryItems = `
 WITH items AS (
-  SELECT id::text AS id, 'artifact'::text AS kind, title, mode, catalog_id, version,
+  SELECT id::text AS id, 'artifact'::text AS kind, title, split_part(template, '.', 1) AS mode, ''::text AS catalog_id, version,
          COALESCE(agent_id, '') AS agent_id, tags, ''::text AS subject_kind, ''::text AS subject_id, updated_at
   FROM life.artifacts
   WHERE deleted_at IS NULL
@@ -88,10 +90,18 @@ func listLibrary(ctx context.Context, u *unit, in ListLibraryInput) (Page[Librar
 
 func getLibrary(ctx context.Context, u *unit, in GetInput) (LibraryDetail, error) {
 	if a, err := getArtifact(ctx, u, in); err == nil {
+		var doc DocParams // a template without pages shows none until the Library goes (ADR 0011)
+		_ = json.Unmarshal(a.Params, &doc)
+		pages, err := json.Marshal(doc.Pages)
+		if err != nil {
+			return LibraryDetail{}, err
+		}
+		var shown []ViewPage
+		_ = json.Unmarshal(pages, &shown)
 		return LibraryDetail{LibraryItem: LibraryItem{
-			ID: a.ID, Kind: "artifact", Title: a.Title, Mode: a.Mode, CatalogID: a.CatalogID, Version: a.Version,
+			ID: a.ID, Kind: "artifact", Title: a.Title, Mode: strings.SplitN(a.Template, ".", 2)[0], Version: a.Version,
 			AgentID: a.AgentID, Tags: a.Tags, UpdatedAt: a.UpdatedAt,
-		}, Pages: a.Pages}, nil
+		}, Pages: shown}, nil
 	} else if !errors.Is(err, pgx.ErrNoRows) {
 		return LibraryDetail{}, err
 	}

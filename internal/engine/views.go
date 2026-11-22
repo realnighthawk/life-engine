@@ -3,7 +3,6 @@ package engine
 import (
 	"context"
 	"encoding/json"
-	"net/url"
 	"strings"
 	"time"
 )
@@ -107,13 +106,6 @@ type ViewsListInput struct {
 }
 type ViewList struct {
 	Items []View `json:"items"`
-}
-
-func validateLink(raw string) error {
-	if u, e := url.Parse(raw); e != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" || len(raw) > 2048 {
-		return invalid("A link block needs an http or https url")
-	}
-	return nil
 }
 
 func validateView(d ViewData) error {

@@ -13,9 +13,9 @@ func TestTheLibraryListsArtifactsAndSubjectViews(t *testing.T) {
 	viewInput["tags"] = []string{" Training ", "training"}
 	view := execute[engine.View](t, s, "views_create", viewInput)
 	artifact := execute[engine.Artifact](t, s, "artifacts_create", map[string]any{
-		"idempotency_key": key(), "title": "Race plan", "mode": "document", "catalog_id": engine.TrackerCatalogKit,
-		"tags":  []string{"plan"},
-		"pages": []map[string]any{{"id": "main", "sections": []map[string]any{{"id": "s", "title": "Plan", "blocks": []map[string]any{{"id": "t", "kind": "text", "body": "Easy week."}}}}}},
+		"idempotency_key": key(), "title": "Race plan", "template": "document.v1",
+		"tags":   []string{"plan"},
+		"params": map[string]any{"pages": []map[string]any{{"id": "main", "sections": []map[string]any{{"id": "s", "title": "Plan", "blocks": []map[string]any{{"id": "t", "kind": "text", "body": "Easy week."}}}}}}},
 	})
 
 	all := execute[engine.Page[engine.LibraryItem]](t, s, "library_list", map[string]any{})

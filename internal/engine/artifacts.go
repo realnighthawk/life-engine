@@ -8,17 +8,16 @@ import (
 )
 
 type ArtifactData struct {
-	Title     string     `json:"title"`
-	Mode      string     `json:"mode" jsonschema:"document or deck; each page of a deck is a slide"`
-	CatalogID string     `json:"catalog_id"`
-	Pages     []ViewPage `json:"pages"`
+	Title    string           `json:"title"`
+	Template string           `json:"template" jsonschema:"a template id from templates_get, such as document.v1"`
+	Params   json.RawMessage  `json:"params" jsonschema:"the template's params object; its shape is params_schema in templates_get"`
+	Sources  []ArtifactSource `json:"sources,omitempty" jsonschema:"where the template's data comes from; omit for a document that needs none"`
 }
 
 type ArtifactSummary struct {
 	ID        string    `json:"id"`
 	Title     string    `json:"title"`
-	Mode      string    `json:"mode"`
-	CatalogID string    `json:"catalog_id"`
+	Template  string    `json:"template"`
 	Version   int64     `json:"version"`
 	AgentID   string    `json:"agent_id,omitempty"`
 	Tags      []string  `json:"tags"`
@@ -27,7 +26,8 @@ type ArtifactSummary struct {
 
 type Artifact struct {
 	ArtifactSummary
-	Pages []ViewPage `json:"pages"`
+	Params  json.RawMessage  `json:"params"`
+	Sources []ArtifactSource `json:"sources"`
 }
 
 type CreateArtifactInput struct {
@@ -62,32 +62,7 @@ func normalizeArtifactTags(tags []string) []string {
 	return normalized
 }
 
-func (d ArtifactData) validate() error {
-	if strings.TrimSpace(d.Title) == "" || len(d.Title) > 200 {
-		return invalid("Artifact title must be 1-200 bytes")
-	}
-	if !oneOf(d.Mode, "document", "deck") {
-		return invalid("Artifact mode must be document or deck")
-	}
-	if _, err := trackerCatalog(d.CatalogID); err != nil {
-		return err
-	}
-	if err := validatePages(d.Pages, nil); err != nil {
-		return err
-	}
-	for _, page := range d.Pages {
-		for _, section := range page.Sections {
-			for _, block := range section.Blocks {
-				if block.Kind == "tasks" || block.Kind == "events" {
-					return invalid("Tasks and events blocks require a subject-linked view")
-				}
-			}
-		}
-	}
-	return nil
-}
-
-const artifactColumns = `id::text,title,mode,catalog_id,version,COALESCE(agent_id,''),tags,updated_at`
+const summaryColumns = `id::text,title,template,version,COALESCE(agent_id,''),tags,updated_at`
 
 func listArtifacts(ctx context.Context, u *unit, in ListArtifactsInput) (Page[ArtifactSummary], error) {
 	result := Page[ArtifactSummary]{Items: []ArtifactSummary{}}
@@ -111,14 +86,14 @@ func listArtifacts(ctx context.Context, u *unit, in ListArtifactsInput) (Page[Ar
 		where += " AND agent_id=$3"
 		args = append(args, in.AgentID)
 	}
-	rows, err := u.tx.Query(ctx, `SELECT `+artifactColumns+` FROM life.artifacts`+where+` ORDER BY updated_at DESC,id DESC LIMIT $1 OFFSET $2`, args...)
+	rows, err := u.tx.Query(ctx, `SELECT `+summaryColumns+` FROM life.artifacts`+where+` ORDER BY updated_at DESC,id DESC LIMIT $1 OFFSET $2`, args...)
 	if err != nil {
 		return result, err
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var a ArtifactSummary
-		if err = rows.Scan(&a.ID, &a.Title, &a.Mode, &a.CatalogID, &a.Version, &a.AgentID, &a.Tags, &a.UpdatedAt); err != nil {
+		if err = rows.Scan(&a.ID, &a.Title, &a.Template, &a.Version, &a.AgentID, &a.Tags, &a.UpdatedAt); err != nil {
 			return result, err
 		}
 		a.UpdatedAt = a.UpdatedAt.UTC()
@@ -129,44 +104,54 @@ func listArtifacts(ctx context.Context, u *unit, in ListArtifactsInput) (Page[Ar
 }
 
 func getArtifact(ctx context.Context, u *unit, in GetInput) (Artifact, error) {
-	var a Artifact
 	key, err := id(in.ID)
 	if err != nil {
-		return a, err
+		return Artifact{}, err
 	}
-	var pages []byte
-	err = u.tx.QueryRow(ctx, `SELECT `+artifactColumns+`,pages FROM life.artifacts WHERE id=$1 AND deleted_at IS NULL`, key).
-		Scan(&a.ID, &a.Title, &a.Mode, &a.CatalogID, &a.Version, &a.AgentID, &a.Tags, &a.UpdatedAt, &pages)
-	if err != nil {
+	return readArtifact(ctx, u, key, false)
+}
+
+// readArtifact reads one artifact; the audit trail of a removed one needs includeDeleted.
+func readArtifact(ctx context.Context, u *unit, key string, includeDeleted bool) (Artifact, error) {
+	var a Artifact
+	var params, sources []byte
+	q := `SELECT ` + summaryColumns + `,params,sources FROM life.artifacts WHERE id=$1`
+	if !includeDeleted {
+		q += ` AND deleted_at IS NULL`
+	}
+	if err := u.tx.QueryRow(ctx, q, key).Scan(&a.ID, &a.Title, &a.Template, &a.Version, &a.AgentID, &a.Tags, &a.UpdatedAt, &params, &sources); err != nil {
 		return a, err
 	}
 	a.UpdatedAt = a.UpdatedAt.UTC()
-	err = json.Unmarshal(pages, &a.Pages)
-	return a, err
+	a.Params = params
+	return a, json.Unmarshal(sources, &a.Sources)
 }
 
 func createArtifact(ctx context.Context, u *unit, in CreateArtifactInput) (Artifact, error) {
-	if err := in.ArtifactData.validate(); err != nil {
+	if err := validateArtifact(in.ArtifactData); err != nil {
 		return Artifact{}, err
 	}
 	key, err := createID("")
 	if err != nil {
 		return Artifact{}, err
 	}
-	pages, err := json.Marshal(in.Pages)
+	if in.Sources == nil {
+		in.Sources = []ArtifactSource{}
+	}
+	sources, err := json.Marshal(in.Sources)
 	if err != nil {
 		return Artifact{}, err
 	}
 	a := Artifact{
 		ArtifactSummary: ArtifactSummary{
-			ID: key, Title: in.Title, Mode: in.Mode, CatalogID: in.CatalogID,
+			ID: key, Title: in.Title, Template: in.Template,
 			AgentID: artifactCreator(ctx), Tags: normalizeArtifactTags(in.Tags),
 		},
-		Pages: in.Pages,
+		Params: in.Params, Sources: in.Sources,
 	}
-	err = u.tx.QueryRow(ctx, `INSERT INTO life.artifacts(id,title,mode,catalog_id,pages,agent_id,tags)
+	err = u.tx.QueryRow(ctx, `INSERT INTO life.artifacts(id,title,template,params,sources,agent_id,tags)
 		VALUES($1,$2,$3,$4,$5,NULLIF($6,''),$7) RETURNING version,updated_at`,
-		key, a.Title, a.Mode, a.CatalogID, pages, a.AgentID, a.Tags).Scan(&a.Version, &a.UpdatedAt)
+		key, a.Title, a.Template, []byte(a.Params), sources, a.AgentID, a.Tags).Scan(&a.Version, &a.UpdatedAt)
 	if err != nil {
 		return Artifact{}, err
 	}
@@ -175,7 +160,7 @@ func createArtifact(ctx context.Context, u *unit, in CreateArtifactInput) (Artif
 }
 
 func updateArtifact(ctx context.Context, u *unit, in UpdateArtifactInput) (Artifact, error) {
-	if err := in.ArtifactData.validate(); err != nil {
+	if err := validateArtifact(in.ArtifactData); err != nil {
 		return Artifact{}, err
 	}
 	old, err := getArtifact(ctx, u, GetInput{ID: in.ID})
@@ -185,19 +170,22 @@ func updateArtifact(ctx context.Context, u *unit, in UpdateArtifactInput) (Artif
 	if err = version(in.ExpectedVersion, old.Version); err != nil {
 		return Artifact{}, err
 	}
-	pages, err := json.Marshal(in.Pages)
+	if in.Sources == nil {
+		in.Sources = []ArtifactSource{}
+	}
+	sources, err := json.Marshal(in.Sources)
 	if err != nil {
 		return Artifact{}, err
 	}
 	a := old
-	a.Title, a.Mode, a.CatalogID, a.Pages = in.Title, in.Mode, in.CatalogID, in.Pages
+	a.Title, a.Template, a.Params, a.Sources = in.Title, in.Template, in.Params, in.Sources
 	if in.Tags != nil {
 		a.Tags = normalizeArtifactTags(*in.Tags)
 	}
 	err = u.tx.QueryRow(ctx, `UPDATE life.artifacts
-		SET title=$2,mode=$3,catalog_id=$4,pages=$5,tags=$6,version=version+1,updated_at=now()
+		SET title=$2,template=$3,params=$4,sources=$5,tags=$6,version=version+1,updated_at=now()
 		WHERE id=$1 RETURNING version,updated_at`,
-		a.ID, a.Title, a.Mode, a.CatalogID, pages, a.Tags).Scan(&a.Version, &a.UpdatedAt)
+		a.ID, a.Title, a.Template, []byte(a.Params), sources, a.Tags).Scan(&a.Version, &a.UpdatedAt)
 	if err != nil {
 		return Artifact{}, err
 	}
@@ -228,15 +216,9 @@ func deleteArtifact(ctx context.Context, u *unit, in EditInput) (Artifact, error
 		return old, e
 	}
 	// The live read hides it now; read the row directly for the audit trail.
-	var pages []byte
-	after := old
-	if e = u.tx.QueryRow(ctx, `SELECT `+artifactColumns+`,pages FROM life.artifacts WHERE id=$1`, old.ID).
-		Scan(&after.ID, &after.Title, &after.Mode, &after.CatalogID, &after.Version, &after.AgentID, &after.Tags, &after.UpdatedAt, &pages); e != nil {
+	after, e := readArtifact(ctx, u, old.ID, true)
+	if e != nil {
 		return after, e
 	}
-	if e = json.Unmarshal(pages, &after.Pages); e != nil {
-		return after, e
-	}
-	after.UpdatedAt = after.UpdatedAt.UTC()
 	return after, u.audit(ctx, "artifact", after.ID, old, after)
 }

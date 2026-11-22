@@ -1,6 +1,7 @@
 package engine_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -31,12 +32,15 @@ func TestStandaloneArtifactReplayAndRevision(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer session.Close()
-	data := engine.ArtifactData{
-		Title: "Design review", Mode: "deck", CatalogID: engine.TrackerCatalogKit,
-		Pages: []engine.ViewPage{{ID: "main", Sections: []engine.ViewSection{{ID: "review", Title: "Tradeoffs",
-			Blocks: []engine.ViewBlock{{ID: "draft", Kind: "markdown", Markdown: "## Original"}},
-		}}}},
+	deck := func(markdown string) json.RawMessage {
+		raw, err := json.Marshal(map[string]any{"pages": []map[string]any{{"id": "main", "sections": []map[string]any{{"id": "review", "title": "Tradeoffs",
+			"blocks": []map[string]any{{"id": "draft", "kind": "markdown", "markdown": markdown}}}}}}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return raw
 	}
+	data := engine.ArtifactData{Title: "Design review", Template: "deck.v1", Params: deck("## Original")}
 	const reviewer = "agent:reviewer:discord:channel:c1"
 	call := func(sessionKey, operation string, input any) engine.Artifact {
 		t.Helper()
@@ -87,11 +91,11 @@ func TestStandaloneArtifactReplayAndRevision(t *testing.T) {
 		t.Fatalf("direct MCP attribution: %+v", direct)
 	}
 	forged := map[string]any{
-		"idempotency_key": key(), "title": data.Title, "mode": data.Mode,
-		"catalog_id": data.CatalogID, "pages": data.Pages, "agent_id": "main",
+		"idempotency_key": key(), "title": data.Title, "template": data.Template,
+		"params": data.Params, "agent_id": "main",
 	}
 	errorCode(t, s, "artifacts_create", forged, "invalid_input")
-	data.Pages[0].Sections[0].Blocks[0].Markdown = "## Revised"
+	data.Params = deck("## Revised")
 	edit := engine.UpdateArtifactInput{EditInput: engine.EditInput{ID: a.ID, ExpectedVersion: a.Version, Meta: engine.Meta{IdempotencyKey: key()}}, ArtifactData: data}
 	updated := call(reviewer, "artifacts_update", edit)
 	if updated.AgentID != a.AgentID || updated.Version != 2 || updated.UpdatedAt.Before(a.UpdatedAt) || !slices.Equal(updated.Tags, a.Tags) {
@@ -104,8 +108,8 @@ func TestStandaloneArtifactReplayAndRevision(t *testing.T) {
 	edit.IdempotencyKey = key()
 	errorCode(t, s, "artifacts_update", edit, "conflict")
 	got := execute[engine.Artifact](t, s, "artifacts_get", engine.GetInput{ID: a.ID})
-	if got.Version != 2 || got.Mode != "deck" || got.AgentID != a.AgentID || !got.UpdatedAt.Equal(updated.UpdatedAt) ||
-		!slices.Equal(got.Tags, a.Tags) || got.Pages[0].Sections[0].Blocks[0].Markdown != "## Revised" {
+	if got.Version != 2 || got.Template != "deck.v1" || got.AgentID != a.AgentID || !got.UpdatedAt.Equal(updated.UpdatedAt) ||
+		!slices.Equal(got.Tags, a.Tags) || !bytes.Contains(got.Params, []byte("## Revised")) {
 		t.Fatalf("stored artifact: %+v", got)
 	}
 
@@ -121,7 +125,7 @@ func TestStandaloneArtifactReplayAndRevision(t *testing.T) {
 	for _, want := range []engine.Artifact{got, other, direct} {
 		page := execute[engine.Page[engine.ArtifactSummary]](t, s, "artifacts_list", engine.ListArtifactsInput{AgentID: want.AgentID})
 		if page.Total != 1 || len(page.Items) != 1 || page.Items[0].ID != want.ID || page.Items[0].Title != want.Title ||
-			page.Items[0].Mode != want.Mode || page.Items[0].CatalogID != want.CatalogID ||
+			page.Items[0].Template != want.Template ||
 			page.Items[0].AgentID != want.AgentID || page.Items[0].Version != want.Version ||
 			!page.Items[0].UpdatedAt.Equal(want.UpdatedAt) || !slices.Equal(page.Items[0].Tags, want.Tags) {
 			t.Fatalf("creator page for %s: %+v", want.AgentID, page)
