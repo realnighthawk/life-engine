@@ -152,3 +152,26 @@ func TestStandaloneArtifactReplayAndRevision(t *testing.T) {
 	edit.Tags = nil
 	errorCode(t, s, "artifacts_update", edit, "conflict")
 }
+
+func TestDataTemplatesRoundTripThroughTheEngine(t *testing.T) {
+	s := integrationService(t)
+	tpls := execute[engine.TemplateList](t, s, "templates_get", map[string]any{})
+	if len(tpls.Items) != 4 {
+		t.Fatalf("templates: %+v", tpls.Items)
+	}
+	for _, tpl := range tpls.Items {
+		created := execute[engine.Artifact](t, s, "artifacts_create", engine.CreateArtifactInput{
+			Meta:         engine.Meta{IdempotencyKey: key()},
+			ArtifactData: engine.ArtifactData{Title: "Example " + tpl.ID, Template: tpl.ID, Params: tpl.Example, Sources: tpl.ExampleSources},
+		})
+		got := execute[engine.Artifact](t, s, "artifacts_get", engine.GetInput{ID: created.ID})
+		if got.Template != tpl.ID || len(got.Sources) != len(tpl.ExampleSources) || !bytes.Contains(got.Params, []byte(`"`)) {
+			t.Fatalf("%s did not round-trip: %+v", tpl.ID, got)
+		}
+	}
+	one := execute[engine.TemplateList](t, s, "templates_get", map[string]any{"id": "tracker.v1"})
+	if len(one.Items) != 1 || one.Items[0].DataContract == nil || one.Items[0].DataExample == nil {
+		t.Fatalf("tracker template: %+v", one.Items)
+	}
+	errorCode(t, s, "templates_get", map[string]any{"id": "nope.v9"}, "invalid_input")
+}

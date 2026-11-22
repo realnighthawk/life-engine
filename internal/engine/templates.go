@@ -16,16 +16,19 @@ import (
 // must return. templates_get serves it to the agent; the engine validates every write against it.
 
 type Template struct {
-	ID           string          `json:"id" jsonschema:"versioned template id to put in an artifact's template field, such as document.v1"`
-	Title        string          `json:"title"`
-	Description  string          `json:"description" jsonschema:"what the template is for and when to choose it"`
-	ParamsSchema json.RawMessage `json:"params_schema" jsonschema:"JSON Schema of the artifact's params for this template"`
-	DataContract json.RawMessage `json:"data_contract,omitempty" jsonschema:"JSON Schema of what each source must return; absent when the template reads no sources"`
-	Example      json.RawMessage `json:"example" jsonschema:"a valid params object to copy the shape from"`
-	Clients      []string        `json:"clients" jsonschema:"the apps that draw this template; a client that does not draw it shows the title only"`
+	ID             string           `json:"id" jsonschema:"versioned template id to put in an artifact's template field, such as document.v1"`
+	Title          string           `json:"title"`
+	Description    string           `json:"description" jsonschema:"what the template is for and when to choose it"`
+	ParamsSchema   json.RawMessage  `json:"params_schema" jsonschema:"JSON Schema of the artifact's params for this template"`
+	DataContract   json.RawMessage  `json:"data_contract,omitempty" jsonschema:"JSON Schema of what each source must return; absent when the template reads no sources"`
+	Example        json.RawMessage  `json:"example" jsonschema:"a valid params object to copy the shape from"`
+	ExampleSources []ArtifactSource `json:"example_sources,omitempty" jsonschema:"the sources the example's params refer to"`
+	DataExample    json.RawMessage  `json:"data_example,omitempty" jsonschema:"a valid answer from a source: build the app to return this shape"`
+	Clients        []string         `json:"clients" jsonschema:"the apps that draw this template; a client that does not draw it shows the title only"`
 
-	schema *jsonschema.Resolved
-	check  func(params json.RawMessage) error
+	schema   *jsonschema.Resolved
+	contract *jsonschema.Resolved
+	check    func(params json.RawMessage, sources []ArtifactSource) error
 }
 
 type TemplatesGetInput struct {
@@ -62,7 +65,7 @@ type DocParams struct {
 
 var artifactIdentifier = regexp.MustCompile(`^[a-z][a-z0-9_]{0,63}$`)
 
-func checkDocument(raw json.RawMessage) error {
+func checkDocument(raw json.RawMessage, _ []ArtifactSource) error {
 	var p DocParams
 	if err := json.Unmarshal(raw, &p); err != nil {
 		return invalid("params: " + err.Error())
@@ -195,6 +198,7 @@ func buildTemplates() ([]*Template, map[string]*Template) {
 			ParamsSchema: raw, Example: docExample(true), Clients: clients, schema: resolved, check: checkDocument,
 		},
 	}
+	list = append(list, dataTemplates()...)
 	index := make(map[string]*Template, len(list))
 	for _, t := range list {
 		index[t.ID] = t
@@ -268,7 +272,7 @@ func validateArtifact(d ArtifactData) error {
 	if err := t.schema.Validate(instance); err != nil {
 		return invalid("params do not match " + t.ID + ": " + err.Error())
 	}
-	if err := t.check(d.Params); err != nil {
+	if err := t.check(d.Params, d.Sources); err != nil {
 		return err
 	}
 	return validateSources(d.Sources)

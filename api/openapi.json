@@ -11485,6 +11485,13 @@
                     "null"
                   ]
                 },
+                "data_example": {
+                  "description": "a valid answer from a source: build the app to return this shape",
+                  "type": [
+                    "object",
+                    "null"
+                  ]
+                },
                 "description": {
                   "description": "what the template is for and when to choose it",
                   "type": "string"
@@ -11494,6 +11501,31 @@
                   "type": [
                     "object",
                     "null"
+                  ]
+                },
+                "example_sources": {
+                  "description": "the sources the example's params refer to",
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "description": "lowercase identifier the template's params use to refer to this source",
+                        "type": "string"
+                      },
+                      "url": {
+                        "description": "life-app://\u003capp\u003e/\u003cpath\u003e: an app of this person, reached through the router at /apps/\u003capp\u003e/\u003cpath\u003e",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "url"
+                    ],
+                    "type": "object"
+                  },
+                  "type": [
+                    "null",
+                    "array"
                   ]
                 },
                 "id": {

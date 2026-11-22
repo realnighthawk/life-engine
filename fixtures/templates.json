@@ -301,6 +301,359 @@
         "web",
         "ios"
       ]
+    },
+    {
+      "id": "collection.v1",
+      "title": "Collection",
+      "description": "A list or table of records the person can act on: chores, a shopping list, bookings, open items. The source returns the records; each action calls the same app (for example marking one done).",
+      "params_schema": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "description": "the id of one of the artifact's sources; it returns the items"
+          },
+          "layout": {
+            "type": "string",
+            "description": "list shows the first column as the title, the second as the subtitle and the rest beside it; table shows every column"
+          },
+          "columns": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "description": "the field of each item this column shows; lowercase identifier"
+                },
+                "label": {
+                  "type": "string",
+                  "description": "column heading, up to 24 characters"
+                },
+                "format": {
+                  "type": "string",
+                  "description": "text (default), number, money, percent, date or status"
+                }
+              },
+              "required": [
+                "key",
+                "label"
+              ],
+              "additionalProperties": false
+            },
+            "description": "1-8 columns, in order"
+          },
+          "empty": {
+            "type": "string",
+            "description": "what to say when there are no items, up to 120 characters"
+          },
+          "actions": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "lowercase identifier, unique among the actions"
+                },
+                "label": {
+                  "type": "string",
+                  "description": "button text, up to 24 characters"
+                },
+                "method": {
+                  "type": "string",
+                  "description": "POST or DELETE"
+                },
+                "path": {
+                  "type": "string",
+                  "description": "a path on the source's app with {id} replaced by the row's id, such as /items/{id}/done"
+                },
+                "confirm": {
+                  "type": "boolean",
+                  "description": "ask the person before sending"
+                },
+                "destructive": {
+                  "type": "boolean",
+                  "description": "draw it as a destructive action"
+                }
+              },
+              "required": [
+                "id",
+                "label",
+                "method",
+                "path"
+              ],
+              "additionalProperties": false
+            },
+            "description": "up to 4 actions offered on every row"
+          }
+        },
+        "required": [
+          "source",
+          "layout",
+          "columns"
+        ],
+        "additionalProperties": false
+      },
+      "data_contract": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "id"
+              ],
+              "additionalProperties": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean",
+                  "null"
+                ]
+              }
+            },
+            "maxItems": 500
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "example": {
+        "source": "chores",
+        "layout": "list",
+        "columns": [
+          {
+            "key": "title",
+            "label": "Chore"
+          },
+          {
+            "key": "due",
+            "label": "Due",
+            "format": "date"
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "format": "status"
+          }
+        ],
+        "empty": "Nothing to do.",
+        "actions": [
+          {
+            "id": "done",
+            "label": "Done",
+            "method": "POST",
+            "path": "/chores/{id}/done"
+          }
+        ]
+      },
+      "example_sources": [
+        {
+          "id": "chores",
+          "url": "life-app://chores/chores"
+        }
+      ],
+      "data_example": {
+        "items": [
+          {
+            "id": "c1",
+            "title": "Water the plants",
+            "due": "2026-11-22",
+            "status": "open"
+          },
+          {
+            "id": "c2",
+            "title": "Take out the bins",
+            "due": "2026-11-23",
+            "status": "open"
+          }
+        ]
+      },
+      "clients": []
+    },
+    {
+      "id": "tracker.v1",
+      "title": "Tracker",
+      "description": "One measurement over time, drawn as a chart with an optional target, plus an optional form that logs a new value: weight, spend, a habit count. The source returns the points; the form posts to the same app.",
+      "params_schema": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "description": "the id of one of the artifact's sources; it returns the series"
+          },
+          "unit": {
+            "type": "string",
+            "description": "what a value is measured in, up to 24 characters"
+          },
+          "target": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "description": "a value to draw a line at"
+          },
+          "direction": {
+            "type": "string",
+            "description": "up or down: which way is better, so progress is drawn correctly"
+          },
+          "days": {
+            "type": "integer",
+            "description": "how many recent days to show, 1-366; default 30"
+          },
+          "log": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "properties": {
+              "label": {
+                "type": "string",
+                "description": "the form's button text, up to 24 characters"
+              },
+              "path": {
+                "type": "string",
+                "description": "a path on the source's app that receives the form as a JSON POST, such as /log"
+              },
+              "fields": {
+                "type": [
+                  "null",
+                  "array"
+                ],
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string",
+                      "description": "the field name sent to the app; lowercase identifier"
+                    },
+                    "label": {
+                      "type": "string",
+                      "description": "up to 24 characters"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "description": "number, text or date"
+                    },
+                    "required": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "label",
+                    "kind"
+                  ],
+                  "additionalProperties": false
+                },
+                "description": "1-4 fields"
+              }
+            },
+            "description": "a form that records a new value; omit for a read-only tracker",
+            "required": [
+              "label",
+              "path",
+              "fields"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "source"
+        ],
+        "additionalProperties": false
+      },
+      "data_contract": {
+        "type": "object",
+        "properties": {
+          "points": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "at": {
+                  "type": "string",
+                  "description": "a date (2026-11-21) or an RFC 3339 time",
+                  "minLength": 8
+                },
+                "value": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "at",
+                "value"
+              ]
+            },
+            "maxItems": 2000
+          }
+        },
+        "required": [
+          "points"
+        ]
+      },
+      "example": {
+        "source": "weight",
+        "unit": "kg",
+        "target": 72,
+        "direction": "down",
+        "days": 30,
+        "log": {
+          "label": "Log weight",
+          "path": "/log",
+          "fields": [
+            {
+              "key": "value",
+              "label": "Weight",
+              "kind": "number",
+              "required": true
+            },
+            {
+              "key": "note",
+              "label": "Note",
+              "kind": "text"
+            }
+          ]
+        }
+      },
+      "example_sources": [
+        {
+          "id": "weight",
+          "url": "life-app://weight/series"
+        }
+      ],
+      "data_example": {
+        "points": [
+          {
+            "at": "2026-11-01",
+            "value": 75.2
+          },
+          {
+            "at": "2026-11-08",
+            "value": 74.6
+          },
+          {
+            "at": "2026-11-15",
+            "value": 74.1
+          }
+        ]
+      },
+      "clients": []
     }
   ]
 }
