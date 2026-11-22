@@ -180,13 +180,13 @@ func dataTemplates() []*Template {
 			ID: "collection.v1", Title: "Collection",
 			Description:  "A list or table of records the person can act on: chores, a shopping list, bookings, open items. The source returns the records; each action calls the same app (for example marking one done).",
 			ParamsSchema: collParams, DataContract: collRaw, Example: json.RawMessage(collectionExample), ExampleSources: sourceFor("chores", "chores", "/chores"),
-			DataExample: json.RawMessage(collectionData), Clients: []string{}, schema: collSchema, contract: collResolved, check: checkCollection,
+			DataExample: json.RawMessage(collectionData), Clients: []string{"web", "ios"}, schema: collSchema, contract: collResolved, check: checkCollection,
 		},
 		{
 			ID: "tracker.v1", Title: "Tracker",
 			Description:  "One measurement over time, drawn as a chart with an optional target, plus an optional form that logs a new value: weight, spend, a habit count. The source returns the points; the form posts to the same app.",
 			ParamsSchema: trackParams, DataContract: trackRaw, Example: json.RawMessage(trackerExample), ExampleSources: sourceFor("weight", "weight", "/series"),
-			DataExample: json.RawMessage(trackerData), Clients: []string{}, schema: trackSchema, contract: trackResolved, check: checkTracker,
+			DataExample: json.RawMessage(trackerData), Clients: []string{"web", "ios"}, schema: trackSchema, contract: trackResolved, check: checkTracker,
 		},
 	}
 }

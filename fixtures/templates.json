@@ -484,7 +484,10 @@
           }
         ]
       },
-      "clients": []
+      "clients": [
+        "web",
+        "ios"
+      ]
     },
     {
       "id": "tracker.v1",
@@ -648,7 +651,10 @@
           }
         ]
       },
-      "clients": []
+      "clients": [
+        "web",
+        "ios"
+      ]
     }
   ]
 }
