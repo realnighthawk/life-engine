@@ -1,0 +1,306 @@
+{
+  "items": [
+    {
+      "id": "document.v1",
+      "title": "Document",
+      "description": "Authored content: a plan, report, booking, analysis or reference, as pages of titled sections of Markdown, short text and links. The default when nothing richer fits.",
+      "params_schema": {
+        "type": "object",
+        "properties": {
+          "pages": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "stable lowercase identifier, unique within the artifact"
+                },
+                "title": {
+                  "type": "string",
+                  "description": "tab or slide name, up to 80 characters; required when there is more than one page"
+                },
+                "sections": {
+                  "type": [
+                    "null",
+                    "array"
+                  ],
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "description": "stable lowercase identifier, unique within the artifact"
+                      },
+                      "title": {
+                        "type": "string",
+                        "description": "1-60 characters"
+                      },
+                      "intro": {
+                        "type": "string",
+                        "description": "optional one or two plain sentences, up to 240 characters"
+                      },
+                      "blocks": {
+                        "type": [
+                          "null",
+                          "array"
+                        ],
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "description": "stable lowercase identifier, unique within the artifact"
+                            },
+                            "kind": {
+                              "type": "string",
+                              "description": "markdown, text or link"
+                            },
+                            "title": {
+                              "type": "string",
+                              "description": "optional short heading, up to 80 characters"
+                            },
+                            "markdown": {
+                              "type": "string",
+                              "description": "markdown: authored Markdown, 1-16384 bytes; rendered without raw HTML"
+                            },
+                            "body": {
+                              "type": "string",
+                              "description": "text: plain words, up to 280 characters"
+                            },
+                            "points": {
+                              "type": [
+                                "null",
+                                "array"
+                              ],
+                              "items": {
+                                "type": "string"
+                              },
+                              "description": "text: up to five short points, each up to 120 characters"
+                            },
+                            "url": {
+                              "type": "string",
+                              "description": "link: an http or https address to open"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "kind"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "description": "1-12 blocks in display order"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "title",
+                      "blocks"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "description": "1-12 sections in display order"
+                }
+              },
+              "required": [
+                "id",
+                "sections"
+              ],
+              "additionalProperties": false
+            },
+            "description": "1-60 pages; one page shows no tabs"
+          }
+        },
+        "required": [
+          "pages"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "pages": [
+          {
+            "id": "main",
+            "sections": [
+              {
+                "id": "plan",
+                "title": "Weekend plan",
+                "intro": "Where things stand.",
+                "blocks": [
+                  {
+                    "id": "notes",
+                    "kind": "markdown",
+                    "markdown": "## Saturday\n- Market at 9\n- Dinner at 7"
+                  },
+                  {
+                    "id": "more",
+                    "kind": "link",
+                    "title": "Booking",
+                    "url": "https://example.com/booking"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "clients": [
+        "web",
+        "ios"
+      ]
+    },
+    {
+      "id": "deck.v1",
+      "title": "Deck",
+      "description": "The document shape shown one page at a time: each page is a slide.",
+      "params_schema": {
+        "type": "object",
+        "properties": {
+          "pages": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "stable lowercase identifier, unique within the artifact"
+                },
+                "title": {
+                  "type": "string",
+                  "description": "tab or slide name, up to 80 characters; required when there is more than one page"
+                },
+                "sections": {
+                  "type": [
+                    "null",
+                    "array"
+                  ],
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "description": "stable lowercase identifier, unique within the artifact"
+                      },
+                      "title": {
+                        "type": "string",
+                        "description": "1-60 characters"
+                      },
+                      "intro": {
+                        "type": "string",
+                        "description": "optional one or two plain sentences, up to 240 characters"
+                      },
+                      "blocks": {
+                        "type": [
+                          "null",
+                          "array"
+                        ],
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "description": "stable lowercase identifier, unique within the artifact"
+                            },
+                            "kind": {
+                              "type": "string",
+                              "description": "markdown, text or link"
+                            },
+                            "title": {
+                              "type": "string",
+                              "description": "optional short heading, up to 80 characters"
+                            },
+                            "markdown": {
+                              "type": "string",
+                              "description": "markdown: authored Markdown, 1-16384 bytes; rendered without raw HTML"
+                            },
+                            "body": {
+                              "type": "string",
+                              "description": "text: plain words, up to 280 characters"
+                            },
+                            "points": {
+                              "type": [
+                                "null",
+                                "array"
+                              ],
+                              "items": {
+                                "type": "string"
+                              },
+                              "description": "text: up to five short points, each up to 120 characters"
+                            },
+                            "url": {
+                              "type": "string",
+                              "description": "link: an http or https address to open"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "kind"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "description": "1-12 blocks in display order"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "title",
+                      "blocks"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "description": "1-12 sections in display order"
+                }
+              },
+              "required": [
+                "id",
+                "sections"
+              ],
+              "additionalProperties": false
+            },
+            "description": "1-60 pages; one page shows no tabs"
+          }
+        },
+        "required": [
+          "pages"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "pages": [
+          {
+            "id": "main",
+            "sections": [
+              {
+                "id": "plan",
+                "title": "Trip review",
+                "intro": "Where things stand.",
+                "blocks": [
+                  {
+                    "id": "notes",
+                    "kind": "markdown",
+                    "markdown": "## Saturday\n- Market at 9\n- Dinner at 7"
+                  },
+                  {
+                    "id": "more",
+                    "kind": "link",
+                    "title": "Booking",
+                    "url": "https://example.com/booking"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "clients": [
+        "web",
+        "ios"
+      ]
+    }
+  ]
+}

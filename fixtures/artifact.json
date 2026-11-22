@@ -1,0 +1,36 @@
+{
+  "id": "690e2d5b-1e61-49fd-a450-b40dd905b0a1",
+  "title": "Lisbon plan",
+  "template": "document.v1",
+  "version": 1,
+  "tags": [
+    "trip"
+  ],
+  "updated_at": "2026-11-22T05:18:08.960227Z",
+  "params": {
+    "pages": [
+      {
+        "id": "main",
+        "sections": [
+          {
+            "blocks": [
+              {
+                "id": "notes",
+                "kind": "markdown",
+                "markdown": "## Before we go\n- Book flights"
+              }
+            ],
+            "id": "plan",
+            "title": "Plan"
+          }
+        ]
+      }
+    ]
+  },
+  "sources": [
+    {
+      "id": "packing",
+      "url": "life-app://packing/list"
+    }
+  ]
+}

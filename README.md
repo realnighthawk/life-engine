@@ -8,7 +8,7 @@ Clean-slate rebuild on branch `clean-slate-engine` (2026-10-21), not yet merged 
 
 The engine owns the clock: it keeps a Temporal Schedule matched to each item with an alert (`internal/clock`, updated in place, native recurrence in the item's zone) and runs the worker for `FireWorkflow`. A person's alert is posted to the gateway's events intake (`GATEWAY_EVENTS_URL`, `GATEWAY_EVENTS_TOKEN`), which stores it in their inbox and pushes it to their devices; mcp-hub is not involved. An agent's alert signals the conversation it was created from. Needs `TEMPORAL_ADDRESS` and `TENANT_SLUG` together (alerts are off without them). Migration 0022 drops the older model (reminders, schedules, routines, plan, steps, commitments, monitors, trackers and views, journal, notes, captures, attachments): nothing is migrated.
 
-Not here: views and trackers (deferred, to be rebuilt on this base), and the client apps, which still speak the old operations.
+Artifacts are `{template, params, sources}` (`templates_get` lists the templates and their schemas); views, the view kit and numeric measurements are removed ([ADR 0011](https://github.com/kumarabd/project-hub/blob/main/projects/life-engine/adr/0011-artifacts-are-templates-apps-are-backends.md)). Not here: the client apps, which must move to the new artifact shape.
 
 ## Run
 

@@ -10,7 +10,7 @@ import (
 // so an intention, a task and an event can be composed in one transaction.
 var batchable = map[string]bool{
 	"intentions_create": true, "commitments_create": true, "states_create": true, "activities_record": true,
-	"links_set": true, "tasks_create": true, "calendar_events_create": true, "views_create": true,
+	"links_set": true, "tasks_create": true, "calendar_events_create": true,
 }
 
 // checkBatch validates a plan without running it, so a decision's effect is refused at creation if it could never apply.
@@ -20,14 +20,14 @@ func checkBatch(plan BatchPlan) error {
 	}
 	for i, o := range plan.Operations {
 		if !batchable[o.Operation] {
-			return invalid(fmt.Sprintf("operations[%d]: %q cannot be part of a batch. A batch runs create operations only (intentions_create, commitments_create, states_create, activities_record, links_set, tasks_create, calendar_events_create, views_create); call any other tool on its own, outside the batch", i, o.Operation))
+			return invalid(fmt.Sprintf("operations[%d]: %q cannot be part of a batch. A batch runs create operations only (intentions_create, commitments_create, states_create, activities_record, links_set, tasks_create, calendar_events_create); call any other tool on its own, outside the batch", i, o.Operation))
 		}
 	}
 	return nil
 }
 
 type BatchOp struct {
-	Operation string          `json:"operation" jsonschema:"a create operation: intentions_create, commitments_create, states_create, activities_record, links_set, tasks_create, calendar_events_create or views_create"`
+	Operation string          `json:"operation" jsonschema:"a create operation: intentions_create, commitments_create, states_create, activities_record, links_set, tasks_create or calendar_events_create"`
 	Input     json.RawMessage `json:"input" jsonschema:"that operation's own input; leave out idempotency_key, the batch sets it. Give each new record an id so later operations can refer to it"`
 }
 type BatchPlan struct {
@@ -125,7 +125,6 @@ var inverse = map[string]struct{ op, table, removed string }{
 	"states_create":          {"states_delete", "states", "deleted_at"},
 	"tasks_create":           {"tasks_delete", "tasks", "deleted_at"},
 	"calendar_events_create": {"calendar_events_delete", "events", "deleted_at"},
-	"views_create":           {"views_delete", "views", "deleted_at"},
 }
 
 type BatchUndoInput struct {
