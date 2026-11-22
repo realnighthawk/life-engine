@@ -45,12 +45,11 @@ type TrackerLog struct {
 	Fields []LogField `json:"fields" jsonschema:"1-4 fields"`
 }
 type TrackerParams struct {
-	Source    string      `json:"source" jsonschema:"the id of one of the artifact's sources; it returns the series"`
-	Unit      string      `json:"unit,omitempty" jsonschema:"what a value is measured in, up to 24 characters"`
-	Target    *float64    `json:"target,omitempty" jsonschema:"a value to draw a line at"`
-	Direction string      `json:"direction,omitempty" jsonschema:"up or down: which way is better, so progress is drawn correctly"`
-	Days      int         `json:"days,omitempty" jsonschema:"how many recent days to show, 1-366; default 30"`
-	Log       *TrackerLog `json:"log,omitempty" jsonschema:"a form that records a new value; omit for a read-only tracker"`
+	Source string      `json:"source" jsonschema:"the id of one of the artifact's sources; it returns the series"`
+	Unit   string      `json:"unit,omitempty" jsonschema:"what a value is measured in, up to 24 characters"`
+	Target *float64    `json:"target,omitempty" jsonschema:"a value to draw a line at"`
+	Days   int         `json:"days,omitempty" jsonschema:"how many recent days to show, 1-366; default 30"`
+	Log    *TrackerLog `json:"log,omitempty" jsonschema:"a form that records a new value; omit for a read-only tracker"`
 }
 
 var (
@@ -113,8 +112,8 @@ func checkTracker(raw json.RawMessage, sources []ArtifactSource) error {
 	if !declared(sources, p.Source) {
 		return invalid("params.source must be the id of one of the artifact's sources")
 	}
-	if len(p.Unit) > 24 || p.Days < 0 || p.Days > 366 || p.Direction != "" && !oneOf(p.Direction, "up", "down") {
-		return invalid("unit is at most 24 characters, days 1-366, direction up or down")
+	if len(p.Unit) > 24 || p.Days < 0 || p.Days > 366 {
+		return invalid("unit is at most 24 characters, days 1-366")
 	}
 	if l := p.Log; l != nil {
 		if strings.TrimSpace(l.Label) == "" || len(l.Label) > 24 || !appPath(l.Path) || len(l.Fields) < 1 || len(l.Fields) > 4 {
@@ -137,7 +136,7 @@ const trackerContract = `{"type":"object","required":["points"],"properties":{"p
 
 const collectionExample = `{"source":"chores","layout":"list","columns":[{"key":"title","label":"Chore"},{"key":"due","label":"Due","format":"date"},{"key":"status","label":"Status","format":"status"}],"empty":"Nothing to do.","actions":[{"id":"done","label":"Done","method":"POST","path":"/chores/{id}/done"}]}`
 const collectionData = `{"items":[{"id":"c1","title":"Water the plants","due":"2026-11-22","status":"open"},{"id":"c2","title":"Take out the bins","due":"2026-11-23","status":"open"}]}`
-const trackerExample = `{"source":"weight","unit":"kg","target":72,"direction":"down","days":30,"log":{"label":"Log weight","path":"/log","fields":[{"key":"value","label":"Weight","kind":"number","required":true},{"key":"note","label":"Note","kind":"text"}]}}`
+const trackerExample = `{"source":"weight","unit":"kg","target":72,"days":30,"log":{"label":"Log weight","path":"/log","fields":[{"key":"value","label":"Weight","kind":"number","required":true},{"key":"note","label":"Note","kind":"text"}]}}`
 const trackerData = `{"points":[{"at":"2026-11-01","value":75.2},{"at":"2026-11-08","value":74.6},{"at":"2026-11-15","value":74.1}]}`
 
 func mustSchema[T any]() (json.RawMessage, *jsonschema.Resolved) {

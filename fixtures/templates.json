@@ -508,10 +508,6 @@
             ],
             "description": "a value to draw a line at"
           },
-          "direction": {
-            "type": "string",
-            "description": "up or down: which way is better, so progress is drawn correctly"
-          },
           "days": {
             "type": "integer",
             "description": "how many recent days to show, 1-366; default 30"
@@ -611,7 +607,6 @@
         "source": "weight",
         "unit": "kg",
         "target": 72,
-        "direction": "down",
         "days": 30,
         "log": {
           "label": "Log weight",

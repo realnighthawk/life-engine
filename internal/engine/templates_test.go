@@ -120,7 +120,6 @@ func TestDataTemplatesRefuseWhatTheyCannotRender(t *testing.T) {
 		"action protocol path": {"collection.v1", `{"source":"app","layout":"list","columns":[{"key":"a","label":"A"}],"actions":[{"id":"x","label":"X","method":"POST","path":"//evil.example/x"}]}`, src, "path on the app"},
 		"action climbs":        {"collection.v1", `{"source":"app","layout":"list","columns":[{"key":"a","label":"A"}],"actions":[{"id":"x","label":"X","method":"POST","path":"/../life/x"}]}`, src, "path on the app"},
 		"tracker days":         {"tracker.v1", `{"source":"app","days":999}`, src, "days 1-366"},
-		"tracker direction":    {"tracker.v1", `{"source":"app","direction":"sideways"}`, src, "direction"},
 		"log field kind":       {"tracker.v1", `{"source":"app","log":{"label":"L","path":"/log","fields":[{"key":"v","label":"V","kind":"file"}]}}`, src, "kind"},
 		"log without fields":   {"tracker.v1", `{"source":"app","log":{"label":"L","path":"/log","fields":[]}}`, src, "1-4 fields"},
 		"unknown param":        {"tracker.v1", `{"source":"app","colour":"red"}`, src, "do not match"},
