@@ -132,18 +132,22 @@ func TestDataTemplatesRefuseWhatTheyCannotRender(t *testing.T) {
 	}
 }
 
-func TestBriefRefusesWhatItCannotDraw(t *testing.T) {
+func TestBoardRefusesWhatItCannotDraw(t *testing.T) {
 	sec := func(body string) string { return `{"headline":"h","sections":[` + body + `]}` }
+	// A header is optional: a board can be only components.
+	if err := validateArtifact(ArtifactData{Title: "t", Template: "board.v1", Params: json.RawMessage(`{"sections":[{"id":"a","kind":"moves","moves":[{"id":"m","title":"A"}]}]}`)}); err != nil {
+		t.Errorf("a board without a header was refused: %v", err)
+	}
 	moves := `{"id":"a","kind":"moves","moves":[{"id":"m","title":"A"}]}`
 	cases := map[string]struct{ params, want string }{
 		"no sections":       {`{"headline":"h","sections":[]}`, "1-12 sections"},
-		"empty headline":    {`{"headline":" ","sections":[` + moves + `]}`, "headline"},
+		"long eyebrow":      {`{"eyebrow":"` + strings.Repeat("x", 41) + `","sections":[` + moves + `]}`, "eyebrow"},
 		"long headline":     {`{"headline":"` + strings.Repeat("x", 91) + `","sections":[` + moves + `]}`, "headline"},
 		"bad tone":          {`{"headline":"h","tone":"red","sections":[` + moves + `]}`, "tone"},
 		"unknown kind":      {sec(`{"id":"a","kind":"gauge"}`), "Unknown section kind"},
 		"foreign field":     {sec(`{"id":"a","kind":"moves","moves":[{"id":"m","title":"A"}],"links":[{"id":"l","title":"L","url":"https://x.example"}]}`), "takes only moves"},
 		"empty component":   {sec(`{"id":"a","kind":"moves"}`), "1-8 moves"},
-		"bad icon":          {sec(`{"id":"a","kind":"moves","moves":[{"id":"m","title":"A","icon":"rocket"}]}`), "brief icon"},
+		"bad icon":          {sec(`{"id":"a","kind":"moves","moves":[{"id":"m","title":"A","icon":"rocket"}]}`), "board icon"},
 		"bad state":         {sec(`{"id":"a","kind":"moves","moves":[{"id":"m","title":"A","state":"later"}]}`), "state"},
 		"hyphen id":         {sec(`{"id":"a-b","kind":"moves","moves":[{"id":"m","title":"A"}]}`), "unique id"},
 		"duplicate id":      {sec(moves + "," + moves), "unique id"},
@@ -161,7 +165,7 @@ func TestBriefRefusesWhatItCannotDraw(t *testing.T) {
 		"unknown field":     {`{"headline":"h","sections":[` + moves + `],"colour":"red"}`, "do not match"},
 	}
 	for name, c := range cases {
-		err := validateArtifact(ArtifactData{Title: "t", Template: "brief.v1", Params: json.RawMessage(c.params)})
+		err := validateArtifact(ArtifactData{Title: "t", Template: "board.v1", Params: json.RawMessage(c.params)})
 		if err == nil || !strings.Contains(err.Error(), c.want) {
 			t.Errorf("%s: got %v, want %q", name, err, c.want)
 		}
@@ -177,7 +181,7 @@ func TestBriefRefusesWhatItCannotDraw(t *testing.T) {
 		`{"id":"a","kind":"progress","progress":[{"id":"p","label":"Chips used","value":1,"max":4,"note":"1 of 4"}]}`,
 	}
 	for _, v := range valid {
-		if err := validateArtifact(ArtifactData{Title: "t", Template: "brief.v1", Params: json.RawMessage(sec(v))}); err != nil {
+		if err := validateArtifact(ArtifactData{Title: "t", Template: "board.v1", Params: json.RawMessage(sec(v))}); err != nil {
 			t.Errorf("a valid section was refused: %v\n%s", err, v)
 		}
 	}

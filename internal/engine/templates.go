@@ -198,7 +198,7 @@ func buildTemplates() ([]*Template, map[string]*Template) {
 			ParamsSchema: raw, Example: docExample(true), Clients: clients, schema: resolved, check: checkDocument,
 		},
 	}
-	list = append(list, briefTemplate())
+	list = append(list, boardTemplate())
 	list = append(list, dataTemplates()...)
 	index := make(map[string]*Template, len(list))
 	for _, t := range list {

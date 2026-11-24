@@ -303,9 +303,9 @@
       ]
     },
     {
-      "id": "brief.v1",
-      "title": "Brief",
-      "description": "A screen of typed components for a decision, plan or review the person acts on and returns to, drawn mostly with icons, tone, tiles and charts. A header gives a one-line verdict; then an ordered list of sections, each one component: stats (tiles), moves (things to do with a state), watch (risks), steps (a timeline), callout (one highlighted note), facts (label and value pairs), table (a small comparison), bars (values compared by length), chart (a small line or column snapshot), progress (bars toward a goal), details (folded Markdown for method) and links (sources). Compose and repeat them as the decision needs; lead with the verdict, then the numbers, then what to do. Keep every slot short: a long explanation belongs in a document or a details section. The icons are check, swap, star, alert, clock, calendar, trend_up, trend_down, target, shield, bolt, flag, pin, money, user, trophy and heart; the tones are neutral, good, warn and risk.",
+      "id": "board.v1",
+      "title": "Board",
+      "description": "A screen of typed components for any task: a plan, a weekly review, a comparison, a status, a dashboard-like summary. An optional header gives a title or a one-line verdict; then an ordered list of sections, each one component: stats (tiles), moves (things to do with a state), watch (risks), steps (a timeline), callout (one highlighted note), facts (label and value pairs), table (a small comparison), bars (values compared by length), chart (a small line or column snapshot), progress (bars toward a goal), details (folded Markdown for method) and links (sources). Compose and repeat them as the task needs; lead with what matters most. Every component is an authored snapshot: a value that keeps changing belongs in a tracker or collection. Keep every slot short: a long explanation belongs in a document or a details section. The icons are check, swap, star, alert, clock, calendar, trend_up, trend_down, target, shield, bolt, flag, pin, money, user, trophy and heart; the tones are neutral, good, warn and risk.",
       "params_schema": {
         "type": "object",
         "properties": {
@@ -315,7 +315,7 @@
           },
           "headline": {
             "type": "string",
-            "description": "the verdict in one line, 1-90 characters"
+            "description": "optional: a verdict or title in one line, up to 90 characters"
           },
           "subline": {
             "type": "string",
@@ -327,7 +327,7 @@
           },
           "icon": {
             "type": "string",
-            "description": "one of the brief icons, drawn beside the headline"
+            "description": "one of the board icons, drawn beside the headline"
           },
           "sections": {
             "type": [
@@ -339,7 +339,7 @@
               "properties": {
                 "id": {
                   "type": "string",
-                  "description": "stable lowercase identifier, unique within the brief"
+                  "description": "stable lowercase identifier, unique within the board"
                 },
                 "kind": {
                   "type": "string",
@@ -359,7 +359,7 @@
                     "properties": {
                       "id": {
                         "type": "string",
-                        "description": "stable lowercase identifier, unique within the brief"
+                        "description": "stable lowercase identifier, unique within the board"
                       },
                       "label": {
                         "type": "string",
@@ -375,7 +375,7 @@
                       },
                       "icon": {
                         "type": "string",
-                        "description": "one of the brief icons"
+                        "description": "one of the board icons"
                       },
                       "tone": {
                         "type": "string",
@@ -401,7 +401,7 @@
                     "properties": {
                       "id": {
                         "type": "string",
-                        "description": "stable lowercase identifier, unique within the brief"
+                        "description": "stable lowercase identifier, unique within the board"
                       },
                       "title": {
                         "type": "string",
@@ -417,7 +417,7 @@
                       },
                       "icon": {
                         "type": "string",
-                        "description": "one of the brief icons"
+                        "description": "one of the board icons"
                       },
                       "tag": {
                         "type": "string",
@@ -442,7 +442,7 @@
                     "properties": {
                       "id": {
                         "type": "string",
-                        "description": "stable lowercase identifier, unique within the brief"
+                        "description": "stable lowercase identifier, unique within the board"
                       },
                       "title": {
                         "type": "string",
@@ -458,7 +458,7 @@
                       },
                       "icon": {
                         "type": "string",
-                        "description": "one of the brief icons"
+                        "description": "one of the board icons"
                       }
                     },
                     "required": [
@@ -479,7 +479,7 @@
                     "properties": {
                       "id": {
                         "type": "string",
-                        "description": "stable lowercase identifier, unique within the brief"
+                        "description": "stable lowercase identifier, unique within the board"
                       },
                       "label": {
                         "type": "string",
@@ -491,7 +491,7 @@
                       },
                       "icon": {
                         "type": "string",
-                        "description": "one of the brief icons"
+                        "description": "one of the board icons"
                       },
                       "tone": {
                         "type": "string",
@@ -523,7 +523,7 @@
                     },
                     "icon": {
                       "type": "string",
-                      "description": "one of the brief icons"
+                      "description": "one of the board icons"
                     },
                     "tone": {
                       "type": "string",
@@ -546,7 +546,7 @@
                     "properties": {
                       "id": {
                         "type": "string",
-                        "description": "stable lowercase identifier, unique within the brief"
+                        "description": "stable lowercase identifier, unique within the board"
                       },
                       "label": {
                         "type": "string",
@@ -558,7 +558,7 @@
                       },
                       "icon": {
                         "type": "string",
-                        "description": "one of the brief icons"
+                        "description": "one of the board icons"
                       }
                     },
                     "required": [
@@ -610,7 +610,7 @@
                         "properties": {
                           "id": {
                             "type": "string",
-                            "description": "stable lowercase identifier, unique within the brief"
+                            "description": "stable lowercase identifier, unique within the board"
                           },
                           "cells": {
                             "type": [
@@ -630,7 +630,7 @@
                                 },
                                 "icon": {
                                   "type": "string",
-                                  "description": "one of the brief icons"
+                                  "description": "one of the board icons"
                                 }
                               },
                               "required": [
@@ -680,7 +680,7 @@
                         "properties": {
                           "id": {
                             "type": "string",
-                            "description": "stable lowercase identifier, unique within the brief"
+                            "description": "stable lowercase identifier, unique within the board"
                           },
                           "label": {
                             "type": "string",
@@ -782,7 +782,7 @@
                     "properties": {
                       "id": {
                         "type": "string",
-                        "description": "stable lowercase identifier, unique within the brief"
+                        "description": "stable lowercase identifier, unique within the board"
                       },
                       "label": {
                         "type": "string",
@@ -825,7 +825,7 @@
                     "properties": {
                       "id": {
                         "type": "string",
-                        "description": "stable lowercase identifier, unique within the brief"
+                        "description": "stable lowercase identifier, unique within the board"
                       },
                       "title": {
                         "type": "string",
@@ -855,7 +855,7 @@
                     "properties": {
                       "id": {
                         "type": "string",
-                        "description": "stable lowercase identifier, unique within the brief"
+                        "description": "stable lowercase identifier, unique within the board"
                       },
                       "title": {
                         "type": "string",
@@ -886,7 +886,6 @@
           }
         },
         "required": [
-          "headline",
           "sections"
         ],
         "additionalProperties": false
