@@ -131,3 +131,30 @@ func TestDataTemplatesRefuseWhatTheyCannotRender(t *testing.T) {
 		}
 	}
 }
+
+func TestBriefRefusesWhatItCannotDraw(t *testing.T) {
+	ok := `{"headline":"Do it","moves":[{"id":"a","title":"A"}]}`
+	cases := map[string]struct{ params, want string }{
+		"headline only":   {`{"headline":"Do it"}`, "at least one"},
+		"empty headline":  {`{"headline":" ","moves":[{"id":"a","title":"A"}]}`, "headline"},
+		"long headline":   {`{"headline":"` + strings.Repeat("x", 91) + `","moves":[{"id":"a","title":"A"}]}`, "headline"},
+		"bad tone":        {`{"headline":"h","tone":"red","moves":[{"id":"a","title":"A"}]}`, "tone"},
+		"bad icon":        {`{"headline":"h","moves":[{"id":"a","title":"A","icon":"rocket"}]}`, "icon"},
+		"bad state":       {`{"headline":"h","moves":[{"id":"a","title":"A","state":"later"}]}`, "state"},
+		"hyphen id":       {`{"headline":"h","moves":[{"id":"a-b","title":"A"}]}`, "unique id"},
+		"duplicate id":    {`{"headline":"h","moves":[{"id":"a","title":"A"},{"id":"a","title":"B"}]}`, "unique id"},
+		"five stats":      {`{"headline":"h","stats":[` + strings.TrimSuffix(strings.Repeat(`{"id":"s","label":"L","value":"1"},`, 5), ",") + `]}`, "at most 4"},
+		"long stat value": {`{"headline":"h","stats":[{"id":"s","label":"L","value":"1234567890123"}]}`, "stat"},
+		"bad link":        {`{"headline":"h","moves":[{"id":"a","title":"A"}],"links":[{"id":"l","title":"L","url":"javascript:x"}]}`, "http"},
+		"unknown field":   {`{"headline":"h","moves":[{"id":"a","title":"A"}],"colour":"red"}`, "do not match"},
+	}
+	for name, c := range cases {
+		err := validateArtifact(ArtifactData{Title: "t", Template: "brief.v1", Params: json.RawMessage(c.params)})
+		if err == nil || !strings.Contains(err.Error(), c.want) {
+			t.Errorf("%s: got %v, want %q", name, err, c.want)
+		}
+	}
+	if err := validateArtifact(ArtifactData{Title: "t", Template: "brief.v1", Params: json.RawMessage(ok)}); err != nil {
+		t.Errorf("a valid brief was refused: %v", err)
+	}
+}

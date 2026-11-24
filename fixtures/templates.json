@@ -303,6 +303,358 @@
       ]
     },
     {
+      "id": "brief.v1",
+      "title": "Brief",
+      "description": "A decision screen drawn mostly with icons, tone and tiles: a one-line verdict, up to 4 stat tiles, the moves to make, what to watch, what is ahead, folded notes and sources. Choose it for a plan or a weekly decision the person acts on and returns to. Keep every slot short; a long explanation belongs in a document or a folded detail. The icons are check, swap, star, alert, clock, calendar, trend_up, trend_down, target, shield, bolt, flag, pin, money, user, trophy and heart.",
+      "params_schema": {
+        "type": "object",
+        "properties": {
+          "eyebrow": {
+            "type": "string",
+            "description": "a small line above the headline, up to 40 characters, such as GW12 · deadline Fri 18:30"
+          },
+          "headline": {
+            "type": "string",
+            "description": "the verdict in one line, 1-90 characters"
+          },
+          "subline": {
+            "type": "string",
+            "description": "one supporting line, up to 140 characters"
+          },
+          "tone": {
+            "type": "string",
+            "description": "colours the header: neutral (default), good, warn or risk"
+          },
+          "icon": {
+            "type": "string",
+            "description": "one of the brief icons, drawn beside the headline"
+          },
+          "stats": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "stable lowercase identifier, unique within the brief"
+                },
+                "label": {
+                  "type": "string",
+                  "description": "what the number is, up to 20 characters"
+                },
+                "value": {
+                  "type": "string",
+                  "description": "the figure as shown, up to 12 characters, such as +12.9 or 5th"
+                },
+                "note": {
+                  "type": "string",
+                  "description": "a few words under the value, up to 24 characters"
+                },
+                "icon": {
+                  "type": "string",
+                  "description": "one of the brief icons"
+                },
+                "tone": {
+                  "type": "string",
+                  "description": "neutral (default), good, warn or risk"
+                }
+              },
+              "required": [
+                "id",
+                "label",
+                "value"
+              ],
+              "additionalProperties": false
+            },
+            "description": "up to 4 tiles"
+          },
+          "moves": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "stable lowercase identifier, unique within the brief"
+                },
+                "title": {
+                  "type": "string",
+                  "description": "the action, up to 60 characters"
+                },
+                "detail": {
+                  "type": "string",
+                  "description": "one short reason, up to 80 characters"
+                },
+                "state": {
+                  "type": "string",
+                  "description": "todo (default), done or hold"
+                },
+                "icon": {
+                  "type": "string",
+                  "description": "one of the brief icons"
+                },
+                "tag": {
+                  "type": "string",
+                  "description": "a small label such as a deadline, up to 16 characters"
+                }
+              },
+              "required": [
+                "id",
+                "title"
+              ],
+              "additionalProperties": false
+            },
+            "description": "up to 8 things to do"
+          },
+          "watch": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "stable lowercase identifier, unique within the brief"
+                },
+                "title": {
+                  "type": "string",
+                  "description": "the risk, up to 60 characters"
+                },
+                "detail": {
+                  "type": "string",
+                  "description": "one short note, up to 80 characters"
+                },
+                "level": {
+                  "type": "string",
+                  "description": "info, warn (default) or risk"
+                },
+                "icon": {
+                  "type": "string",
+                  "description": "one of the brief icons"
+                }
+              },
+              "required": [
+                "id",
+                "title"
+              ],
+              "additionalProperties": false
+            },
+            "description": "up to 6 things that could change the plan"
+          },
+          "ahead": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "stable lowercase identifier, unique within the brief"
+                },
+                "label": {
+                  "type": "string",
+                  "description": "when, up to 16 characters, such as GW15 or Jan"
+                },
+                "title": {
+                  "type": "string",
+                  "description": "what happens, up to 48 characters"
+                },
+                "icon": {
+                  "type": "string",
+                  "description": "one of the brief icons"
+                },
+                "tone": {
+                  "type": "string",
+                  "description": "neutral (default), good, warn or risk"
+                }
+              },
+              "required": [
+                "id",
+                "label",
+                "title"
+              ],
+              "additionalProperties": false
+            },
+            "description": "up to 8 upcoming steps, in order"
+          },
+          "details": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "stable lowercase identifier, unique within the brief"
+                },
+                "title": {
+                  "type": "string",
+                  "description": "1-40 characters; shown folded"
+                },
+                "markdown": {
+                  "type": "string",
+                  "description": "authored Markdown, 1-4096 bytes; rendered without raw HTML"
+                }
+              },
+              "required": [
+                "id",
+                "title",
+                "markdown"
+              ],
+              "additionalProperties": false
+            },
+            "description": "up to 4 folded notes for the method or reasoning"
+          },
+          "links": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "stable lowercase identifier, unique within the brief"
+                },
+                "title": {
+                  "type": "string",
+                  "description": "up to 60 characters"
+                },
+                "url": {
+                  "type": "string",
+                  "description": "an http or https address to open"
+                }
+              },
+              "required": [
+                "id",
+                "title",
+                "url"
+              ],
+              "additionalProperties": false
+            },
+            "description": "up to 6 sources"
+          }
+        },
+        "required": [
+          "headline"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "eyebrow": "GW12 · deadline Fri 18:30",
+        "headline": "Swap Raya for Trafford. Roll the other transfer.",
+        "subline": "Raya is 50% fit; Leeds have the best clean-sheet odds.",
+        "tone": "good",
+        "icon": "swap",
+        "stats": [
+          {
+            "id": "gain",
+            "label": "5-week gain",
+            "value": "+12.9",
+            "note": "from one transfer",
+            "icon": "trend_up",
+            "tone": "good"
+          },
+          {
+            "id": "rank",
+            "label": "League rank",
+            "value": "5th",
+            "note": "31 behind 2nd"
+          },
+          {
+            "id": "ft",
+            "label": "Free transfers",
+            "value": "1",
+            "note": "rolled to next week",
+            "icon": "swap"
+          }
+        ],
+        "moves": [
+          {
+            "id": "gk",
+            "title": "Raya to Trafford",
+            "detail": "Raya 12.0 vs Trafford 24.9 points",
+            "icon": "swap",
+            "tag": "before Fri"
+          },
+          {
+            "id": "cap",
+            "title": "Captain Groß",
+            "detail": "6.2 expected, Haaland 5.6 away",
+            "icon": "star"
+          },
+          {
+            "id": "roll",
+            "title": "Keep the second transfer",
+            "state": "hold",
+            "icon": "clock"
+          }
+        ],
+        "watch": [
+          {
+            "id": "raya",
+            "title": "Raya is 50% fit",
+            "level": "risk",
+            "icon": "heart"
+          },
+          {
+            "id": "cards",
+            "title": "Three players on four yellows",
+            "detail": "A fifth is a ban",
+            "level": "warn",
+            "icon": "alert"
+          }
+        ],
+        "ahead": [
+          {
+            "id": "tc",
+            "label": "GW15",
+            "title": "Triple Captain, Haaland at home",
+            "icon": "bolt",
+            "tone": "good"
+          },
+          {
+            "id": "expiry",
+            "label": "GW19",
+            "title": "First chip set expires",
+            "icon": "calendar",
+            "tone": "warn"
+          }
+        ],
+        "details": [
+          {
+            "id": "method",
+            "title": "How this was scored",
+            "markdown": "Five gameweeks of fixtures, half underlying stats and half results."
+          }
+        ],
+        "links": [
+          {
+            "id": "rotowire",
+            "title": "RotoWire GW12 rankings",
+            "url": "https://www.rotowire.com/soccer/"
+          }
+        ]
+      },
+      "clients": [
+        "web",
+        "ios"
+      ]
+    },
+    {
       "id": "collection.v1",
       "title": "Collection",
       "description": "A list or table of records the person can act on: chores, a shopping list, bookings, open items. The source returns the records; each action calls the same app (for example marking one done).",
