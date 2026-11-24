@@ -156,7 +156,7 @@ func TestStandaloneArtifactReplayAndRevision(t *testing.T) {
 func TestDataTemplatesRoundTripThroughTheEngine(t *testing.T) {
 	s := integrationService(t)
 	tpls := execute[engine.TemplateList](t, s, "templates_get", map[string]any{})
-	if len(tpls.Items) != 4 {
+	if len(tpls.Items) != 5 {
 		t.Fatalf("templates: %+v", tpls.Items)
 	}
 	for _, tpl := range tpls.Items {
