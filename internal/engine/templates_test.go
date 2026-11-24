@@ -133,20 +133,32 @@ func TestDataTemplatesRefuseWhatTheyCannotRender(t *testing.T) {
 }
 
 func TestBriefRefusesWhatItCannotDraw(t *testing.T) {
-	ok := `{"headline":"Do it","moves":[{"id":"a","title":"A"}]}`
+	sec := func(body string) string { return `{"headline":"h","sections":[` + body + `]}` }
+	moves := `{"id":"a","kind":"moves","moves":[{"id":"m","title":"A"}]}`
 	cases := map[string]struct{ params, want string }{
-		"headline only":   {`{"headline":"Do it"}`, "at least one"},
-		"empty headline":  {`{"headline":" ","moves":[{"id":"a","title":"A"}]}`, "headline"},
-		"long headline":   {`{"headline":"` + strings.Repeat("x", 91) + `","moves":[{"id":"a","title":"A"}]}`, "headline"},
-		"bad tone":        {`{"headline":"h","tone":"red","moves":[{"id":"a","title":"A"}]}`, "tone"},
-		"bad icon":        {`{"headline":"h","moves":[{"id":"a","title":"A","icon":"rocket"}]}`, "icon"},
-		"bad state":       {`{"headline":"h","moves":[{"id":"a","title":"A","state":"later"}]}`, "state"},
-		"hyphen id":       {`{"headline":"h","moves":[{"id":"a-b","title":"A"}]}`, "unique id"},
-		"duplicate id":    {`{"headline":"h","moves":[{"id":"a","title":"A"},{"id":"a","title":"B"}]}`, "unique id"},
-		"five stats":      {`{"headline":"h","stats":[` + strings.TrimSuffix(strings.Repeat(`{"id":"s","label":"L","value":"1"},`, 5), ",") + `]}`, "at most 4"},
-		"long stat value": {`{"headline":"h","stats":[{"id":"s","label":"L","value":"1234567890123"}]}`, "stat"},
-		"bad link":        {`{"headline":"h","moves":[{"id":"a","title":"A"}],"links":[{"id":"l","title":"L","url":"javascript:x"}]}`, "http"},
-		"unknown field":   {`{"headline":"h","moves":[{"id":"a","title":"A"}],"colour":"red"}`, "do not match"},
+		"no sections":       {`{"headline":"h","sections":[]}`, "1-12 sections"},
+		"empty headline":    {`{"headline":" ","sections":[` + moves + `]}`, "headline"},
+		"long headline":     {`{"headline":"` + strings.Repeat("x", 91) + `","sections":[` + moves + `]}`, "headline"},
+		"bad tone":          {`{"headline":"h","tone":"red","sections":[` + moves + `]}`, "tone"},
+		"unknown kind":      {sec(`{"id":"a","kind":"gauge"}`), "Unknown section kind"},
+		"foreign field":     {sec(`{"id":"a","kind":"moves","moves":[{"id":"m","title":"A"}],"links":[{"id":"l","title":"L","url":"https://x.example"}]}`), "takes only moves"},
+		"empty component":   {sec(`{"id":"a","kind":"moves"}`), "1-8 moves"},
+		"bad icon":          {sec(`{"id":"a","kind":"moves","moves":[{"id":"m","title":"A","icon":"rocket"}]}`), "brief icon"},
+		"bad state":         {sec(`{"id":"a","kind":"moves","moves":[{"id":"m","title":"A","state":"later"}]}`), "state"},
+		"hyphen id":         {sec(`{"id":"a-b","kind":"moves","moves":[{"id":"m","title":"A"}]}`), "unique id"},
+		"duplicate id":      {sec(moves + "," + moves), "unique id"},
+		"five stats":        {sec(`{"id":"a","kind":"stats","stats":[` + strings.TrimSuffix(strings.Repeat(`{"id":"s","label":"L","value":"1"},`, 5), ",") + `]}`), "1-4 stats"},
+		"long stat value":   {sec(`{"id":"a","kind":"stats","stats":[{"id":"s","label":"L","value":"1234567890123"}]}`), "stat"},
+		"callout no text":   {sec(`{"id":"a","kind":"callout","callout":{"text":" "}}`), "text up to 160"},
+		"table ragged row":  {sec(`{"id":"a","kind":"table","table":{"columns":[{"label":"A"},{"label":"B"}],"rows":[{"id":"r","cells":[{"text":"x"}]}]}}`), "one cell per column"},
+		"table one column":  {sec(`{"id":"a","kind":"table","table":{"columns":[{"label":"A"}],"rows":[{"id":"r","cells":[{"text":"x"}]}]}}`), "2-5 columns"},
+		"one bar":           {sec(`{"id":"a","kind":"bars","bars":{"bars":[{"id":"b","label":"B","value":1}]}}`), "2-8 bars"},
+		"negative bar":      {sec(`{"id":"a","kind":"bars","bars":{"bars":[{"id":"b","label":"B","value":-1},{"id":"c","label":"C","value":1}]}}`), "value of zero or more"},
+		"chart style":       {sec(`{"id":"a","kind":"chart","chart":{"style":"pie","points":[{"label":"a","value":1},{"label":"b","value":2}]}}`), "line or column"},
+		"chart one point":   {sec(`{"id":"a","kind":"chart","chart":{"style":"line","points":[{"label":"a","value":1}]}}`), "2-24 points"},
+		"progress zero max": {sec(`{"id":"a","kind":"progress","progress":[{"id":"p","label":"P","value":1,"max":0}]}`), "max above zero"},
+		"bad link":          {sec(`{"id":"a","kind":"links","links":[{"id":"l","title":"L","url":"javascript:x"}]}`), "http"},
+		"unknown field":     {`{"headline":"h","sections":[` + moves + `],"colour":"red"}`, "do not match"},
 	}
 	for name, c := range cases {
 		err := validateArtifact(ArtifactData{Title: "t", Template: "brief.v1", Params: json.RawMessage(c.params)})
@@ -154,7 +166,19 @@ func TestBriefRefusesWhatItCannotDraw(t *testing.T) {
 			t.Errorf("%s: got %v, want %q", name, err, c.want)
 		}
 	}
-	if err := validateArtifact(ArtifactData{Title: "t", Template: "brief.v1", Params: json.RawMessage(ok)}); err != nil {
-		t.Errorf("a valid brief was refused: %v", err)
+	// Every component the brief names must be drawable from a minimal valid instance.
+	valid := []string{
+		moves,
+		`{"id":"a","kind":"callout","callout":{"text":"Heads up","tone":"warn","icon":"alert"}}`,
+		`{"id":"a","kind":"facts","facts":[{"id":"f","label":"Budget","value":"£100.9m","icon":"money"}]}`,
+		`{"id":"a","kind":"table","table":{"columns":[{"label":"Player"},{"label":"Pts","align":"end"}],"rows":[{"id":"r","cells":[{"text":"Trafford"},{"text":"24.9","tone":"good"}]}]}}`,
+		`{"id":"a","kind":"bars","bars":{"max":30,"bars":[{"id":"b","label":"B","value":24.9,"display":"24.9"},{"id":"c","label":"C","value":12}]}}`,
+		`{"id":"a","kind":"chart","chart":{"style":"column","unit":"pts","target":60,"points":[{"label":"GW9","value":55},{"label":"GW10","value":61}]}}`,
+		`{"id":"a","kind":"progress","progress":[{"id":"p","label":"Chips used","value":1,"max":4,"note":"1 of 4"}]}`,
+	}
+	for _, v := range valid {
+		if err := validateArtifact(ArtifactData{Title: "t", Template: "brief.v1", Params: json.RawMessage(sec(v))}); err != nil {
+			t.Errorf("a valid section was refused: %v\n%s", err, v)
+		}
 	}
 }
